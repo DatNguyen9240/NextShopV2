@@ -15,7 +15,7 @@ const SearchBar = React.memo(function SearchBar() {
       // Xử lý tìm kiếm ở đây
       // alert(`Tìm kiếm: ${value}`);
     },
-    [value]
+    [] // loại bỏ 'value' khỏi dependency array
   );
 
   return (
