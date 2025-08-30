@@ -15,6 +15,7 @@ const products = [
     percent: "10%",
     inStock: true,
     image: "/sell_off/01.jpg",
+    imageHover: "/sell_off/02.jpg",
     rating: 4,
   },
   {
