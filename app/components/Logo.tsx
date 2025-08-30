@@ -8,8 +8,8 @@ const Logo = React.memo(function Logo() {
       <Image
         src="/logo/01.png"
         alt="Logo Tuệ Nhân Shop"
-        width={180}
-        height={120}
+        width={120}
+        height={80}
         priority
       />
     </Link>

@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
+import CarouselButton from "./CarouselButton";
 
 const images = [
   "/sell_off/01.jpg",
@@ -64,22 +65,10 @@ const Carousel: React.FC = () => {
       </div>
 
       {/* Prev Button */}
-      <button
-        onClick={prevSlide}
-        className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white shadow rounded-full w-10 h-10 flex items-center justify-center text-2xl font-bold transition"
-        aria-label="Previous"
-      >
-        &#8249;
-      </button>
+      <CarouselButton onClick={prevSlide} direction="prev" />
 
       {/* Next Button */}
-      <button
-        onClick={nextSlide}
-        className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white shadow rounded-full w-10 h-10 flex items-center justify-center text-2xl font-bold transition"
-        aria-label="Next"
-      >
-        &#8250;
-      </button>
+      <CarouselButton onClick={nextSlide} direction="next" />
 
       {/* Indicator */}
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">

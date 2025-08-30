@@ -1,10 +1,13 @@
 import Carousel from "./components/Carousel";
+import FeaturedCategories from "./components/FeaturedCategories";
+import PopularProductsSection from "./components/PopularProductsSection";
 
 export default function HomePage() {
   return (
     <main>
       <Carousel />
-      {/* Thêm các section khác ở đây */}
+      <FeaturedCategories />
+      <PopularProductsSection />
     </main>
   );
 }

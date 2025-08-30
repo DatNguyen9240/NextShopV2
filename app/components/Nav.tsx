@@ -2,20 +2,56 @@
 import React, { useState } from "react";
 
 const menu = [
-  { label: "Áo thun", href: "#", icon: "👕" }, // T-shirt emoji
-  { label: "Áo sơ mi", href: "#", icon: "👔" }, // Shirt + tie
+  { label: "Trang chủ", href: "/" },
+  {
+    label: "Quần áo",
+    href: "/quan-ao",
+    subMenu: [
+      { label: "Nam", href: "/quan-ao/nam" },
+      { label: "Nữ", href: "/quan-ao/nu" },
+      { label: "Học sinh", href: "/quan-ao/hoc-sinh" },
+      { label: "Thể thao", href: "/quan-ao/the-thao" },
+      { label: "Trẻ sơ sinh", href: "/quan-ao/tre-so-sinh" },
+    ],
+  },
   {
     label: "Áo",
     href: "#",
-    icon: "🧥", // Coat – phù hợp cho áo khoác/áo len/áo vest
+    icon: "👕",
     subMenu: [
-      { label: "Áo khoác", href: "#", icon: "🧥" },
+      { label: "Áo thun", href: "#", icon: "👕" }, // T-shirt emoji
+      { label: "Áo sơ mi", href: "#", icon: "👔" }, // Shirt + tie
+      { label: "Áo khoác", href: "#", icon: "🧥" }, // Coat
       { label: "Áo len", href: "#", icon: "🧶" }, // Yarn – biểu tượng ấm áp
-      { label: "Áo vest", href: "#", icon: "🤵" }, // Vest – biểu tượng vest sang trọng
     ],
   },
-  { label: "Quần áo nam", href: "#", icon: "👖" }, // Jeans – phù hợp quần nam
-  { label: "Quần áo nữ", href: "#", icon: "👗" }, // Dress – phù hợp quần áo nữ
+  {
+    label: "Quần",
+    href: "#",
+    icon: "👖",
+    subMenu: [
+      {
+        label: "Quần dài",
+        href: "#",
+        icon: "👖", // Pants
+      },
+      {
+        label: "Quần short",
+        href: "#",
+        icon: "🩳", // Shorts
+      },
+      {
+        label: "Quần jeans",
+        href: "#",
+        icon: "👖", // Jeans
+      },
+      {
+        label: "Quần tây",
+        href: "#",
+        icon: "👔", // Dress pants – biểu tượng trang trọng
+      },
+    ],
+  }, // Jeans – phù hợp quần nam
   { label: "Túi xách", href: "#", icon: "👜" }, // Handbag
   { label: "Balo", href: "#", icon: "🎒" }, // Backpack
   { label: "Ví", href: "#", icon: "👛" }, // Purse wallet
