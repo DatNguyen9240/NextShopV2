@@ -1,7 +1,7 @@
 "use client";
-import React, { useState } from "react";
-import CarouselButton from "./CarouselButton"; // dùng CarouselButton
-import PopularProductsTitle from "./PopularProductsTitle"; // Import component ở đây
+import React, { useState, useRef } from "react";
+import CarouselButton from "./CarouselButton";
+import PopularProductsTitle from "./PopularProductsTitle";
 
 const tabs = [
   "Quần áo",
@@ -16,65 +16,59 @@ const tabs = [
   "Trẻ em",
 ];
 
-const visibleCount = 6; // số tab hiển thị
-const step = 1; // số tab dịch chuyển mỗi lần
-
-const ProductTabs: React.FC = () => {
+const ProductTabs = React.memo(function ProductTabs() {
   const [activeTab, setActiveTab] = useState(0);
-  const [startIndex, setStartIndex] = useState(0);
-
-  const lastPossibleIndex = Math.max(0, tabs.length - visibleCount); // 6 tab
-
-  const handleNext = () => {
-    setStartIndex((prev) => Math.min(prev + step, lastPossibleIndex));
-  };
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const handlePrev = () => {
-    setStartIndex((prev) => Math.max(prev - step, 0));
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: -80, behavior: "smooth" });
+    }
   };
 
-  const visibleTabs = tabs.slice(startIndex, startIndex + visibleCount); // 6 tab
+  const handleNext = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: 80, behavior: "smooth" });
+    }
+  };
 
   return (
-    <div className="relative w-[640px]">
+    <div className="relative lg:w-[640px] w-[540px]">
       {/* Hiện title ở md trở xuống */}
       <div className="block md:hidden mb-2">
         <PopularProductsTitle />
       </div>
+
       {/* Tabs + Carousel Button */}
       <div className="relative">
         {/* Prev Button */}
-        {startIndex > 0 && (
-          <div className="absolute left-0 top-1/2 -translate-y-1/2 z-10">
-            <CarouselButton onClick={handlePrev} direction="prev" size="sm" />
-          </div>
-        )}
+        <CarouselButton onClick={handlePrev} direction="prev" size="sm" />
+
         {/* Tabs */}
-        <div className="flex space-x-2 overflow-hidden border rounded-lg xl:px-12 lg:px-0">
-          {visibleTabs.map((tab, idx) => (
+        <div
+          ref={scrollRef}
+          className="flex lg:space-x-2 space-x-1 overflow-x-auto border rounded-lg scrollbar-hide mx-12"
+        >
+          {tabs.map((tab, idx) => (
             <button
               key={tab}
-              onClick={() => setActiveTab(startIndex + idx)}
-              className={`pb-1 text-sm font-medium flex-1 text-center ${
-                activeTab === startIndex + idx
+              onClick={() => setActiveTab(idx)}
+              className={`pb-1 text-sm font-medium flex-1 text-center lg:min-w-[80px] min-w-[100px] ${
+                activeTab === idx
                   ? "text-blue-600 border-b-2 border-blue-600"
                   : "text-gray-600 hover:text-gray-900"
               }`}
-              style={{ minWidth: 80 }}
             >
               {tab}
             </button>
           ))}
         </div>
+
         {/* Next Button */}
-        {startIndex < lastPossibleIndex && (
-          <div className="absolute right-0 top-1/2 -translate-y-1/2 z-10">
-            <CarouselButton onClick={handleNext} direction="next" size="sm" />
-          </div>
-        )}
+        <CarouselButton onClick={handleNext} direction="next" size="sm" />
       </div>
     </div>
   );
-};
+});
 
 export default ProductTabs;

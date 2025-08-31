@@ -61,7 +61,7 @@ const Nav = React.memo(function Nav() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   return (
-    <nav className="w-full bg-white border-b border-gray-200 flex justify-center">
+    <nav className="w-full bg-white border-b border-gray-200 flex justify-center hidden lg:flex">
       <div className="flex items-center gap-12 py-4">
         {menu.map((item, idx) => (
           <div
