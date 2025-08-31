@@ -200,10 +200,18 @@ const PopularProductsSection: React.FC = () => {
             ))}
           </div>
           {startIdx > 0 && (
-            <CarouselButton direction="prev" onClick={handlePrev} />
+            <CarouselButton
+              direction="prev"
+              onClick={handlePrev}
+              size={isLg ? "md" : "sm"}
+            />
           )}
           {startIdx + visibleCount < products.length && (
-            <CarouselButton direction="next" onClick={handleNext} />
+            <CarouselButton
+              direction="next"
+              onClick={handleNext}
+              size={isLg ? "md" : "sm"}
+            />
           )}
         </div>
       </div>
