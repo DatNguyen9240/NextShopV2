@@ -33,7 +33,7 @@ const ProductTabs = React.memo(function ProductTabs() {
   };
 
   return (
-    <div className="relative lg:w-[640px] w-[540px]">
+    <div className="relative lg:w-[640px] w-[390px]">
       {/* Hiện title ở md trở xuống */}
       <div className="block md:hidden mb-2">
         <PopularProductsTitle />
@@ -47,7 +47,7 @@ const ProductTabs = React.memo(function ProductTabs() {
         {/* Tabs */}
         <div
           ref={scrollRef}
-          className="flex lg:space-x-2 space-x-1 overflow-x-auto border rounded-lg scrollbar-hide mx-12"
+          className="flex lg:space-x-2 space-x-0 overflow-x-auto border rounded-lg scrollbar-hide mx-12"
         >
           {tabs.map((tab, idx) => (
             <button

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import AdBanner from "./AdBanner";
 import ProductCard from "./ProductCard";
 import ProductTabs from "./ProductTabs";
@@ -140,17 +140,39 @@ const products = [
   },
 ];
 
+function useBreakpoint() {
+  const [isLg, setIsLg] = useState(false);
+
+  useEffect(() => {
+    const media = window.matchMedia("(min-width: 1024px)");
+    const listener = () => setIsLg(media.matches);
+    listener();
+    media.addEventListener("change", listener);
+    return () => media.removeEventListener("change", listener);
+  }, []);
+
+  return { isLg };
+}
+
 const PopularProductsSection: React.FC = () => {
   const [startIdx, setStartIdx] = useState(0);
+  const { isLg } = useBreakpoint();
 
-  const step = 2.75;
+  // card size + gap theo breakpoint
+  const cardWidth = isLg ? 220 : 180;
+  const gap = isLg ? 18 : 8;
+
+  const visibleCount = 4;
+  const step = isLg ? 2.75 : 1.5;
 
   const handlePrev = () => {
     setStartIdx((prev) => Math.max(prev - step, 0));
   };
 
   const handleNext = () => {
-    setStartIdx((prev) => Math.min(prev + step, products.length - 4));
+    setStartIdx((prev) =>
+      Math.min(prev + step, products.length - visibleCount)
+    );
   };
 
   return (
@@ -170,7 +192,7 @@ const PopularProductsSection: React.FC = () => {
           <div
             className="flex gap-4 transition-transform duration-500 ease-in-out"
             style={{
-              transform: `translateX(-${startIdx * (222 + 18)}px)`,
+              transform: `translateX(-${startIdx * (cardWidth + gap)}px)`,
             }}
           >
             {products.map((p) => (
@@ -180,7 +202,7 @@ const PopularProductsSection: React.FC = () => {
           {startIdx > 0 && (
             <CarouselButton direction="prev" onClick={handlePrev} />
           )}
-          {startIdx + 4 < products.length && (
+          {startIdx + visibleCount < products.length && (
             <CarouselButton direction="next" onClick={handleNext} />
           )}
         </div>

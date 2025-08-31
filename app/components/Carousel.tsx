@@ -12,7 +12,7 @@ const images = [
 
 // Responsive width & height
 const WIDTHS = {
-  base: 240,
+  base: 320,
   sm: 360,
   md: 520,
   lg: 1280,
@@ -78,12 +78,12 @@ const Carousel = React.memo(function Carousel() {
 
   return (
     <div
-      className="relative mx-auto rounded-xl mt-5 w-full"
-      style={{ maxWidth: size.width, height: size.height }}
+      className="relative mx-auto rounded-xl mt-5 overflow-hidden lg:overflow-visible"
+      style={{ width: size.width, height: size.height }}
     >
       {/* Slide container */}
       <div
-        className="flex transition-transform duration-700 ease-in-out gap-4"
+        className="flex transition-transform duration-700 ease-in-out"
         style={{
           width: size.width * images.length,
           transform: `translateX(-${activeIndex * size.width}px)`,
@@ -91,7 +91,11 @@ const Carousel = React.memo(function Carousel() {
         }}
       >
         {images.map((src, idx) => (
-          <div key={idx} style={{ width: size.width, height: size.height }}>
+          <div
+            className="lg:px-2"
+            key={idx}
+            style={{ width: size.width, height: size.height }}
+          >
             <Image
               src={src}
               alt={`slide-${idx}`}
