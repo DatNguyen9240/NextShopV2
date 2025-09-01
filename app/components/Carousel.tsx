@@ -11,26 +11,58 @@ const images = [
   "/sell_off/02.jpg",
 ];
 
-type CarouselProps = {
-  timeout?: number; // Thời gian chuyển slide tự động (ms)
-  showIndicator?: boolean;
-  size?: "sm" | "md" | "lg" | "xl";
-  className?: string; // thêm prop này
-};
+const WIDTHS = {
+  base: 320,
+  sm: 360,
+  md: 520,
+  lg: 1280,
+  xl: 1280,
+} as const;
 
-const SIZE_MAP = {
-  sm: { width: 320, height: 160 },
-  md: { width: 520, height: 220 },
-  lg: { width: 1280, height: 369 },
-  xl: { width: 1536, height: 480 },
+const HEIGHTS = {
+  base: 160,
+  sm: 240,
+  md: 220,
+  lg: 369,
+  xl: 369,
+} as const;
+
+type Breakpoint = "base" | "sm" | "md" | "lg" | "xl";
+
+function useBreakpoint(): Breakpoint {
+  const [width, setWidth] = useState(0);
+
+  useEffect(() => {
+    const handleResize = () => setWidth(window.innerWidth);
+    handleResize(); // chạy lần đầu
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  if (width < 640) return "base";
+  if (width < 768) return "sm";
+  if (width < 1024) return "md";
+  if (width < 1280) return "lg";
+  return "xl";
+}
+
+type CarouselProps = {
+  timeout?: number;
+  showIndicator?: boolean;
+  className?: string;
+  size?: "base" | "sm" | "md" | "lg" | "xl";
 };
 
 const Carousel: React.FC<CarouselProps> = React.memo(function Carousel({
   timeout = 0,
   showIndicator = true,
-  size = "lg",
   className,
+  size,
 }) {
+  const breakpoint = size ?? useBreakpoint();
+  const width = WIDTHS[breakpoint];
+  const height = HEIGHTS[breakpoint];
+
   const [activeIndex, setActiveIndex] = useState(0);
 
   useEffect(() => {
@@ -41,23 +73,14 @@ const Carousel: React.FC<CarouselProps> = React.memo(function Carousel({
     return () => clearTimeout(timer);
   }, [activeIndex, timeout]);
 
-  const { width, height } = SIZE_MAP[size];
-
-  const prevSlide = () => {
+  const prevSlide = () =>
     setActiveIndex((prev) => (prev - 1 + images.length) % images.length);
-  };
-
-  const nextSlide = () => {
-    setActiveIndex((prev) => (prev + 1) % images.length);
-  };
-
-  const goToSlide = (idx: number) => {
-    setActiveIndex(idx);
-  };
+  const nextSlide = () => setActiveIndex((prev) => (prev + 1) % images.length);
+  const goToSlide = (idx: number) => setActiveIndex(idx);
 
   return (
     <div
-      className={`relative rounded-xl mt-5 max-w-7xl overflow-hidden lg:overflow-visible ${
+      className={`relative rounded-xl mt-5 max-w-7xl lg:overflow-visible overflow-hidden ${
         className ?? ""
       }`}
     >
@@ -71,7 +94,11 @@ const Carousel: React.FC<CarouselProps> = React.memo(function Carousel({
         }}
       >
         {images.map((src, idx) => (
-          <div className="lg:px-2" key={idx} style={{ width, height }}>
+          <div
+            key={idx}
+            style={{ width, height }}
+            className="flex-shrink-0 px-2"
+          >
             <Image
               src={src}
               alt={`slide-${idx}`}
@@ -84,8 +111,12 @@ const Carousel: React.FC<CarouselProps> = React.memo(function Carousel({
           </div>
         ))}
       </div>
+
+      {/* Buttons */}
       <CarouselButton onClick={prevSlide} direction="prev" size="md" />
       <CarouselButton onClick={nextSlide} direction="next" size="md" />
+
+      {/* Indicator */}
       {showIndicator && (
         <CarouselIndicator
           count={images.length}
