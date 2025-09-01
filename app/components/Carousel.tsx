@@ -30,7 +30,7 @@ const HEIGHTS = {
 type Breakpoint = "base" | "sm" | "md" | "lg" | "xl";
 
 function useBreakpoint(): Breakpoint {
-  const [width, setWidth] = useState(0);
+  const [width, setWidth] = useState(1280);
 
   useEffect(() => {
     const handleResize = () => setWidth(window.innerWidth);
