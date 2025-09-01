@@ -15,7 +15,7 @@ const WIDTHS = {
   base: 320,
   sm: 360,
   md: 520,
-  lg: 1280,
+  lg: 1024,
   xl: 1280,
 } as const;
 
@@ -59,8 +59,8 @@ const Carousel: React.FC<CarouselProps> = React.memo(function Carousel({
   className,
   size,
 }) {
-  const detectedBreakpoint = useBreakpoint(); // luôn gọi hook ở đầu
-  const breakpoint = size ?? detectedBreakpoint; // dùng prop nếu có, không thì lấy từ hook
+  const detectedBreakpoint = useBreakpoint();
+  const breakpoint = size ?? detectedBreakpoint;
   const width = WIDTHS[breakpoint];
   const height = HEIGHTS[breakpoint];
 
@@ -81,7 +81,7 @@ const Carousel: React.FC<CarouselProps> = React.memo(function Carousel({
 
   return (
     <div
-      className={`relative rounded-xl mt-5 max-w-7xl lg:overflow-visible overflow-hidden ${
+      className={`relative rounded-xl mt-5 max-w-7xl xl:overflow-visible overflow-hidden ${
         className ?? ""
       }`}
     >
