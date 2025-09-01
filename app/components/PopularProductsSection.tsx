@@ -202,20 +202,18 @@ const PopularProductsSection: React.FC = () => {
               <ProductCard product={p} key={p.id} />
             ))}
           </div>
-          {startIdx > 0 && (
-            <CarouselButton
-              direction="prev"
-              onClick={handlePrev}
-              size={isLg ? "md" : "sm"}
-            />
-          )}
-          {startIdx + visibleCount < products.length && (
-            <CarouselButton
-              direction="next"
-              onClick={handleNext}
-              size={isLg ? "md" : "sm"}
-            />
-          )}
+          <CarouselButton
+            direction="prev"
+            onClick={handlePrev}
+            size={isLg ? "md" : "sm"}
+            hidden={startIdx <= 0}
+          />
+          <CarouselButton
+            direction="next"
+            onClick={handleNext}
+            size={isLg ? "md" : "sm"}
+            hidden={startIdx + visibleCount >= products.length}
+          />
         </div>
       </div>
     </section>

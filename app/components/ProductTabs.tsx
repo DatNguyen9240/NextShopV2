@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import CarouselButton from "./CarouselButton";
 import ProductsTitle from "./ProductsTitle";
 
@@ -19,6 +19,8 @@ const tabs = [
 const ProductTabs = React.memo(function ProductTabs() {
   const [activeTab, setActiveTab] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [showPrev, setShowPrev] = useState(false);
+  const [showNext, setShowNext] = useState(false);
 
   const handlePrev = () => {
     if (scrollRef.current) {
@@ -31,6 +33,30 @@ const ProductTabs = React.memo(function ProductTabs() {
       scrollRef.current.scrollBy({ left: 80, behavior: "smooth" });
     }
   };
+
+  // Kiểm tra khi nào hiện nút Prev/Next
+  useEffect(() => {
+    const checkShow = () => {
+      if (scrollRef.current) {
+        setShowPrev(scrollRef.current.scrollLeft > 0);
+        setShowNext(
+          scrollRef.current.scrollLeft + scrollRef.current.offsetWidth <
+            scrollRef.current.scrollWidth
+        );
+      }
+    };
+    checkShow();
+    if (scrollRef.current) {
+      scrollRef.current.addEventListener("scroll", checkShow);
+    }
+    window.addEventListener("resize", checkShow);
+    return () => {
+      if (scrollRef.current) {
+        scrollRef.current.removeEventListener("scroll", checkShow);
+      }
+      window.removeEventListener("resize", checkShow);
+    };
+  }, []);
 
   return (
     <div className="relative lg:w-[640px] w-[390px]">
@@ -45,7 +71,12 @@ const ProductTabs = React.memo(function ProductTabs() {
       {/* Tabs + Carousel Button */}
       <div className="relative">
         {/* Prev Button */}
-        <CarouselButton onClick={handlePrev} direction="prev" size="sm" />
+        <CarouselButton
+          onClick={handlePrev}
+          direction="prev"
+          size="sm"
+          hidden={!showPrev}
+        />
 
         {/* Tabs */}
         <div
@@ -68,7 +99,12 @@ const ProductTabs = React.memo(function ProductTabs() {
         </div>
 
         {/* Next Button */}
-        <CarouselButton onClick={handleNext} direction="next" size="sm" />
+        <CarouselButton
+          onClick={handleNext}
+          direction="next"
+          size="sm"
+          hidden={!showNext}
+        />
       </div>
     </div>
   );
