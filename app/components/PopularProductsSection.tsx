@@ -5,6 +5,8 @@ import ProductCard from "./ProductCard";
 import ProductTabs from "./ProductTabs";
 import CarouselButton from "./CarouselButton";
 import ProductsTitle from "./ProductsTitle";
+import NewProductsSection from "./NewProductsSection";
+import Carousel from "./Carousel";
 
 const products = [
   {
@@ -215,6 +217,8 @@ const PopularProductsSection: React.FC = () => {
             hidden={startIdx + visibleCount >= products.length}
           />
         </div>
+        <NewProductsSection />
+        <Carousel size="sm" />
       </div>
     </section>
   );

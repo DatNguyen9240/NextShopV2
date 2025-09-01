@@ -5,7 +5,7 @@ import PopularProductsSection from "./components/PopularProductsSection";
 export default function HomePage() {
   return (
     <main>
-      <Carousel />
+      <Carousel timeout={4000} className="mx-auto" />
       <FeaturedCategories />
       <PopularProductsSection />
     </main>
