@@ -1,14 +1,22 @@
 import React from "react";
 
-const PopularProductsTitle: React.FC = () => (
+type ProductsTitleProps = {
+  title: string;
+  description: string;
+};
+
+const ProductsTitle: React.FC<ProductsTitleProps> = ({
+  title,
+  description,
+}) => (
   <div className="flex flex-col justify-center h-full">
     <h2 className="text-xl font-bold text-gray-800 leading-tight truncate">
-      SẢN PHẨM PHỔ BIẾN
+      {title}
     </h2>
     <p className="text-sm text-gray-500 mt-1 leading-tight truncate">
-      Đừng bỏ lỡ các ưu đãi hiện tại đến hết tháng này.
+      {description}
     </p>
   </div>
 );
 
-export default PopularProductsTitle;
+export default ProductsTitle;

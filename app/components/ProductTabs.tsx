@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useRef } from "react";
 import CarouselButton from "./CarouselButton";
-import PopularProductsTitle from "./PopularProductsTitle";
+import ProductsTitle from "./ProductsTitle";
 
 const tabs = [
   "Quần áo",
@@ -36,7 +36,10 @@ const ProductTabs = React.memo(function ProductTabs() {
     <div className="relative lg:w-[640px] w-[390px]">
       {/* Hiện title ở md trở xuống */}
       <div className="block md:hidden mb-2">
-        <PopularProductsTitle />
+        <ProductsTitle
+          title="Sản phẩm phổ biến"
+          description="Khám phá những sản phẩm được ưa chuộng nhất hiện nay"
+        />
       </div>
 
       {/* Tabs + Carousel Button */}

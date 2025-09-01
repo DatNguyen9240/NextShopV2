@@ -4,7 +4,7 @@ import AdBanner from "./AdBanner";
 import ProductCard from "./ProductCard";
 import ProductTabs from "./ProductTabs";
 import CarouselButton from "./CarouselButton";
-import PopularProductsTitle from "./PopularProductsTitle";
+import ProductsTitle from "./ProductsTitle";
 
 const products = [
   {
@@ -182,7 +182,10 @@ const PopularProductsSection: React.FC = () => {
         <div className="flex items-center justify-between mb-2">
           {/* Chỉ hiện title ở md trở lên */}
           <div className="hidden xl:block">
-            <PopularProductsTitle />
+            <ProductsTitle
+              title="Sản phẩm phổ biến"
+              description="Khám phá những sản phẩm phổ biến tháng 9 này"
+            />
           </div>
           <div className="flex-shrink-0">
             <ProductTabs />
