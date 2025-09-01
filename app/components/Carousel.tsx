@@ -59,7 +59,8 @@ const Carousel: React.FC<CarouselProps> = React.memo(function Carousel({
   className,
   size,
 }) {
-  const breakpoint = size ?? useBreakpoint();
+  const detectedBreakpoint = useBreakpoint(); // luôn gọi hook ở đầu
+  const breakpoint = size ?? detectedBreakpoint; // dùng prop nếu có, không thì lấy từ hook
   const width = WIDTHS[breakpoint];
   const height = HEIGHTS[breakpoint];
 
