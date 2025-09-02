@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
-import CarouselButton from "./CarouselButton";
+import { ButtonPrev, ButtonNext } from "./Button";
 import ProductsTitle from "./ProductsTitle";
 
 const tabs = [
@@ -59,7 +59,7 @@ const ProductTabs = React.memo(function ProductTabs() {
   }, []);
 
   return (
-    <div className="relative lg:w-[640px] w-[390px]">
+    <div className="relative lg:w-[640px] w-[345px] md:w-[600px]">
       {/* Hiện title ở md trở xuống */}
       <div className="block md:hidden mb-2">
         <ProductsTitle
@@ -68,20 +68,15 @@ const ProductTabs = React.memo(function ProductTabs() {
         />
       </div>
 
-      {/* Tabs + Carousel Button */}
+      {/* Tabs + ButtonPrev/ButtonNext */}
       <div className="relative">
         {/* Prev Button */}
-        <CarouselButton
-          onClick={handlePrev}
-          direction="prev"
-          size="sm"
-          hidden={!showPrev}
-        />
+        <ButtonPrev onClick={handlePrev} size="sm" hidden={!showPrev} />
 
         {/* Tabs */}
         <div
           ref={scrollRef}
-          className="flex lg:space-x-2 space-x-0 overflow-x-auto border rounded-lg scrollbar-hide mx-12"
+          className="flex lg:space-x-2 space-x-0 overflow-x-auto border rounded-lg scrollbar-hide mx-6 xl:mx-12 lg:mx-12 md:mx-12"
         >
           {tabs.map((tab, idx) => (
             <button
@@ -99,12 +94,7 @@ const ProductTabs = React.memo(function ProductTabs() {
         </div>
 
         {/* Next Button */}
-        <CarouselButton
-          onClick={handleNext}
-          direction="next"
-          size="sm"
-          hidden={!showNext}
-        />
+        <ButtonNext onClick={handleNext} size="sm" hidden={!showNext} />
       </div>
     </div>
   );

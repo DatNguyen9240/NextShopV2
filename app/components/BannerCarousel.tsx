@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import Image from "next/image";
-import CarouselButton from "./CarouselButton";
+import { ButtonPrev, ButtonNext } from "./Button";
 
 const banners = [
   "/sell_off/01.jpg",
@@ -38,8 +38,8 @@ const BannerCarousel: React.FC = () => {
             />
           </div>
         ))}
-        <CarouselButton direction="prev" onClick={prev} size="md" />
-        <CarouselButton direction="next" onClick={next} size="md" />
+        <ButtonPrev onClick={prev} size="md" />
+        <ButtonNext onClick={next} size="md" />
       </div>
     </div>
   );

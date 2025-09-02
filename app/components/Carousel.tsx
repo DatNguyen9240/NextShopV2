@@ -1,8 +1,9 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import CarouselButton from "./CarouselButton";
+import { ButtonPrev, ButtonNext } from "./Button";
 import CarouselIndicator from "./CarouselIndicator";
+import { useBreakpoint } from "@/app/hooks/useBreakpoint";
 
 const images = [
   "/sell_off/01.jpg",
@@ -26,25 +27,6 @@ const HEIGHTS = {
   lg: 369,
   xl: 369,
 } as const;
-
-type Breakpoint = "base" | "sm" | "md" | "lg" | "xl";
-
-function useBreakpoint(): Breakpoint {
-  const [width, setWidth] = useState(1280);
-
-  useEffect(() => {
-    const handleResize = () => setWidth(window.innerWidth);
-    handleResize(); // chạy lần đầu
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  if (width < 640) return "base";
-  if (width < 768) return "sm";
-  if (width < 1024) return "md";
-  if (width < 1280) return "lg";
-  return "xl";
-}
 
 type CarouselProps = {
   timeout?: number;
@@ -114,8 +96,8 @@ const Carousel: React.FC<CarouselProps> = React.memo(function Carousel({
       </div>
 
       {/* Buttons */}
-      <CarouselButton onClick={prevSlide} direction="prev" size="md" />
-      <CarouselButton onClick={nextSlide} direction="next" size="md" />
+      <ButtonPrev onClick={prevSlide} />
+      <ButtonNext onClick={nextSlide} />
 
       {/* Indicator */}
       {showIndicator && (

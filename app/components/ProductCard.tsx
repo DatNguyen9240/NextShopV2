@@ -2,6 +2,7 @@
 import React from "react";
 import { Expand, Heart } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 type Product = {
   id?: string;
@@ -14,7 +15,7 @@ type Product = {
   rating: number;
 };
 
-const ProductBadge = ({ percent }: { percent: string }) => (
+export const ProductBadge = ({ percent }: { percent: string }) => (
   <span
     className="
     absolute left-2 top-2 bg-blue-100 text-blue-700
@@ -29,25 +30,34 @@ const ProductBadge = ({ percent }: { percent: string }) => (
   </span>
 );
 
-const ProductImageActions = () => (
-  <div className="absolute right-2 top-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30">
-    <button className="bg-white rounded-full shadow flex items-center justify-center w-10 h-10">
-      <Expand size={22} strokeWidth={1} color="#222" />
-    </button>
-    <button className="bg-white rounded-full shadow flex items-center justify-center w-10 h-10">
-      <Heart size={22} strokeWidth={1} color="#222" />
-    </button>
-  </div>
-);
+const ProductImageActions = ({ productId }: { productId?: string }) => {
+  const router = useRouter();
+  return (
+    <div className="absolute right-2 top-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30">
+      <button
+        className="bg-white rounded-full shadow flex items-center justify-center w-10 h-10"
+        onClick={() => productId && router.push(`/products/${productId}`)}
+        title="Xem chi tiết"
+      >
+        <Expand size={22} strokeWidth={1} color="#222" />
+      </button>
+      <button className="bg-white rounded-full shadow flex items-center justify-center w-10 h-10">
+        <Heart size={22} strokeWidth={1} color="#222" />
+      </button>
+    </div>
+  );
+};
 
 const ProductImage = ({
   src,
   alt,
   hoverSrc,
+  productId,
 }: {
   src: string;
   alt: string;
   hoverSrc?: string;
+  productId?: string;
 }) => (
   <div className="relative w-full h-[120px] sm:h-[160px] md:h-[200px] lg:h-[220px] xl:h-[240px] overflow-hidden group mb-6">
     {/* Ảnh gốc */}
@@ -81,7 +91,7 @@ const ProductImage = ({
       />
     )}
     {/* Nút hiện khi hover */}
-    <ProductImageActions />
+    <ProductImageActions productId={productId} />
   </div>
 );
 
@@ -97,17 +107,29 @@ const ProductLabel = ({ label }: { label: string }) => (
   </div>
 );
 
-const ProductStock = ({ inStock }: { inStock: boolean }) => (
-  <div
-    className="
-    text-green-600 text-[10px] md:text-[11px] lg:text-xs mb-1 text-left w-full
-  "
+export const ProductStock = ({
+  inStock,
+  bg = false,
+}: {
+  inStock: boolean;
+  bg?: boolean;
+}) => (
+  <span
+    className={
+      (bg
+        ? `inline-block px-3 py-1 rounded-full text-xs mb-1 ${
+            inStock ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"
+          }`
+        : inStock
+        ? "text-green-600 text-xs mb-1"
+        : "text-red-600 text-xs mb-1") + " text-left"
+    }
   >
     {inStock ? "Còn hàng" : "Hết hàng"}
-  </div>
+  </span>
 );
 
-const ProductRating = ({ rating }: { rating: number }) => (
+export const ProductRating = ({ rating }: { rating: number }) => (
   <div
     className="
     flex mb-2 text-left w-full
@@ -125,32 +147,36 @@ const ProductRating = ({ rating }: { rating: number }) => (
   </div>
 );
 
-const ProductPrice = ({
+export const ProductPrice = ({
   priceOld,
   priceNew,
+  className = "",
 }: {
   priceOld: string;
   priceNew: string;
-}) => (
-  <div
-    className="
-    text-xs md:text-sm lg:text-base mb-1 text-left w-full
-  "
-  >
-    <span className="line-through text-gray-400 mr-2">
-      {Number(priceOld).toLocaleString("vi-VN", {
-        style: "currency",
-        currency: "VND",
-      })}
-    </span>
-    <span className="text-red-600 font-bold text-sm md:text-base lg:text-lg md:block lg:inline">
-      {Number(priceNew).toLocaleString("vi-VN", {
-        style: "currency",
-        currency: "VND",
-      })}
-    </span>
-  </div>
-);
+  className?: string;
+}) => {
+  // Chuyển giá về số và format
+  const old =
+    typeof priceOld === "string"
+      ? Number(priceOld.replace(/[^\d]/g, ""))
+      : priceOld;
+  const newP =
+    typeof priceNew === "string"
+      ? Number(priceNew.replace(/[^\d]/g, ""))
+      : priceNew;
+
+  return (
+    <div className={`flex items-center gap-2 ${className}`}>
+      <span className="line-through text-gray-400">
+        {old.toLocaleString("vi-VN")}đ
+      </span>
+      <span className="text-pink-600 font-bold">
+        {newP.toLocaleString("vi-VN")}đ
+      </span>
+    </div>
+  );
+};
 
 const ProductCard: React.FC<{ product: Product & { imageHover?: string } }> = ({
   product,
@@ -169,13 +195,13 @@ const ProductCard: React.FC<{ product: Product & { imageHover?: string } }> = ({
         src={product.image}
         alt={product.label}
         hoverSrc={product.imageHover}
+        productId={product.id}
       />
       <ProductBadge percent={product.percent} />
     </div>
     <div className="flex-1 flex flex-col justify-start items-start w-full px-2 md:px-3 lg:px-4">
       <ProductLabel label={product.label} />
-      {/* Stock & Rating: md thì cạnh nhau, lg trở lên thì xuống dòng */}
-      <div className="flex flex-col md:flex-row lg:flex-col md:items-center w-full">
+      <div className="flex flex-col md:flex-row lg:flex-col md:items-start w-full text-left">
         <ProductStock inStock={product.inStock} />
         <ProductRating rating={product.rating} />
       </div>

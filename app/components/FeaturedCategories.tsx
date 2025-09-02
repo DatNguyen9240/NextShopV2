@@ -1,4 +1,5 @@
 import React from "react";
+import SectionTitle from "./SectionTitle";
 
 const categories = [
   { label: "Quần áo", icon: "🧥", href: "/quan-ao" },
@@ -11,7 +12,7 @@ const categories = [
 
 const FeaturedCategories: React.FC = () => (
   <section className="hidden lg:block max-w-[1280px] mx-auto mt-10">
-    <h2 className="text-2xl font-bold mb-6 text-gray-800">DANH MỤC NỔI BẬT</h2>
+    <SectionTitle size="lg">DANH MỤC NỔI BẬT</SectionTitle>
     <div className="flex gap-8 justify-center flex-wrap">
       {categories.map((cat) => (
         <a

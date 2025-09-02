@@ -3,10 +3,11 @@ import React, { useState, useEffect } from "react";
 import AdBanner from "./AdBanner";
 import ProductCard from "./ProductCard";
 import ProductTabs from "./ProductTabs";
-import CarouselButton from "./CarouselButton";
+import { ButtonPrev, ButtonNext } from "./Button";
 import ProductsTitle from "./ProductsTitle";
 import NewProductsSection from "./NewProductsSection";
 import Carousel from "./Carousel";
+import { useBreakpoint } from "@/app/hooks/useBreakpoint";
 
 const products = [
   {
@@ -23,8 +24,8 @@ const products = [
   {
     id: "2",
     label: "A-Line Kurti With Sh... 2",
-    priceOld: "1450",
-    priceNew: "1300",
+    priceOld: "145000",
+    priceNew: "130000",
     percent: "8%",
     inStock: true,
     image: "/sell_off/02.jpg",
@@ -142,30 +143,19 @@ const products = [
   },
 ];
 
-function useBreakpoint() {
-  const [isLg, setIsLg] = useState(false);
-
-  useEffect(() => {
-    const media = window.matchMedia("(min-width: 1024px)");
-    const listener = () => setIsLg(media.matches);
-    listener();
-    media.addEventListener("change", listener);
-    return () => media.removeEventListener("change", listener);
-  }, []);
-
-  return { isLg };
-}
+const CARD_CONFIG = {
+  base: { cardWidth: 180, gap: 8, visibleCount: 4, step: 1.5 },
+  sm: { cardWidth: 180, gap: 8, visibleCount: 4, step: 1.5 },
+  md: { cardWidth: 180, gap: 8, visibleCount: 4, step: 1.5 },
+  lg: { cardWidth: 220, gap: 18, visibleCount: 4, step: 2.75 },
+  xl: { cardWidth: 220, gap: 18, visibleCount: 4, step: 2.75 },
+};
 
 const PopularProductsSection: React.FC = () => {
   const [startIdx, setStartIdx] = useState(0);
-  const { isLg } = useBreakpoint();
+  const breakpoint = useBreakpoint();
 
-  // card size + gap theo breakpoint
-  const cardWidth = isLg ? 220 : 180;
-  const gap = isLg ? 18 : 8;
-
-  const visibleCount = 4;
-  const step = isLg ? 2.75 : 1.5;
+  const { cardWidth, gap, visibleCount, step } = CARD_CONFIG[breakpoint];
 
   const handlePrev = () => {
     setStartIdx((prev) => Math.max(prev - step, 0));
@@ -204,16 +194,10 @@ const PopularProductsSection: React.FC = () => {
               <ProductCard product={p} key={p.id} />
             ))}
           </div>
-          <CarouselButton
-            direction="prev"
-            onClick={handlePrev}
-            size={isLg ? "md" : "sm"}
-            hidden={startIdx <= 0}
-          />
-          <CarouselButton
-            direction="next"
+          <ButtonPrev onClick={handlePrev} size={"md"} hidden={startIdx <= 0} />
+          <ButtonNext
             onClick={handleNext}
-            size={isLg ? "md" : "sm"}
+            size={"md"}
             hidden={startIdx + visibleCount >= products.length}
           />
         </div>
