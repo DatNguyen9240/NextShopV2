@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import AdBanner from "./AdBanner";
 import ProductCard from "./ProductCard";
 import ProductTabs from "./ProductTabs";

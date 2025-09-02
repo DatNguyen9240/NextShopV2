@@ -18,6 +18,7 @@ import {
   CompareButton,
   ButtonClose,
 } from "@/app/components/Button";
+import Image from "next/image";
 
 export default function ProductModal({
   params,
@@ -65,20 +66,27 @@ export default function ProductModal({
           {/* Image & thumbnails */}
           <div>
             <div className="relative w-[340px] h-[360px] rounded-xl overflow-hidden mb-3">
-              <img
+              <Image
                 src="/sell_off/01.jpg"
                 alt="Product"
+                width={340}
+                height={360}
                 className="object-cover w-full h-full"
+                style={{ objectFit: "cover" }}
+                priority
               />
               <ProductBadge percent="8%" /> {/* dùng lại component này */}
             </div>
             <div className="flex gap-2 flex-wrap">
-              {[1, 2, 3].map((i) => (
-                <img
+              {[1, 2, 3, 4].map((i) => (
+                <Image
                   key={i}
                   src={`/sell_off/01.jpg`}
                   alt={`Thumb ${i}`}
-                  className="w-20 h-20 object-cover rounded-lg border" // tăng rộng và cao thumbnail
+                  width={80}
+                  height={80}
+                  className="object-cover w-20 h-20 rounded-lg border"
+                  style={{ objectFit: "cover" }}
                 />
               ))}
             </div>

@@ -36,23 +36,23 @@ const ProductTabs = React.memo(function ProductTabs() {
 
   // Kiểm tra khi nào hiện nút Prev/Next
   useEffect(() => {
+    const scrollEl = scrollRef.current;
     const checkShow = () => {
-      if (scrollRef.current) {
-        setShowPrev(scrollRef.current.scrollLeft > 0);
+      if (scrollEl) {
+        setShowPrev(scrollEl.scrollLeft > 0);
         setShowNext(
-          scrollRef.current.scrollLeft + scrollRef.current.offsetWidth <
-            scrollRef.current.scrollWidth
+          scrollEl.scrollLeft + scrollEl.offsetWidth < scrollEl.scrollWidth
         );
       }
     };
     checkShow();
-    if (scrollRef.current) {
-      scrollRef.current.addEventListener("scroll", checkShow);
+    if (scrollEl) {
+      scrollEl.addEventListener("scroll", checkShow);
     }
     window.addEventListener("resize", checkShow);
     return () => {
-      if (scrollRef.current) {
-        scrollRef.current.removeEventListener("scroll", checkShow);
+      if (scrollEl) {
+        scrollEl.removeEventListener("scroll", checkShow);
       }
       window.removeEventListener("resize", checkShow);
     };
