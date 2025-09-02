@@ -27,7 +27,7 @@ export default function ProductModal({
 }) {
   const router = useRouter();
   const { id } = use(params);
-  const [selectedSize, setSelectedSize] = useState("M"); // Trạng thái cho size được chọn
+  const [selectedSize, setSelectedSize] = useState("M");
   const [quantity, setQuantity] = useState(1);
 
   return (
@@ -43,7 +43,7 @@ export default function ProductModal({
         <div className="flex justify-between items-start">
           <div className="w-full">
             <SectionTitle>
-              A-Line Kurti With Sharara & DupattaA-Line Kurti
+              A-Line Kurti With Sharara & DupattaA-Line Kurti- ${id}
             </SectionTitle>
             <div className="-mt-6">
               <div className="text-gray-600">
@@ -52,7 +52,6 @@ export default function ProductModal({
               <ProductRating rating={4} />
             </div>
             <hr className="my-2 border-t border-gray-200" />{" "}
-            {/* Đường line mỏng dài hết ngang */}
           </div>
           <ButtonClose
             onClick={() => router.back()}
@@ -75,7 +74,7 @@ export default function ProductModal({
                 style={{ objectFit: "cover" }}
                 priority
               />
-              <ProductBadge percent="8%" /> {/* dùng lại component này */}
+              <ProductBadge percent="8%" />
             </div>
             <div className="flex gap-2 flex-wrap">
               {[1, 2, 3, 4].map((i) => (
@@ -103,7 +102,7 @@ export default function ProductModal({
             <ProductStock inStock={true} bg />
             <p className="text-gray-700 mb-16">
               Rs: Lorem Ipsum is simply dummy text of the printing and
-              typesetting industry. Lorem Ipsum has been the industry's standard
+              typesetting industry. Lorem Ipsum has been the industry standard
               dummy text ever since the 1500s, when an unknown printer took a
               galley of type ajnd scrambled it to make a type specimen book.
             </p>
