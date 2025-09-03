@@ -1,13 +1,11 @@
 "use client";
-import React, { useState } from "react";
+import React from "react";
 import AdBanner from "./AdBanner";
-import ProductCard from "./ProductCard";
 import ProductTabs from "./ProductTabs";
-import { ButtonPrev, ButtonNext } from "./Button";
 import ProductsTitle from "./ProductsTitle";
 import NewProductsSection from "./NewProductsSection";
 import Carousel from "./Carousel";
-import { useBreakpoint } from "@/app/hooks/useBreakpoint";
+import ProductList from "./ProductCarousel";
 
 const products = [
   {
@@ -132,8 +130,28 @@ const products = [
     rating: 5,
   },
   {
-    id: "13",
-    label: "Men Layerr Regular F... 13",
+    id: "14",
+    label: "Men Layerr Regular F... 14",
+    priceOld: "1200",
+    priceNew: "950",
+    percent: "12%",
+    inStock: true,
+    image: "/products/04.jpg",
+    rating: 5,
+  },
+  {
+    id: "15",
+    label: "Men Layerr Regular F... 15",
+    priceOld: "1200",
+    priceNew: "950",
+    percent: "12%",
+    inStock: true,
+    image: "/products/04.jpg",
+    rating: 5,
+  },
+  {
+    id: "16",
+    label: "16Men Layerr Regular F... 16",
     priceOld: "1200",
     priceNew: "950",
     percent: "12%",
@@ -143,30 +161,7 @@ const products = [
   },
 ];
 
-const CARD_CONFIG = {
-  base: { cardWidth: 180, gap: 8, visibleCount: 4, step: 1.5 },
-  sm: { cardWidth: 180, gap: 8, visibleCount: 4, step: 1.5 },
-  md: { cardWidth: 180, gap: 8, visibleCount: 4, step: 1.5 },
-  lg: { cardWidth: 220, gap: 18, visibleCount: 4, step: 2.75 },
-  xl: { cardWidth: 220, gap: 18, visibleCount: 4, step: 2.75 },
-};
-
 const PopularProductsSection: React.FC = () => {
-  const [startIdx, setStartIdx] = useState(0);
-  const breakpoint = useBreakpoint();
-
-  const { cardWidth, gap, visibleCount, step } = CARD_CONFIG[breakpoint];
-
-  const handlePrev = () => {
-    setStartIdx((prev) => Math.max(prev - step, 0));
-  };
-
-  const handleNext = () => {
-    setStartIdx((prev) =>
-      Math.min(prev + step, products.length - visibleCount)
-    );
-  };
-
   return (
     <section className="w-full xl:mx-[100px] lg:mx-0 mt-10 flex">
       <AdBanner />
@@ -183,24 +178,7 @@ const PopularProductsSection: React.FC = () => {
             <ProductTabs />
           </div>
         </div>
-        <div className="relative">
-          <div
-            className="flex gap-4 transition-transform duration-500 ease-in-out"
-            style={{
-              transform: `translateX(-${startIdx * (cardWidth + gap)}px)`,
-            }}
-          >
-            {products.map((p) => (
-              <ProductCard product={p} key={p.id} />
-            ))}
-          </div>
-          <ButtonPrev onClick={handlePrev} size={"md"} hidden={startIdx <= 0} />
-          <ButtonNext
-            onClick={handleNext}
-            size={"md"}
-            hidden={startIdx + visibleCount >= products.length}
-          />
-        </div>
+        <ProductList products={products} />
         <NewProductsSection />
         <Carousel size="sm" />
       </div>

@@ -167,7 +167,11 @@ export const ProductPrice = ({
       : priceNew;
 
   return (
-    <div className={`flex items-center gap-2 ${className}`}>
+    <div
+      className={`flex items-center gap-2 ${className}
+        text-[11px] md:text-sm lg:text-base xl:text-lg
+      `}
+    >
       <span className="line-through text-gray-400">
         {old.toLocaleString("vi-VN")}đ
       </span>
@@ -184,11 +188,12 @@ const ProductCard: React.FC<{ product: Product & { imageHover?: string } }> = ({
   <div
     className="
     bg-white rounded-xl border border-gray-100 flex flex-col relative transition-shadow duration-200 hover:shadow-2xl
-    md:max-w-[180px] md:min-w-[140px] md:h-[320px]
+    w-full
+    max-w-[150px] min-w-[120px] h-[250px]
+    md:max-w-[180px] md:min-w-[180px] md:h-[320px]
     lg:max-w-[300px] lg:min-w-[222px] lg:h-[398px]
     xl:max-w-[300px] xl:min-w-[222px] xl:h-[398px]
-    w-full
-    "
+  "
   >
     <div className="relative">
       <ProductImage
@@ -201,7 +206,7 @@ const ProductCard: React.FC<{ product: Product & { imageHover?: string } }> = ({
     </div>
     <div className="flex-1 flex flex-col justify-start items-start w-full px-2 md:px-3 lg:px-4">
       <ProductLabel label={product.label} />
-      <div className="flex flex-col md:flex-row lg:flex-col md:items-start w-full text-left">
+      <div className="flex flex-row flex-wrap items-center w-full text-left gap-2">
         <ProductStock inStock={product.inStock} />
         <ProductRating rating={product.rating} />
       </div>
