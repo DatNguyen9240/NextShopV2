@@ -5,7 +5,7 @@ import SearchBar from "./SearchBar";
 import CartIcon from "./CartIcon";
 import Badge from "./Badge";
 import Hotline from "./Hotline";
-import SignUpButton from "./SignUpButton";
+import { SignUpButton } from "./Button";
 
 const Header = () => {
   const [openModal, setOpenModal] = useState(false);

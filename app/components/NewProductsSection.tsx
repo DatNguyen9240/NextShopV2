@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import ProductsTitle from "./ProductsTitle";
 import ProductCard from "./ProductCard";
+import { PaginationButton } from "./Button";
 
 // Dữ liệu mẫu sản phẩm mới
 const newProducts = [
@@ -222,23 +223,21 @@ const NewProductsSection: React.FC = () => {
         ))}
       </div>
       <div className="flex justify-center items-center gap-2 mt-6">
-        <button
-          className="px-3 py-1 rounded bg-gray-200"
+        <PaginationButton
           disabled={page === 1}
           onClick={() => setPage((p) => Math.max(1, p - 1))}
         >
           Trang trước
-        </button>
+        </PaginationButton>
         <span>
           {page} / {totalPages}
         </span>
-        <button
-          className="px-3 py-1 rounded bg-gray-200"
+        <PaginationButton
           disabled={page === totalPages}
           onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
         >
           Trang sau
-        </button>
+        </PaginationButton>
       </div>
     </section>
   );

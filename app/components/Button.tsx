@@ -12,11 +12,12 @@ import {
 type ButtonProps = {
   onClick?: () => void;
   size?: "sm" | "md" | "lg" | number;
-  shape?: "circle" | "rounded" | "square";
+  shape?: "circle" | "rounded" | "square" | "roundedSquare";
   icon?: React.ReactNode;
   className?: string;
   children?: React.ReactNode;
-  hidden?: boolean; // thêm prop hidden
+  hidden?: boolean;
+  disabled?: boolean;
 };
 
 const sizeMap: Record<string, string> = {
@@ -35,6 +36,7 @@ const shapeMap: Record<string, string> = {
   circle: "rounded-full",
   rounded: "rounded-full",
   square: "rounded-none",
+  roundedSquare: "rounded-lg",
 };
 
 const Button: React.FC<ButtonProps> = ({
@@ -44,7 +46,8 @@ const Button: React.FC<ButtonProps> = ({
   icon,
   className = "",
   children,
-  hidden = false, // nhận prop hidden
+  hidden = false,
+  disabled = false,
 }) => {
   let sizeClass = "";
   if (shape === "circle" || shape === "square") {
@@ -66,6 +69,7 @@ const Button: React.FC<ButtonProps> = ({
       className={`${sizeClass} ${shapeClass} ${
         hidden ? "invisible" : ""
       } ${className}`}
+      disabled={disabled}
     >
       {icon && children ? (
         <>
@@ -206,5 +210,38 @@ export const ButtonClose: React.FC<{
     onClick={onClick}
   />
 );
+
+export const PaginationButton: React.FC<ButtonProps> = (props) => (
+  <Button
+    shape="roundedSquare"
+    size="md"
+    className={`transition-colors duration-200
+      ${
+        props.disabled
+          ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+          : "bg-pink-600 text-white hover:bg-pink-700 cursor-pointer shadow-md"
+      }
+      ${props.className ?? ""}
+    `}
+    disabled={props.disabled}
+    hidden={props.hidden}
+    onClick={props.onClick}
+  >
+    {props.children}
+  </Button>
+);
+
+export const SignUpButton = React.memo(function SignUpButton(props) {
+  return (
+    <Button
+      shape="roundedSquare"
+      size="md"
+      className="bg-black text-white font-semibold ml-4 px-6 py-2 text-base hover:bg-gray-900 transition-colors whitespace-nowrap"
+      {...props}
+    >
+      Đăng ký
+    </Button>
+  );
+});
 
 export default Button;
