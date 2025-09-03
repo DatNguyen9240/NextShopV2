@@ -34,7 +34,6 @@ const ProductTabs = React.memo(function ProductTabs() {
     }
   };
 
-  // Kiểm tra khi nào hiện nút Prev/Next
   useEffect(() => {
     const scrollEl = scrollRef.current;
     const checkShow = () => {
@@ -60,7 +59,6 @@ const ProductTabs = React.memo(function ProductTabs() {
 
   return (
     <div className="relative lg:w-[640px] w-[345px] md:w-[600px]">
-      {/* Hiện title ở md trở xuống */}
       <div className="block md:hidden mb-2">
         <ProductsTitle
           title="Sản phẩm phổ biến"
@@ -68,12 +66,9 @@ const ProductTabs = React.memo(function ProductTabs() {
         />
       </div>
 
-      {/* Tabs + ButtonPrev/ButtonNext */}
       <div className="relative">
-        {/* Prev Button */}
         <ButtonPrev onClick={handlePrev} size="sm" hidden={!showPrev} />
 
-        {/* Tabs */}
         <div
           ref={scrollRef}
           className="flex lg:space-x-2 space-x-0 overflow-x-auto border rounded-lg scrollbar-hide mx-6 xl:mx-12 lg:mx-12 md:mx-12"
@@ -93,7 +88,6 @@ const ProductTabs = React.memo(function ProductTabs() {
           ))}
         </div>
 
-        {/* Next Button */}
         <ButtonNext onClick={handleNext} size="sm" hidden={!showNext} />
       </div>
     </div>

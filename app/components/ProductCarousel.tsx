@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useLayoutEffect } from "react";
 import ProductCard from "./ProductCard";
 import { ButtonPrev, ButtonNext } from "./Button";
 import { useBreakpoint } from "@/app/hooks/useBreakpoint";
@@ -21,11 +21,11 @@ type ProductCarouselProps = {
 };
 
 const CARD_CONFIG = {
-  base: { cardWidth: 160, step: 1.5 },
-  sm: { cardWidth: 180, step: 1.5 },
-  md: { cardWidth: 220, step: 1.5 },
-  lg: { cardWidth: 240, step: 2.75 },
-  xl: { cardWidth: 240, step: 2.75 },
+  base: { cardWidth: 140 },
+  sm: { cardWidth: 180 },
+  md: { cardWidth: 220 },
+  lg: { cardWidth: 240 },
+  xl: { cardWidth: 240 },
 };
 
 const ProductCarousel: React.FC<ProductCarouselProps> = ({
@@ -34,14 +34,27 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({
 }) => {
   const [startIdx, setStartIdx] = useState(0);
   const breakpoint = useBreakpoint();
-  const { cardWidth, step } = cardConfig[breakpoint];
+  const { cardWidth } = cardConfig[breakpoint];
 
-  const handlePrev = () => setStartIdx((prev) => Math.max(prev - step, 0));
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const [carouselWidth, setCarouselWidth] = useState(1240);
+
+  useLayoutEffect(() => {
+    if (carouselRef.current) {
+      setCarouselWidth(carouselRef.current.offsetWidth);
+    }
+  }, [breakpoint]);
+
+  const visibleCount = Math.floor(carouselWidth / cardWidth);
+
+  const handlePrev = () => setStartIdx((prev) => Math.max(prev - 2.25, 0));
   const handleNext = () =>
-    setStartIdx((prev) => Math.min(prev + step, products.length - 4));
+    setStartIdx((prev) =>
+      Math.min(prev + 2.25, products.length - visibleCount)
+    );
 
   return (
-    <div className="relative">
+    <div className="relative" ref={carouselRef}>
       <div
         className="flex gap-4 transition-transform duration-500 ease-in-out"
         style={{
@@ -56,7 +69,7 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({
       <ButtonNext
         onClick={handleNext}
         size={"md"}
-        hidden={startIdx + 4 >= products.length}
+        hidden={startIdx + visibleCount >= products.length}
       />
     </div>
   );

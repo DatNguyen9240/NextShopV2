@@ -163,11 +163,14 @@ const products = [
 
 const PopularProductsSection: React.FC = () => {
   return (
-    <section className="w-full xl:mx-[100px] lg:mx-0 mt-10 flex">
-      <AdBanner />
+    <section className="w-full xl:mx-[100px] lg:mx-0 mt-10 flex relative">
+      <div className="hidden xl:block flex-shrink-0" style={{ width: 260 }}>
+        <div className="sticky top-24">
+          <AdBanner />
+        </div>
+      </div>
       <div className="w-[980px] overflow-hidden sm:ml-4 sm:pl-4">
         <div className="flex items-center justify-between mb-2">
-          {/* Chỉ hiện title ở md trở lên */}
           <div className="hidden xl:block">
             <ProductsTitle
               title="Sản phẩm phổ biến"

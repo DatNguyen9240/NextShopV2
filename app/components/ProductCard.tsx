@@ -169,7 +169,7 @@ export const ProductPrice = ({
   return (
     <div
       className={`flex items-center gap-2 ${className}
-        text-[11px] md:text-sm lg:text-base xl:text-lg
+        text-[10px] md:text-xs lg:text-sm xl:text-base
       `}
     >
       <span className="line-through text-gray-400">
@@ -189,10 +189,10 @@ const ProductCard: React.FC<{ product: Product & { imageHover?: string } }> = ({
     className="
     bg-white rounded-xl border border-gray-100 flex flex-col relative transition-shadow duration-200 hover:shadow-2xl
     w-full
-    max-w-[150px] min-w-[120px] h-[250px]
+    max-w-[350px] min-w-[120px] h-[250px]
     md:max-w-[180px] md:min-w-[180px] md:h-[320px]
-    lg:max-w-[300px] lg:min-w-[222px] lg:h-[398px]
-    xl:max-w-[300px] xl:min-w-[222px] xl:h-[398px]
+    lg:max-w-[200px] lg:min-w-[222px] lg:h-[398px]
+    xl:max-w-[200px] xl:min-w-[222px] xl:h-[398px]
   "
   >
     <div className="relative">
