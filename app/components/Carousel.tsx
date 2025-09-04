@@ -5,17 +5,12 @@ import { ButtonPrev, ButtonNext } from "./Button";
 import CarouselIndicator from "./CarouselIndicator";
 import { useBreakpoint } from "@/app/hooks/useBreakpoint";
 
-const images = [
-  "/sell_off/01.jpg",
-  "/sell_off/02.jpg",
-  "/sell_off/03.jpg",
-  "/sell_off/02.jpg",
-];
+const images = ["/sell_off/01.jpg", "/sell_off/02.jpg", "/sell_off/03.jpg"];
 
 const WIDTHS = {
   base: 320,
   sm: 360,
-  md: 520,
+  md: 435,
   lg: 1024,
   xl: 1280,
 } as const;
@@ -95,9 +90,13 @@ const Carousel: React.FC<CarouselProps> = React.memo(function Carousel({
         ))}
       </div>
 
-      {/* Buttons */}
-      <ButtonPrev onClick={prevSlide} />
-      <ButtonNext onClick={nextSlide} />
+      {/* Chỉ hiện nút khi showIndicator true */}
+      {showIndicator && (
+        <>
+          <ButtonPrev onClick={prevSlide} />
+          <ButtonNext onClick={nextSlide} />
+        </>
+      )}
 
       {/* Indicator */}
       {showIndicator && (

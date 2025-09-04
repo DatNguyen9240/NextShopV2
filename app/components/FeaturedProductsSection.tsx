@@ -2,7 +2,8 @@
 import React from "react";
 import SectionTitle from "./SectionTitle";
 import ProductCarousel from "./ProductCarousel";
-
+import Carousel from "./Carousel";
+import ProductsTitle from "./ProductsTitle";
 // Dữ liệu mẫu sản phẩm nổi bật
 const featuredProducts = [
   {
@@ -175,6 +176,20 @@ const FeaturedProductsSection: React.FC = () => (
     </div>
     <div className="px-4">
       <ProductCarousel products={featuredProducts} />
+    </div>
+    <Carousel
+      className="max-w-[1300px] mx-auto"
+      size="md"
+      showIndicator={false}
+    />
+    <div className="mt-10">
+      <ProductsTitle
+        title="Sản phẩm thời trang"
+        description="Không thể bỏ qua những sản phẩm hot nhất!"
+      />
+      <div className="px-4 mt-4">
+        <ProductCarousel products={featuredProducts} />
+      </div>
     </div>
   </section>
 );
