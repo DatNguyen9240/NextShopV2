@@ -129,13 +129,14 @@ export const ProductStock = ({
   </span>
 );
 
-export const ProductRating = ({ rating }: { rating: number }) => (
-  <div
-    className="
-    flex mb-2 text-left w-full
-    text-[10px] md:text-[11px] lg:text-xs
-  "
-  >
+export const ProductRating = ({
+  rating,
+  className = "",
+}: {
+  rating: number;
+  className?: string;
+}) => (
+  <div className={`flex text-left w-full ${className}`}>
     {Array.from({ length: 5 }).map((_, i) => (
       <span
         key={i}
@@ -208,7 +209,7 @@ const ProductCard: React.FC<{ product: Product & { imageHover?: string } }> = ({
       <ProductLabel label={product.label} />
       <div className="flex flex-row flex-wrap items-center w-full text-left gap-2">
         <ProductStock inStock={product.inStock} />
-        <ProductRating rating={product.rating} />
+        <ProductRating rating={product.rating} className="mb-2" />
       </div>
       <ProductPrice priceOld={product.priceOld} priceNew={product.priceNew} />
     </div>

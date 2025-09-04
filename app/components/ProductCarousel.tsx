@@ -18,6 +18,7 @@ type Product = {
 type ProductCarouselProps = {
   products: Product[];
   cardConfig?: typeof CARD_CONFIG;
+  slideStep?: number;
 };
 
 const CARD_CONFIG = {
@@ -31,6 +32,7 @@ const CARD_CONFIG = {
 const ProductCarousel: React.FC<ProductCarouselProps> = ({
   products,
   cardConfig = CARD_CONFIG,
+  slideStep = 2.25,
 }) => {
   const [startIdx, setStartIdx] = useState(0);
   const breakpoint = useBreakpoint();
@@ -47,10 +49,10 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({
 
   const visibleCount = Math.floor(carouselWidth / cardWidth);
 
-  const handlePrev = () => setStartIdx((prev) => Math.max(prev - 2.25, 0));
+  const handlePrev = () => setStartIdx((prev) => Math.max(prev - slideStep, 0));
   const handleNext = () =>
     setStartIdx((prev) =>
-      Math.min(prev + 2.25, products.length - visibleCount)
+      Math.min(prev + slideStep, products.length - visibleCount)
     );
 
   return (
@@ -69,7 +71,7 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({
       <ButtonNext
         onClick={handleNext}
         size={"md"}
-        hidden={startIdx + visibleCount >= products.length}
+        hidden={startIdx + visibleCount >= products.length - 1}
       />
     </div>
   );

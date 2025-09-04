@@ -9,7 +9,7 @@ const images = ["/sell_off/01.jpg", "/sell_off/02.jpg", "/sell_off/03.jpg"];
 
 const WIDTHS = {
   base: 320,
-  sm: 360,
+  sm: 200,
   md: 435,
   lg: 1024,
   xl: 1280,
@@ -17,7 +17,7 @@ const WIDTHS = {
 
 const HEIGHTS = {
   base: 160,
-  sm: 240,
+  sm: 100,
   md: 220,
   lg: 369,
   xl: 369,

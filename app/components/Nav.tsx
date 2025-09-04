@@ -5,7 +5,7 @@ const menu = [
   { label: "Trang chủ", href: "/" },
   {
     label: "Quần áo",
-    href: "/quan-ao",
+    href: "/products/category/010101",
     subMenu: [
       { label: "Nam", href: "/quan-ao/nam" },
       { label: "Nữ", href: "/quan-ao/nu" },

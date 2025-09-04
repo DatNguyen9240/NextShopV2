@@ -183,7 +183,7 @@ const PopularProductsSection: React.FC = () => {
         </div>
         <ProductList products={products} />
         <NewProductsSection />
-        <Carousel size="sm" />
+        <Carousel size="md" />
       </div>
     </section>
   );
