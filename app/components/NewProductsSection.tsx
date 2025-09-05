@@ -1,8 +1,8 @@
 "use client";
 import React, { useState } from "react";
 import ProductsTitle from "./ProductsTitle";
-import ProductCard from "./ProductCard";
-import { PaginationButton } from "./Button";
+import ProductGrid from "./ProductGrid";
+import Pagination from "./Pagination";
 
 // Dữ liệu mẫu sản phẩm mới
 const newProducts = [
@@ -198,7 +198,7 @@ const newProducts = [
   },
 ];
 
-const PAGE_SIZE = 16; // 4 dòng x 4 cột
+const PAGE_SIZE = 12;
 
 const NewProductsSection: React.FC = () => {
   const [page, setPage] = useState(1);
@@ -217,28 +217,13 @@ const NewProductsSection: React.FC = () => {
           description="Sản phẩm được cập nhật mỗi ngày."
         />
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4.5 lg:gap-6 lg:mx-0 mx-2">
-        {productsToShow.map((product) => (
-          <ProductCard key={product.id} product={product} />
-        ))}
-      </div>
-      <div className="flex justify-center items-center gap-2 mt-6">
-        <PaginationButton
-          disabled={page === 1}
-          onClick={() => setPage((p) => Math.max(1, p - 1))}
-        >
-          Trang trước
-        </PaginationButton>
-        <span>
-          {page} / {totalPages}
-        </span>
-        <PaginationButton
-          disabled={page === totalPages}
-          onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-        >
-          Trang sau
-        </PaginationButton>
-      </div>
+      <ProductGrid products={productsToShow} cols={4} />
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        onPageChange={setPage}
+        maxButtons={5}
+      />
     </section>
   );
 };

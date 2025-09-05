@@ -53,13 +53,17 @@ const ProductImage = ({
   alt,
   hoverSrc,
   productId,
+  className = "",
 }: {
   src: string;
   alt: string;
   hoverSrc?: string;
   productId?: string;
+  className?: string;
 }) => (
-  <div className="relative w-full h-[120px] sm:h-[160px] md:h-[200px] lg:h-[220px] xl:h-[240px] overflow-hidden group mb-6">
+  <div
+    className={`relative w-full h-[120px] sm:h-[160px] md:h-[200px] lg:h-[220px] xl:h-[240px] overflow-hidden group mb-6 ${className}`}
+  >
     {/* Ảnh gốc */}
     <Image
       src={src}
@@ -170,7 +174,7 @@ export const ProductPrice = ({
   return (
     <div
       className={`flex items-center gap-2 ${className}
-        text-[10px] md:text-xs lg:text-sm xl:text-base
+        text-[10px] md:text-xs lg:text-sm xl:text-base pb-4
       `}
     >
       <span className="line-through text-gray-400">
@@ -183,18 +187,21 @@ export const ProductPrice = ({
   );
 };
 
-const ProductCard: React.FC<{ product: Product & { imageHover?: string } }> = ({
-  product,
-}) => (
+const ProductCard: React.FC<{
+  product: Product & { imageHover?: string };
+  className?: string;
+  imageClassName?: string;
+}> = ({ product, className = "", imageClassName = "" }) => (
   <div
-    className="
-    bg-white rounded-xl border border-gray-100 flex flex-col relative transition-shadow duration-200 hover:shadow-2xl
-    w-full
-    max-w-[350px] min-w-[120px] h-[250px]
-    md:max-w-[180px] md:min-w-[180px] md:h-[320px]
-    lg:max-w-[200px] lg:min-w-[222px] lg:h-[398px]
-    xl:max-w-[200px] xl:min-w-[222px] xl:h-[398px]
-  "
+    className={`
+      bg-white rounded-xl border border-gray-100 flex flex-col relative transition-shadow duration-200 hover:shadow-2xl
+      w-full
+      max-w-[150px] min-w-[120px]
+      md:max-w-[180px] md:min-w-[180px]
+      lg:max-w-[200px] lg:min-w-[222px]
+      xl:max-w-[390px] xl:min-w-[222px]
+      ${className}
+    `}
   >
     <div className="relative">
       <ProductImage
@@ -202,6 +209,7 @@ const ProductCard: React.FC<{ product: Product & { imageHover?: string } }> = ({
         alt={product.label}
         hoverSrc={product.imageHover}
         productId={product.id}
+        className={imageClassName}
       />
       <ProductBadge percent={product.percent} />
     </div>
