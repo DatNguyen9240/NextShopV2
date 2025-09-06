@@ -1,5 +1,6 @@
 import React from "react";
 import ProductCard from "./ProductCard";
+import ProductCardHorizontal from "./ProductCardHorizontal";
 
 type Product = {
   id?: string;
@@ -37,6 +38,15 @@ const ProductGrid: React.FC<ProductGridProps> = ({
 
   const xlHeightClass =
     cols === 3 ? "xl:h-[300px]" : cols === 2 ? "xl:h-[200px]" : "";
+  if (cols === 1) {
+    return (
+      <div className={`flex flex-col gap-4.5 ${className}`}>
+        {products.map((product) => (
+          <ProductCardHorizontal key={product.id} product={product} />
+        ))}
+      </div>
+    );
+  }
   return (
     <div className={`grid ${colClass} gap-4.5 ${className}`}>
       {products.map((product) => (

@@ -1,5 +1,11 @@
 import React from "react";
 
+const Grid1Icon = () => (
+  <svg width={20} height={20} viewBox="0 0 20 20" fill="none">
+    <rect x="2" y="2" width="16" height="16" fill="currentColor" />
+  </svg>
+);
+
 const Grid2Icon = () => (
   <svg width={20} height={20} viewBox="0 0 20 20" fill="none">
     <rect x="2" y="2" width="7" height="7" fill="currentColor" />
@@ -45,6 +51,7 @@ const Grid4Icon = () => (
 );
 
 const iconMap: Record<number, React.JSX.Element> = {
+  1: <Grid1Icon />,
   2: <Grid2Icon />,
   3: <Grid3Icon />,
   4: <Grid4Icon />,

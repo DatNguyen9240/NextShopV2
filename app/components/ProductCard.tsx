@@ -195,8 +195,8 @@ const ProductCard: React.FC<{
 }> = ({ product, className = "", imageClassName = "" }) => (
   <motion.div
     layout
-    initial={{ scale: 0.95, originX: 1, originY: 1 }}
-    animate={{ scale: 1, originX: 1, originY: 1 }}
+    initial={{ scale: 0.95, originX: 0, originY: 0 }} // originY: 0 là từ trên xuống
+    animate={{ scale: 1, originX: 0, originY: 0 }}
     transition={{ duration: 0.3, ease: "easeInOut" }}
     className={`
       bg-white rounded-xl border border-gray-100 flex flex-col relative transition-shadow duration-200 hover:shadow-2xl

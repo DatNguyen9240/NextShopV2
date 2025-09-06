@@ -165,7 +165,7 @@ const PopularProductsSection: React.FC = () => {
   return (
     <section className="w-full xl:mx-[100px] lg:mx-0 mt-10 flex relative">
       <div className="hidden xl:block flex-shrink-0" style={{ width: 260 }}>
-        <div className="sticky top-24">
+        <div className="sticky top-2">
           <AdBanner />
         </div>
       </div>
