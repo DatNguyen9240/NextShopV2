@@ -4,8 +4,14 @@ import CategoryFilter from "./CategoryFilter";
 import RatingFilter from "./RatingFilter";
 import FeaturedProductAd from "./FeaturedProductAd";
 
-const FilterSidebar: React.FC = () => (
-  <aside className="w-72 p-5 border-r bg-white h-full flex flex-col">
+interface FilterSidebarProps {
+  className?: string;
+}
+
+const FilterSidebar: React.FC<FilterSidebarProps> = ({ className = "" }) => (
+  <aside
+    className={`w-72 p-5 border-r bg-white h-full flex flex-col ${className}`}
+  >
     <CategoryFilter />
     <div className="mt-10">
       <PriceFilter />

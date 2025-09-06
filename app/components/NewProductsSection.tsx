@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import ProductsTitle from "./ProductsTitle";
 import ProductGrid from "./ProductGrid";
 import Pagination from "./Pagination";
+import { useBreakpoint } from "@/app/hooks/useBreakpoint";
 
 // Dữ liệu mẫu sản phẩm mới
 const newProducts = [
@@ -209,6 +210,14 @@ const NewProductsSection: React.FC = () => {
     page * PAGE_SIZE
   );
 
+  const breakpoint = useBreakpoint();
+  const cols =
+    breakpoint === "base" || breakpoint === "sm"
+      ? 2
+      : breakpoint === "md"
+      ? 3
+      : 4;
+
   return (
     <section className="w-full mt-10 px-2 sm:px-4">
       <div className="mb-4">
@@ -217,7 +226,7 @@ const NewProductsSection: React.FC = () => {
           description="Sản phẩm được cập nhật mỗi ngày."
         />
       </div>
-      <ProductGrid products={productsToShow} cols={4} />
+      <ProductGrid products={productsToShow} cols={cols} />
       <Pagination
         page={page}
         totalPages={totalPages}

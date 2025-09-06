@@ -1,7 +1,9 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import ProductGrid from "@/app/components/ProductGrid";
-import { useParams } from "next/navigation";
+import ViewModeSwitcher from "@/app/components/ViewModeSwitcher";
+import { useBreakpoint } from "@/app/hooks/useBreakpoint";
 
 const newProducts = [
   {
@@ -11,7 +13,7 @@ const newProducts = [
     priceNew: "20000",
     percent: "10%",
     inStock: true,
-    image: "/products/poco-c61.jpg",
+    image: "/sell_off/01.jpg",
     rating: 5,
   },
   {
@@ -21,7 +23,7 @@ const newProducts = [
     priceNew: "750",
     percent: "9%",
     inStock: true,
-    image: "/products/bag-red.jpg",
+    image: "/sell_off/02.jpg",
     rating: 4,
   },
   {
@@ -197,17 +199,30 @@ const newProducts = [
 ];
 
 const CategoryPage = () => {
-  const params = useParams();
-  const slug = params?.id;
-  const cols = 3;
+  const breakpoint = useBreakpoint();
+
+  const modes =
+    breakpoint < "md"
+      ? [
+          { key: 2, label: "Grid 2" },
+          { key: 3, label: "Grid 3" },
+        ]
+      : [
+          { key: 4, label: "Grid 4" },
+          { key: 3, label: "Grid 3" },
+        ];
+
+  const [cols, setCols] = useState(modes[0].key);
+  useEffect(() => {
+    setCols(modes[0].key);
+  }, [breakpoint, modes]);
+
   return (
     <div>
-      <ProductGrid
-        products={newProducts}
-        cardClassName={cols < 4 ? "xl:h-[440px]" : ""}
-        imageClassName={cols < 4 ? "xl:h-[290px]" : ""}
-        cols={cols}
-      />
+      <div className="mb-8">
+        <ViewModeSwitcher value={cols} onChange={setCols} modes={modes} />
+      </div>
+      <ProductGrid products={newProducts} cols={cols} />
     </div>
   );
 };

@@ -3,6 +3,7 @@ import React from "react";
 import { Expand, Heart } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 
 type Product = {
   id?: string;
@@ -192,14 +193,18 @@ const ProductCard: React.FC<{
   className?: string;
   imageClassName?: string;
 }> = ({ product, className = "", imageClassName = "" }) => (
-  <div
+  <motion.div
+    layout
+    initial={{ scale: 0.95, originX: 1, originY: 1 }}
+    animate={{ scale: 1, originX: 1, originY: 1 }}
+    transition={{ duration: 0.3, ease: "easeInOut" }}
     className={`
       bg-white rounded-xl border border-gray-100 flex flex-col relative transition-shadow duration-200 hover:shadow-2xl
       w-full
-      max-w-[150px] min-w-[120px]
+      max-w-[250px] min-w-[120px]
       md:max-w-[180px] md:min-w-[180px]
       lg:max-w-[200px] lg:min-w-[222px]
-      xl:max-w-[390px] xl:min-w-[222px]
+      xl:max-w-[490px] xl:min-w-[222px]
       ${className}
     `}
   >
@@ -221,7 +226,7 @@ const ProductCard: React.FC<{
       </div>
       <ProductPrice priceOld={product.priceOld} priceNew={product.priceNew} />
     </div>
-  </div>
+  </motion.div>
 );
 
 export default ProductCard;

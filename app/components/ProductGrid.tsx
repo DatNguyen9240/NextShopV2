@@ -16,16 +16,12 @@ type Product = {
 interface ProductGridProps {
   products: Product[];
   className?: string;
-  cardClassName?: string;
-  imageClassName?: string;
   cols?: number;
 }
 
 const ProductGrid: React.FC<ProductGridProps> = ({
   products,
   className = "",
-  cardClassName = "",
-  imageClassName = "",
   cols = 3,
 }) => {
   const colClass =
@@ -39,14 +35,15 @@ const ProductGrid: React.FC<ProductGridProps> = ({
       ? "grid-cols-4"
       : "grid-cols-1";
 
+  const xlHeightClass =
+    cols === 3 ? "xl:h-[300px]" : cols === 2 ? "xl:h-[200px]" : "";
   return (
-    <div className={`grid ${colClass} gap-4.5 mx-2 ${className}`}>
+    <div className={`grid ${colClass} gap-4.5 ${className}`}>
       {products.map((product) => (
         <ProductCard
           key={product.id}
           product={product}
-          className={cardClassName}
-          imageClassName={imageClassName}
+          imageClassName={xlHeightClass}
         />
       ))}
     </div>
