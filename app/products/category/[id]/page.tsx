@@ -215,7 +215,7 @@ const CategoryPage = () => {
   const [cols, setCols] = useState(modes[0].key);
   useEffect(() => {
     setCols(modes[0].key);
-  }, [breakpoint, modes]);
+  }, [breakpoint]);
 
   return (
     <div>
