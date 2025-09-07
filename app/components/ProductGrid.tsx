@@ -37,10 +37,14 @@ const ProductGrid: React.FC<ProductGridProps> = ({
       : "grid-cols-1";
 
   const xlHeightClass =
-    cols === 3 ? "xl:h-[300px]" : cols === 2 ? "xl:h-[200px]" : "";
+    cols === 3
+      ? "h-[120px] sm:h-[160px] md:h-[300px] lg:h-[240px] xl:h-[300px]"
+      : cols === 2
+      ? "h-[100px] sm:h-[140px] md:h-[180px] lg:h-[200px] xl:h-[200px]"
+      : "";
   if (cols === 1) {
     return (
-      <div className={`flex flex-col gap-4.5 ${className}`}>
+      <div className={`flex flex-col gap-3 ${className}`}>
         {products.map((product) => (
           <ProductCardHorizontal key={product.id} product={product} />
         ))}
@@ -48,7 +52,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({
     );
   }
   return (
-    <div className={`grid ${colClass} gap-4.5 ${className}`}>
+    <div className={`grid ${colClass} gap-4 ${className}`}>
       {products.map((product) => (
         <ProductCard
           key={product.id}

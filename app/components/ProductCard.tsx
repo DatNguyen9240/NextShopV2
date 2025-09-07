@@ -65,7 +65,6 @@ const ProductImage = ({
   <div
     className={`relative w-full h-[120px] sm:h-[160px] md:h-[200px] lg:h-[220px] xl:h-[240px] overflow-hidden group mb-6 ${className}`}
   >
-    {/* Ảnh gốc */}
     <Image
       src={src}
       alt={alt}
@@ -195,15 +194,15 @@ const ProductCard: React.FC<{
 }> = ({ product, className = "", imageClassName = "" }) => (
   <motion.div
     layout
-    initial={{ scale: 0.95, originX: 0, originY: 0 }} // originY: 0 là từ trên xuống
+    initial={{ scale: 0.95, originX: 0, originY: 0 }}
     animate={{ scale: 1, originX: 0, originY: 0 }}
     transition={{ duration: 0.3, ease: "easeInOut" }}
     className={`
       bg-white rounded-xl border border-gray-100 flex flex-col relative transition-shadow duration-200 hover:shadow-2xl
       w-full
       max-w-[250px] min-w-[120px]
-      md:max-w-[180px] md:min-w-[180px]
-      lg:max-w-[200px] lg:min-w-[222px]
+      md:max-w-[380px] md:min-w-[180px]
+      lg:max-w-[235px] lg:min-w-[80px]
       xl:max-w-[490px] xl:min-w-[222px]
       ${className}
     `}

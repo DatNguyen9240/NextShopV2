@@ -33,7 +33,7 @@ const newProducts = [
     priceNew: "460",
     percent: "10%",
     inStock: true,
-    image: "/products/bag-black.jpg",
+    image: "/sell_off/03.jpg",
     rating: 5,
   },
   {
@@ -202,11 +202,8 @@ const CategoryPage = () => {
   const breakpoint = useBreakpoint();
 
   const modes =
-    breakpoint < "md"
-      ? [
-          { key: 2, label: "Grid 2" },
-          { key: 3, label: "Grid 3" },
-        ]
+    breakpoint === "base" || breakpoint === "sm"
+      ? [{ key: 2, label: "Grid 2" }]
       : [
           { key: 4, label: "Grid 4" },
           { key: 3, label: "Grid 3" },
@@ -218,7 +215,7 @@ const CategoryPage = () => {
   }, [breakpoint]);
 
   return (
-    <div>
+    <div className="overflow-hidden lg:px-4">
       <div className="mb-8">
         <ViewModeSwitcher value={cols} onChange={setCols} modes={modes} />
       </div>

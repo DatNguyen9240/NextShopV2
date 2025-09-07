@@ -29,10 +29,9 @@ const ProductCardHorizontal: React.FC<{
     initial={{ scale: 0.8, originX: 0, originY: 0 }}
     animate={{ scale: 1, originX: 0, originY: 0 }}
     transition={{ duration: 0.5, ease: "easeInOut" }}
-    className={`bg-white rounded-xl border border-gray-100 flex flex-row items-center relative transition-shadow duration-200 hover:shadow-2xl w-full min-h-[120px] p-2 ${className}`}
-    style={{ maxWidth: "100%" }}
+    className={`bg-white rounded-xl border border-gray-100 flex flex-row items-center relative transition-shadow duration-200 hover:shadow-2xl w-full max-w-full min-h-[120px] p-2 ${className}`}
   >
-    <div className="relative flex-shrink-0 w-[120px] h-[120px] md:w-[160px] md:h-[160px] lg:w-[180px] lg:h-[180px] xl:w-[200px] xl:h-[200px]">
+    <div className="relative flex-shrink-0 w-[100px] h-[100px] sm:w-[140px] sm:h-[140px] md:w-[180px] md:h-[180px] max-w-full">
       <Image
         src={product.image}
         alt={product.label}
@@ -43,13 +42,20 @@ const ProductCardHorizontal: React.FC<{
       />
       <ProductBadge percent={product.percent} />
     </div>
-    <div className="flex-1 flex flex-col justify-center items-start px-4 py-2">
-      <div className="font-semibold text-gray-800 mb-1 text-left w-full text-base truncate">
+    <div className="flex-1 flex flex-col justify-center items-start px-2 py-1 sm:px-4 sm:py-2 min-w-0">
+      <div className="font-semibold text-gray-800 mb-1 text-left w-full text-[13px] sm:text-base truncate">
         {product.label}
       </div>
       <ProductStock inStock={product.inStock} />
-      <ProductRating rating={product.rating} className="mb-2" />
-      <ProductPrice priceOld={product.priceOld} priceNew={product.priceNew} />
+      <ProductRating
+        rating={product.rating}
+        className="mb-2 text-[15px] sm:text-[18px]"
+      />
+      <ProductPrice
+        priceOld={product.priceOld}
+        priceNew={product.priceNew}
+        className="text-[13px] sm:text-base"
+      />
     </div>
   </motion.div>
 );
