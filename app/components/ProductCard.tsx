@@ -200,7 +200,7 @@ const ProductCard: React.FC<{
     className={`
       bg-white rounded-xl border border-gray-100 flex flex-col relative transition-shadow duration-200 hover:shadow-2xl
       w-full
-      max-w-[250px] min-w-[120px]
+      max-w-[250px] min-w-[130px]
       md:max-w-[380px] md:min-w-[180px]
       lg:max-w-[235px] lg:min-w-[180px]
       xl:max-w-[490px] xl:min-w-[222px]

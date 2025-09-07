@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import ProductGrid from "@/app/components/ProductGrid";
 import ViewModeSwitcher from "@/app/components/ViewModeSwitcher";
-import { useBreakpoint } from "@/app/hooks/useBreakpoint";
+import { useGridMode } from "@/app/hooks/useGridMode";
 
 const newProducts = [
   {
@@ -199,20 +199,7 @@ const newProducts = [
 ];
 
 const CategoryPage = () => {
-  const breakpoint = useBreakpoint();
-
-  const modes =
-    breakpoint === "base" || breakpoint === "sm"
-      ? [{ key: 2, label: "Grid 2" }]
-      : [
-          { key: 4, label: "Grid 4" },
-          { key: 3, label: "Grid 3" },
-        ];
-
-  const [cols, setCols] = useState(modes[0].key);
-  useEffect(() => {
-    setCols(modes[0].key);
-  }, [breakpoint]);
+  const { cols, setCols, modes } = useGridMode();
 
   return (
     <div className="overflow-hidden lg:px-4">
