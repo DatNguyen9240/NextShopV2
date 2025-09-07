@@ -202,7 +202,7 @@ const ProductCard: React.FC<{
       w-full
       max-w-[250px] min-w-[120px]
       md:max-w-[380px] md:min-w-[180px]
-      lg:max-w-[235px] lg:min-w-[80px]
+      lg:max-w-[235px] lg:min-w-[180px]
       xl:max-w-[490px] xl:min-w-[222px]
       ${className}
     `}
