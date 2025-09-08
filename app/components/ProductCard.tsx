@@ -34,10 +34,13 @@ export const ProductBadge = ({ percent }: { percent: string }) => (
 const ProductImageActions = ({ productId }: { productId?: string }) => {
   const router = useRouter();
   return (
-    <div className="absolute right-2 top-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30">
+    <div className="absolute right-2 top-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-40">
       <button
         className="bg-white rounded-full shadow flex items-center justify-center w-10 h-10"
-        onClick={() => productId && router.push(`/product/pop-up/${productId}`)}
+        onClick={(e) => {
+          e.stopPropagation();
+          productId && router.push(`/product/pop-up/${productId}`);
+        }}
         title="Xem chi tiết"
       >
         <Expand size={22} strokeWidth={1} color="#222" />
@@ -92,12 +95,12 @@ const ProductImage = ({
             transition-transform transition-opacity duration-500
             opacity-0 scale-100
             group-hover:opacity-100 group-hover:scale-110
-            absolute top-0 left-0 z-10
+            absolute top-0 left-0 z-20
           "
           sizes="100vw"
         />
       )}
-      {/* Nút hiện khi hover */}
+
       <ProductImageActions productId={productId} />
     </div>
   );
@@ -165,7 +168,6 @@ export const ProductPrice = ({
   priceNew: string;
   className?: string;
 }) => {
-  // Chuyển giá về số và format
   const old =
     typeof priceOld === "string"
       ? Number(priceOld.replace(/[^\d]/g, ""))

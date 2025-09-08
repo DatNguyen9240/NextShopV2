@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import ProductGrid from "@/app/components/ProductGrid";
 import ViewModeSwitcher from "@/app/components/ViewModeSwitcher";
 import { useGridMode } from "@/app/hooks/useGridMode";
