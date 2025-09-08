@@ -37,7 +37,7 @@ const ProductImageActions = ({ productId }: { productId?: string }) => {
     <div className="absolute right-2 top-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30">
       <button
         className="bg-white rounded-full shadow flex items-center justify-center w-10 h-10"
-        onClick={() => productId && router.push(`/products/${productId}`)}
+        onClick={() => productId && router.push(`/product/pop-up/${productId}`)}
         title="Xem chi tiết"
       >
         <Expand size={22} strokeWidth={1} color="#222" />
@@ -61,43 +61,47 @@ const ProductImage = ({
   hoverSrc?: string;
   productId?: string;
   className?: string;
-}) => (
-  <div
-    className={`relative w-full h-[120px] sm:h-[160px] md:h-[200px] lg:h-[220px] xl:h-[240px] overflow-hidden group mb-6 ${className}`}
-  >
-    <Image
-      src={src}
-      alt={alt}
-      fill
-      className="
-        object-cover rounded-t-lg
-        transition-opacity duration-500
-        group-hover:opacity-0
-        absolute top-0 left-0 z-10
-      "
-      sizes="100vw"
-      priority
-    />
-    {/* Ảnh hover */}
-    {hoverSrc && (
+}) => {
+  const router = useRouter();
+  return (
+    <div
+      className={`relative w-full h-[120px] sm:h-[160px] md:h-[200px] lg:h-[220px] xl:h-[240px] overflow-hidden group mb-6 cursor-pointer ${className}`}
+      onClick={() => productId && router.push(`/product/${productId}`)}
+    >
       <Image
-        src={hoverSrc}
+        src={src}
         alt={alt}
         fill
         className="
           object-cover rounded-t-lg
-          transition-transform transition-opacity duration-500
-          opacity-0 scale-100
-          group-hover:opacity-100 group-hover:scale-110
+          transition-opacity duration-500
+          group-hover:opacity-0
           absolute top-0 left-0 z-10
         "
         sizes="100vw"
+        priority
       />
-    )}
-    {/* Nút hiện khi hover */}
-    <ProductImageActions productId={productId} />
-  </div>
-);
+      {/* Ảnh hover */}
+      {hoverSrc && (
+        <Image
+          src={hoverSrc}
+          alt={alt}
+          fill
+          className="
+            object-cover rounded-t-lg
+            transition-transform transition-opacity duration-500
+            opacity-0 scale-100
+            group-hover:opacity-100 group-hover:scale-110
+            absolute top-0 left-0 z-10
+          "
+          sizes="100vw"
+        />
+      )}
+      {/* Nút hiện khi hover */}
+      <ProductImageActions productId={productId} />
+    </div>
+  );
+};
 
 const ProductLabel = ({ label }: { label: string }) => (
   <div

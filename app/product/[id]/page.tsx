@@ -1,5 +1,5 @@
 "use client";
-import ProductModal from "@/app/@modal/products/[id]/page";
+import ProductModal from "@/app/@modal/product/pop-up/[id]/page";
 import ProductCarousel from "@/app/components/ProductCarousel";
 import ProductInforTab from "@/app/components/ProductInforTab";
 import ProductsTitle from "@/app/components/ProductsTitle";
