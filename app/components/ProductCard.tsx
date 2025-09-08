@@ -39,7 +39,9 @@ const ProductImageActions = ({ productId }: { productId?: string }) => {
         className="bg-white rounded-full shadow flex items-center justify-center w-10 h-10"
         onClick={(e) => {
           e.stopPropagation();
-          productId && router.push(`/product/pop-up/${productId}`);
+          if (productId) {
+            router.push(`/product/pop-up/${productId}`);
+          }
         }}
         title="Xem chi tiết"
       >
