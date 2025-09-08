@@ -6,7 +6,6 @@ import SectionTitle from "@/app/components/SectionTitle";
 import {
   ProductRating,
   ProductPrice,
-  ProductBadge,
   ProductStock,
 } from "@/app/components/ProductCard";
 import {
@@ -18,12 +17,32 @@ import {
   CompareButton,
   ButtonClose,
 } from "@/app/components/Button";
-import Image from "next/image";
+import ProductImages from "@/app/components/ProductImages";
+
+function ProductInfo({ id }: { id: string }) {
+  return (
+    <>
+      <SectionTitle>
+        <span className="text-xl md:text-2xl">
+          A-Line Kurti With Sharara & Dupatta - {id}
+        </span>
+      </SectionTitle>
+      <div className="-mt-6 mb-2">
+        <div className="text-gray-600">
+          Brands: <span className="font-semibold">Sangria</span>
+        </div>
+        <ProductRating rating={4} />
+      </div>
+    </>
+  );
+}
 
 export default function ProductModal({
   params,
+  isModal = true,
 }: {
   params: Promise<{ id: string }>;
+  isModal?: boolean;
 }) {
   const router = useRouter();
   const { id } = use(params);
@@ -32,59 +51,24 @@ export default function ProductModal({
 
   return (
     <>
-      {/* Header */}
-      <div className="flex justify-between items-start">
-        <div className="w-full">
-          <SectionTitle>
-            A-Line Kurti With Sharara & DupattaA-Line Kurti- ${id}
-          </SectionTitle>
-          <div className="-mt-6">
-            <div className="text-gray-600">
-              Brands: <span className="font-semibold">Sangria</span>
-            </div>
-            <ProductRating rating={4} />
+      {isModal && (
+        <div className="flex justify-between items-start">
+          <div className="w-full">
+            <ProductInfo id={id} />
+            <hr className="my-2 border-t border-gray-200" />
           </div>
-          <hr className="my-2 border-t border-gray-200" />
+          <ButtonClose
+            className="absolute right-4 top-4 z-20"
+            onClick={() => router.back()}
+          />
         </div>
-        <ButtonClose
-          className="absolute right-4 top-4 z-20"
-          onClick={() => router.back()}
-        />
-      </div>
-      <hr className="mb-4" />
+      )}
+      {isModal && <hr className="mb-4" />}
 
-      {/* Main content */}
-      <div className="flex gap-8 flex-wrap">
-        {/* Image & thumbnails */}
-        <div>
-          <div className="relative w-[340px] h-[360px] rounded-xl overflow-hidden mb-3">
-            <Image
-              src="/sell_off/01.jpg"
-              alt="Product"
-              width={340}
-              height={360}
-              className="object-cover w-full h-full"
-              style={{ objectFit: "cover" }}
-              priority
-            />
-            <ProductBadge percent="8%" />
-          </div>
-          <div className="flex gap-2 flex-wrap">
-            {[1, 2, 3, 4].map((i) => (
-              <Image
-                key={i}
-                src={`/sell_off/01.jpg`}
-                alt={`Thumb ${i}`}
-                width={80}
-                height={80}
-                className="object-cover w-20 h-20 rounded-lg border"
-                style={{ objectFit: "cover" }}
-              />
-            ))}
-          </div>
-        </div>
-        {/* Info & actions */}
+      <div className="flex md:gap-4 xl:gap-18 flex-wrap">
+        <ProductImages />
         <div className="flex-1 min-w-[250px] overflow-hidden">
+          {!isModal && <ProductInfo id={id} />}
           <div className="flex items-center gap-3 mb-2">
             <ProductPrice
               priceOld="145000"
