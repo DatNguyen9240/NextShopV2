@@ -6,11 +6,13 @@ import CartIcon from "./CartIcon";
 import Badge from "./Badge";
 import Hotline from "./Hotline";
 import { SignUpButton } from "./Button";
+import { useRouter } from "next/navigation";
 
 const Header = () => {
   const [openModal, setOpenModal] = useState(false);
   const notificationCount = 2;
   const cartCount = 0;
+  const router = useRouter();
 
   return (
     <header className="bg-white border-b border-gray-200 py-3">
@@ -26,19 +28,15 @@ const Header = () => {
           <span className="block h-[2px] w-4 bg-gray-800 rounded"></span>
         </button>
 
-        {/* Logo */}
         <div className="hidden lg:flex">
           <Logo />
         </div>
 
-        {/* Thanh tìm kiếm chỉ hiện khi md trở lên */}
         <div className="hidden md:flex flex-1 justify-center items-center mx-10">
           <SearchBar />
         </div>
 
-        {/* Thông báo, giỏ hàng, hotline, đăng ký */}
         <div className="flex items-center gap-4">
-          {/* Badge thông báo */}
           <div className="relative mr-2">
             <svg
               width="22"
@@ -54,37 +52,34 @@ const Header = () => {
             <Badge count={notificationCount} />
           </div>
 
-          {/* Giỏ hàng */}
-          <div className="relative mr-2">
+          <div
+            className="relative mr-2 cursor-pointer"
+            onClick={() => router.push("/cart")}
+            title="Xem giỏ hàng"
+          >
             <CartIcon />
             <Badge count={cartCount} />
           </div>
 
-          {/* Hotline */}
           <div className="hidden lg:flex">
             <Hotline phone="0975324568" />
           </div>
 
-          {/* Đăng ký */}
           <div className="hidden lg:flex">
             <SignUpButton />
           </div>
         </div>
       </div>
-      {/* Thanh tìm kiếm nằm dưới chỉ khi md trở xuống */}
       <div className="md:hidden max-w-screen-xl mx-auto px-14 mt-3">
         <SearchBar />
       </div>
 
-      {/* Modal chỉ hiện số điện thoại và đăng ký/đăng nhập */}
       {openModal && (
         <>
-          {/* Overlay trắng mờ */}
           <div
             className="fixed inset-0 z-40"
             onClick={() => setOpenModal(false)}
           />
-          {/* Modal content */}
           <div className="fixed top-0 left-0 h-full w-3/4 max-w-xs bg-white shadow-lg z-50 flex flex-col p-5 animate-slide-in-left">
             <button
               className="self-end mb-4 p-2 rounded hover:bg-gray-100"
@@ -102,13 +97,11 @@ const Header = () => {
                 <path d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
-            {/* Sắp xếp ngang nhau */}
             <div className="flex items-center justify-center gap-4">
               <Hotline phone="0975324568" />
               <SignUpButton />
             </div>
           </div>
-          {/* Animation keyframes */}
           <style>{`
             @keyframes slide-in-left {
               from { transform: translateX(-100%); }
