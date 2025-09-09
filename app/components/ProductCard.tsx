@@ -4,6 +4,7 @@ import { Expand, Heart } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import MoneyVND from "./MoneyVND";
 
 type Product = {
   id?: string;
@@ -166,31 +167,18 @@ export const ProductPrice = ({
   priceNew,
   className = "",
 }: {
-  priceOld: string;
+  priceOld?: string;
   priceNew: string;
   className?: string;
 }) => {
-  const old =
-    typeof priceOld === "string"
-      ? Number(priceOld.replace(/[^\d]/g, ""))
-      : priceOld;
-  const newP =
-    typeof priceNew === "string"
-      ? Number(priceNew.replace(/[^\d]/g, ""))
-      : priceNew;
-
   return (
     <div
       className={`flex items-center gap-2 ${className}
         text-[10px] md:text-xs lg:text-sm xl:text-base pb-4
       `}
     >
-      <span className="line-through text-gray-400">
-        {old.toLocaleString("vi-VN")}đ
-      </span>
-      <span className="text-pink-600 font-bold">
-        {newP.toLocaleString("vi-VN")}đ
-      </span>
+      {priceOld && <MoneyVND value={priceOld} color="text-gray-400" old />}
+      <MoneyVND value={priceNew} color="text-pink-600" />
     </div>
   );
 };

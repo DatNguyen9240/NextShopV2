@@ -2,7 +2,7 @@ import React from "react";
 
 type ProductsTitleProps = {
   title: string;
-  description: string;
+  description?: string;
 };
 
 const ProductsTitle: React.FC<ProductsTitleProps> = ({
