@@ -71,7 +71,7 @@ const ProductTabs = React.memo(function ProductTabs() {
 
         <div
           ref={scrollRef}
-          className="flex lg:space-x-2 space-x-0 overflow-x-auto border rounded-lg scrollbar-hide mx-6 xl:mx-12 lg:mx-12 md:mx-12"
+          className="flex lg:space-x-2 space-x-0 overflow-x-auto rounded-lg scrollbar-hide mx-6 xl:mx-12 lg:mx-12 md:mx-12"
         >
           {tabs.map((tab, idx) => (
             <button

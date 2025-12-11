@@ -1,4 +1,6 @@
+"use client";
 import React from "react";
+import { useRouter } from "next/navigation";
 import {
   ChevronLeft,
   ChevronRight,
@@ -231,12 +233,18 @@ export const PaginationButton: React.FC<ButtonProps> = (props) => (
   </Button>
 );
 
-export const SignUpButton = React.memo(function SignUpButton(props) {
+export const SignUpButton = React.memo(function SignUpButton(props: ButtonProps) {
+  const router = useRouter();
+  const handleClick = () => {
+    if (props.onClick) props.onClick();
+    router.push("/register");
+  };
   return (
     <Button
       shape="roundedSquare"
       size="md"
       className="bg-black text-white font-semibold ml-4 px-6 py-2 text-base hover:bg-gray-900 transition-colors whitespace-nowrap"
+      onClick={handleClick}
       {...props}
     >
       Đăng ký
