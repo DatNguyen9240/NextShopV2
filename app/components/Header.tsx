@@ -1,21 +1,38 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Logo from "./Logo";
 import SearchBar from "./SearchBar";
 import CartIcon from "./CartIcon";
 import Badge from "./Badge";
 import Hotline from "./Hotline";
-import { SignUpButton } from "./Button";
+import { SignUpButton, LoginButton } from "./Button";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/app/providers/AuthProvider";
+import { User, Settings, LogOut, ChevronDown } from "lucide-react";
 
 const Header = () => {
   const [openModal, setOpenModal] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, right: 0 });
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const notificationCount = 2;
   const cartCount = 0;
   const router = useRouter();
+  const { user, isAuthenticated, logout } = useAuth();
+
+  useEffect(() => {
+    if (showUserMenu && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setMenuPosition({
+        top: rect.bottom + window.scrollY + 8,
+        right: window.innerWidth - rect.right,
+      });
+    }
+  }, [showUserMenu]);
 
   return (
-    <header className="bg-white border-b border-gray-200 py-3">
+    <header className="bg-white border-b border-gray-200 py-3 relative z-50">
       <div className="max-w-screen-xl mx-auto px-4 flex items-center justify-between">
         {/* --- Nút 3 gạch khi md trở xuống --- */}
         <button
@@ -66,7 +83,75 @@ const Header = () => {
           </div>
 
           <div className="hidden lg:flex">
-            <SignUpButton />
+            {isAuthenticated ? (
+              <div className="relative">
+                <button
+                  ref={buttonRef}
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="flex items-center gap-2 ml-4 px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+                  aria-label="Tài khoản"
+                >
+                  {user?.avatar ? (
+                    <img 
+                      src={user.avatar} 
+                      alt={user.fullName || user.email}
+                      className="w-8 h-8 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
+                      <User size={18} className="text-gray-600" />
+                    </div>
+                  )}
+                  <span className="font-medium text-sm">{user?.fullName || user?.email}</span>
+                  <ChevronDown size={16} className={`transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
+                </button>
+                
+                {showUserMenu && typeof window !== 'undefined' && createPortal(
+                  <>
+                    <div 
+                      className="fixed inset-0 z-[9998]" 
+                      onClick={() => setShowUserMenu(false)}
+                    />
+                    <div 
+                      className="fixed w-56 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-[9999]"
+                      style={{
+                        top: `${menuPosition.top}px`,
+                        right: `${menuPosition.right}px`,
+                      }}
+                    >
+                      <button
+                        onClick={() => {
+                          setShowUserMenu(false);
+                          router.push('/account/settings');
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      >
+                        <Settings size={16} />
+                        <span>Cài đặt tài khoản</span>
+                      </button>
+                      <hr className="my-2 border-gray-200" />
+                      <button
+                        onClick={async () => {
+                          setShowUserMenu(false);
+                          await logout();
+                          router.push('/');
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                      >
+                        <LogOut size={16} />
+                        <span>Đăng xuất</span>
+                      </button>
+                    </div>
+                  </>,
+                  document.body
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center">
+                <LoginButton />
+                <SignUpButton />
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -97,9 +182,52 @@ const Header = () => {
                 <path d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
-            <div className="flex items-center justify-center gap-4">
+            <div className="flex flex-col gap-4">
               <Hotline phone="0975324568" />
-              <SignUpButton />
+              {isAuthenticated ? (
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg">
+                    {user?.avatar ? (
+                      <img 
+                        src={user.avatar} 
+                        alt={user.fullName || user.email}
+                        className="w-8 h-8 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
+                        <User size={18} className="text-gray-600" />
+                      </div>
+                    )}
+                    <span className="font-medium text-sm">{user?.fullName || user?.email}</span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setOpenModal(false);
+                      router.push('/account/settings');
+                    }}
+                    className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                  >
+                    <Settings size={16} />
+                    <span>Cài đặt tài khoản</span>
+                  </button>
+                  <button
+                    onClick={async () => {
+                      setOpenModal(false);
+                      await logout();
+                      router.push('/');
+                    }}
+                    className="flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                  >
+                    <LogOut size={16} />
+                    <span>Đăng xuất</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  <LoginButton />
+                  <SignUpButton />
+                </div>
+              )}
             </div>
           </div>
           <style>{`

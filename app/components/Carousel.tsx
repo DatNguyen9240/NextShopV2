@@ -5,7 +5,7 @@ import { ButtonPrev, ButtonNext } from "./Button";
 import CarouselIndicator from "./CarouselIndicator";
 import { useBreakpoint } from "@/app/hooks/useBreakpoint";
 
-const images = ["/sell_off/01.jpg", "/sell_off/02.jpg", "/sell_off/03.jpg"];
+// No fallback images: Carousel requires `images` prop to render slides.
 
 const WIDTHS = {
   base: 320,
@@ -28,6 +28,7 @@ type CarouselProps = {
   showIndicator?: boolean;
   className?: string;
   size?: "base" | "sm" | "md" | "lg" | "xl";
+  images?: string[];
 };
 
 const Carousel: React.FC<CarouselProps> = React.memo(function Carousel({
@@ -35,6 +36,7 @@ const Carousel: React.FC<CarouselProps> = React.memo(function Carousel({
   showIndicator = true,
   className,
   size,
+  images,
 }) {
   const detectedBreakpoint = useBreakpoint();
   const breakpoint = size ?? detectedBreakpoint;
@@ -43,17 +45,21 @@ const Carousel: React.FC<CarouselProps> = React.memo(function Carousel({
 
   const [activeIndex, setActiveIndex] = useState(0);
 
+  const slides = images ?? [];
+
+  if (slides.length === 0) return null;
+
   useEffect(() => {
     if (!timeout) return;
     const timer = setTimeout(() => {
-      setActiveIndex((prev) => (prev + 1) % images.length);
+      setActiveIndex((prev) => (prev + 1) % slides.length);
     }, timeout);
     return () => clearTimeout(timer);
   }, [activeIndex, timeout]);
 
   const prevSlide = () =>
-    setActiveIndex((prev) => (prev - 1 + images.length) % images.length);
-  const nextSlide = () => setActiveIndex((prev) => (prev + 1) % images.length);
+    setActiveIndex((prev) => (prev - 1 + slides.length) % slides.length);
+  const nextSlide = () => setActiveIndex((prev) => (prev + 1) % slides.length);
   const goToSlide = (idx: number) => setActiveIndex(idx);
 
   return (
@@ -66,12 +72,12 @@ const Carousel: React.FC<CarouselProps> = React.memo(function Carousel({
       <div
         className="flex transition-transform duration-700 ease-in-out"
         style={{
-          width: width * images.length,
+          width: width * slides.length,
           transform: `translateX(-${activeIndex * width}px)`,
           height,
         }}
       >
-        {images.map((src, idx) => (
+        {slides.map((src, idx) => (
           <div
             key={idx}
             style={{ width, height }}
@@ -101,7 +107,7 @@ const Carousel: React.FC<CarouselProps> = React.memo(function Carousel({
       {/* Indicator */}
       {showIndicator && (
         <CarouselIndicator
-          count={images.length}
+          count={slides.length}
           activeIndex={activeIndex}
           onSelect={goToSlide}
         />

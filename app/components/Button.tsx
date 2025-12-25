@@ -252,4 +252,23 @@ export const SignUpButton = React.memo(function SignUpButton(props: ButtonProps)
   );
 });
 
+export const LoginButton = React.memo(function LoginButton(props: ButtonProps) {
+  const router = useRouter();
+  const handleClick = () => {
+    if (props.onClick) props.onClick();
+    router.push("/login");
+  };
+  return (
+    <Button
+      shape="roundedSquare"
+      size="md"
+      className="bg-white text-black border border-gray-300 font-semibold ml-2 px-6 py-2 text-base hover:bg-gray-100 transition-colors whitespace-nowrap"
+      onClick={handleClick}
+      {...props}
+    >
+      Đăng nhập
+    </Button>
+  );
+});
+
 export default Button;

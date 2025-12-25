@@ -52,7 +52,7 @@ instance.interceptors.response.use(
     const originalRequest = (error.config as any) || {};
 
     if (error.response?.status === 401 && !originalRequest._retry) {
-      if (originalRequest.url?.includes('/auth/refresh') || originalRequest.url?.includes('/auth/login')) {
+      if (originalRequest.url?.includes('/api/auth/refresh') || originalRequest.url?.includes('/api/auth/login')) {
         eraseCookie('accessToken');
         eraseCookie('refreshToken');
         return Promise.reject(error);
@@ -76,7 +76,7 @@ instance.interceptors.response.use(
 
       return new Promise(async (resolve, reject) => {
         try {
-          const resp = await axios.post(`${baseURL}/auth/refresh`, { refreshToken });
+          const resp = await axios.post(`${baseURL}/api/auth/refresh`, { refreshToken });
           const { accessToken, refreshToken: newRefresh } = resp.data;
           if (typeof window !== 'undefined') {
             setCookie('accessToken', accessToken, 1); // short lived

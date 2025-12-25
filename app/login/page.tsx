@@ -1,40 +1,26 @@
 "use client";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/app/providers/AuthProvider";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setMessage(null);
     try {
-      const res = await fetch(`${API_URL}/api/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setMessage(data?.message || "Login failed");
-      } else {
-        // backend returns accessToken and refreshToken in response structure
-        const accessToken = data?.accessToken || data?.data?.accessToken;
-        const refreshToken = data?.refreshToken || data?.data?.refreshToken;
-        if (accessToken) localStorage.setItem("accessToken", accessToken);
-        if (refreshToken) localStorage.setItem("refreshToken", refreshToken);
-        setMessage(data?.message || "Login successful");
-        setTimeout(() => router.push("/"), 500);
-      }
+      await login({ email, password });
+      setMessage("Đăng nhập thành công!");
+      setTimeout(() => router.push("/"), 500);
     } catch (err: any) {
-      setMessage(err?.message || "Network error");
+      setMessage(err?.response?.data?.message || err?.message || "Đăng nhập thất bại");
     } finally {
       setLoading(false);
     }
