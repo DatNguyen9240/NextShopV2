@@ -5,7 +5,7 @@ import { ButtonPrev, ButtonNext } from "./Button";
 import ProductsTitle from "./ProductsTitle";
 import { getCategories } from "../services/categoryService";
 
-const ProductTabs = React.memo(function ProductTabs() {
+const ProductTabs = React.memo(function ProductTabs({ onChange }: { onChange?: (categoryId?: string) => void }) {
 
   const [activeTab, setActiveTab] = useState(0);
   const [tabs, setTabs] = useState<{ name: string; categoryId: string }[]>([]);
@@ -14,16 +14,25 @@ const ProductTabs = React.memo(function ProductTabs() {
   const [showPrev, setShowPrev] = useState(false);
   const [showNext, setShowNext] = useState(false);
 
+  const initializedRef = useRef(false);
+
   useEffect(() => {
     setLoading(true);
     getCategories()
       .then((data) => {
         if (Array.isArray(data)) {
-          setTabs(data.map((c: any) => ({ name: c.name, categoryId: c.categoryId })));
+          // prepend an "Tất cả" tab so users can clear the category filter
+          const list = [{ name: "Tất cả", categoryId: "" }, ...data.map((c: any) => ({ name: c.name, categoryId: c.categoryId }))];
+          setTabs(list);
+          // notify parent with initial selection (All) only once
+          if (!initializedRef.current && typeof onChange === 'function') {
+            onChange(undefined);
+            initializedRef.current = true;
+          }
         }
       })
       .finally(() => setLoading(false));
-  }, []);
+  }, [onChange]);
 
   const handlePrev = () => {
     if (scrollRef.current) {
@@ -103,8 +112,11 @@ const ProductTabs = React.memo(function ProductTabs() {
           ) : (
             tabs.map((tab, idx) => (
               <button
-                key={tab.categoryId}
-                onClick={() => setActiveTab(idx)}
+                key={tab.categoryId || `all-${idx}`}
+                onClick={() => {
+                  setActiveTab(idx);
+                  if (typeof onChange === 'function') onChange(tab.categoryId || undefined);
+                }}
                 className={`pb-1 text-sm font-medium flex-1 text-center lg:min-w-[80px] min-w-[100px] ${
                   activeTab === idx
                     ? "text-blue-600 border-b-2 border-blue-600"

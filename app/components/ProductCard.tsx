@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import MoneyVND from "./MoneyVND";
 
-type Product = {
+export type Product = {
   id?: string;
   label: string;
   priceOld: string;

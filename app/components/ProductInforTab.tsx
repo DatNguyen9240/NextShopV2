@@ -8,23 +8,21 @@ type Tab = {
 
 const defaultTabs: Tab[] = [
   {
-    label: "Description",
+    label: "Mô tả",
     content: (
       <p>
-        Lorem Ipsum is simply dummy text of the printing and typesetting
-        industry. Lorem Ipsum has been the industry standard dummy text ever
-        since the 1500s, when an unknown printer took a galley of type and
-        scrambled it to make a type specimen book.
+        Đây là phần mô tả sản phẩm. Nội dung mẫu bằng tiếng Việt, mô tả chi tiết về chất liệu, kích thước,
+        tính năng và hướng dẫn sử dụng sản phẩm.
       </p>
     ),
   },
   {
-    label: "Additional Info",
-    content: <p>Additional product information goes here.</p>,
+    label: "Thông tin bổ sung",
+    content: <p>Thông tin bổ sung về sản phẩm (kích thước, hướng dẫn bảo quản, xuất xứ, ...).</p>,
   },
   {
-    label: "Reviews (9)",
-    content: <p>Reviews content goes here.</p>,
+    label: "Đánh giá (9)",
+    content: <p>Nội dung đánh giá của khách hàng sẽ hiển thị ở đây.</p>,
   },
 ];
 

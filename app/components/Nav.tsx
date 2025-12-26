@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -8,7 +8,6 @@ interface NavProps {
 }
 
 const Nav = React.memo(function Nav({ categories }: NavProps) {
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
   const pathname = usePathname();
 
   // Lấy các category cha (không có ParentId)
@@ -31,17 +30,7 @@ const Nav = React.memo(function Nav({ categories }: NavProps) {
     })),
   ];
 
-  // Auto-open parent menu when current pathname matches a parent or its child
-  useEffect(() => {
-    if (!pathname) return;
-    const idx = menu.findIndex((item) => {
-      if (item.href === "/") return pathname === "/";
-      if (pathname.startsWith(item.href)) return true;
-      if (item.subMenu && item.subMenu.some((s: any) => pathname.startsWith(s.href))) return true;
-      return false;
-    });
-    setOpenIndex(idx >= 0 ? idx : null);
-  }, [pathname]);
+  // NOTE: we intentionally do NOT auto-open submenus based on route. Dropdown visibility is purely on hover.
 
   return (
     <nav className="w-full bg-white border-b border-gray-200 flex justify-center hidden lg:flex">
@@ -50,8 +39,6 @@ const Nav = React.memo(function Nav({ categories }: NavProps) {
           <div
             key={item.label}
             className="relative group"
-            onMouseEnter={() => item.subMenu && setOpenIndex(idx)}
-            onMouseLeave={() => item.subMenu && setOpenIndex(null)}
           >
             <Link
               href={item.href}
@@ -86,11 +73,7 @@ const Nav = React.memo(function Nav({ categories }: NavProps) {
             </Link>
             {item.subMenu && (
               <div
-                className={`absolute left-0 top-full mt-2 bg-white shadow-lg rounded z-10 min-w-[160px] overflow-hidden transition-all duration-200 ease-in-out ${
-                  openIndex === idx
-                    ? "opacity-100 visible transform scale-100"
-                    : "opacity-0 invisible transform scale-95"
-                }`}
+                className="absolute left-0 top-full mt-2 bg-white shadow-lg rounded z-10 min-w-[160px] overflow-hidden transition-all duration-200 ease-in-out opacity-0 invisible transform scale-95 group-hover:opacity-100 group-hover:visible group-hover:scale-100"
               >
                 {item.subMenu.map((sub) => (
                   <Link

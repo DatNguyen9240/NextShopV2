@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, use } from "react";
+import { useState, use, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import SectionTitle from "@/app/components/SectionTitle";
 import {
@@ -18,20 +18,43 @@ import {
   ButtonClose,
 } from "@/app/components/Button";
 import ProductImages from "@/app/components/ProductImages";
+import { getProductById } from "@/app/services/productService";
 
-function ProductInfo({ id }: { id: string }) {
+type Variant = {
+  productVariantId: string;
+  basePrice: number;
+  priceAfterDiscount: number;
+  imageUrl?: string;
+  imgHover?: string;
+  thumbnailUrl?: string;
+  isDefault?: boolean;
+  stockQuantity?: number;
+  size?: string | null;
+  color?: string | null;
+};
+
+type ProductDto = {
+  productId: string;
+  name: string;
+  brand?: string | null;
+  averageRating?: number;
+  description?: string | null;
+  images?: string[];
+  variants?: Variant[];
+};
+
+function ProductInfo({ product }: { product?: ProductDto | null }) {
+  if (!product) return null;
   return (
     <>
       <SectionTitle>
-        <span className="text-xl md:text-2xl">
-          A-Line Kurti With Sharara & Dupatta - {id}
-        </span>
+        <span className="text-xl md:text-2xl">{product.name}</span>
       </SectionTitle>
       <div className="-mt-6 mb-2">
         <div className="text-gray-600">
-          Brands: <span className="font-semibold">Sangria</span>
+          Brands: <span className="font-semibold">{product.brand}</span>
         </div>
-        <ProductRating rating={4} />
+        <ProductRating rating={Math.round(product.averageRating || 0)} />
       </div>
     </>
   );
@@ -46,16 +69,51 @@ export default function ProductModal({
 }) {
   const router = useRouter();
   const { id } = use(params);
-  const [selectedSize, setSelectedSize] = useState("M");
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
+  const [product, setProduct] = useState<ProductDto | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    async function load() {
+      setLoading(true);
+      try {
+        // Use central product service
+        const p = await getProductById(id);
+        if (!mounted) return;
+        if (p) {
+          setProduct(p as ProductDto);
+          const def = (p?.variants || []).find((v: any) => v.isDefault) as Variant | undefined;
+          setSelectedVariant(def ?? (p?.variants && p?.variants.length > 0 ? p.variants[0] : null));
+          if (def && def.size) setSelectedSize(def.size);
+        } else {
+          console.error("Product load failed: no data returned");
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+    load();
+    return () => {
+      mounted = false;
+    };
+  }, [id]);
+
+  // Build images array from selectedVariant and product, but DO NOT fallback to local placeholder images
+  const imagesFromVariant = selectedVariant?.imageUrl ? [selectedVariant.imageUrl, ...(product?.images ?? [])] : (product?.images ?? []);
+  // While loading, pass undefined so ProductImages shows skeleton; after loaded, pass either images array or empty array
+  const imagesProp = loading ? undefined : (imagesFromVariant.length > 0 ? imagesFromVariant : []);
 
   return (
     <>
       {isModal && (
         <div className="flex justify-between items-start">
           <div className="w-full">
-            <ProductInfo id={id} />
-            <hr className="my-2 border-t border-gray-200" />
+            <ProductInfo product={product} />
           </div>
           <ButtonClose
             className="absolute right-4 top-4 z-20"
@@ -66,46 +124,49 @@ export default function ProductModal({
       {isModal && <hr className="mb-4" />}
 
       <div className="flex md:gap-4 xl:gap-18 flex-wrap">
-        <ProductImages />
+        <ProductImages images={imagesProp} />
         <div className="flex-1 min-w-[250px] overflow-hidden">
-          {!isModal && <ProductInfo id={id} />}
-          <div className="flex items-center gap-3 mb-2">
-            <ProductPrice
-              priceOld="145000"
-              priceNew="130000"
-              className="text-2xl"
-            />
-          </div>
-          <ProductStock inStock={true} bg />
-          <p className="text-gray-700 mb-16">
-            Rs: Lorem Ipsum is simply dummy text of the printing and typesetting
-            industry. Lorem Ipsum has been the industry standard dummy text ever
-            since the 1500s, when an unknown printer took a galley of type ajnd
-            scrambled it to make a type specimen book.
-          </p>
-          <div className="mb-4 flex items-center">
-            <span className="mr-2 text-black">Size:</span>
-            {["S", "M", "L", "XL"].map((size) => (
-              <ButtonSize
-                key={size}
-                value={size}
-                selected={selectedSize === size}
-                onClick={() => setSelectedSize(size)}
-              />
-            ))}
-          </div>
-          <div className="flex items-center gap-4 my-6">
-            <ButtonMinus
-              onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-            />
-            <span className="mx-2 text-xl text-black">{quantity}</span>
-            <ButtonPlus onClick={() => setQuantity((q) => q + 1)} />
-            <AddToCartButton />
-          </div>
-          <div className="flex gap-3">
-            <WishlistButton />
-            <CompareButton />
-          </div>
+          {!isModal && <ProductInfo product={product} />}
+
+          {loading ? (
+            <div>Loading...</div>
+          ) : (
+            <>
+              <div className="flex items-center gap-3 mb-2">
+                <ProductPrice
+                  priceOld={selectedVariant ? String(selectedVariant.basePrice) : ""}
+                  priceNew={selectedVariant ? String(selectedVariant.priceAfterDiscount) : "0"}
+                  className="text-2xl"
+                />
+              </div>
+              <ProductStock inStock={(selectedVariant?.stockQuantity ?? 0) > 0} bg />
+
+              <p className="text-gray-700 mb-16">{product?.description}</p>
+
+              <div className="mb-4 flex items-center">
+                <span className="mr-2 text-black">Size:</span>
+                {Array.from(new Set((product?.variants || []).map((v) => v.size || "M"))).map((size) => (
+                  <ButtonSize
+                    key={String(size)}
+                    value={String(size)}
+                    selected={selectedSize === String(size)}
+                    onClick={() => setSelectedSize(String(size))}
+                  />
+                ))}
+              </div>
+
+              <div className="flex items-center gap-4 my-6">
+                <ButtonMinus onClick={() => setQuantity((q) => Math.max(1, q - 1))} />
+                <span className="mx-2 text-xl text-black">{quantity}</span>
+                <ButtonPlus onClick={() => setQuantity((q) => q + 1)} />
+                <AddToCartButton />
+              </div>
+              <div className="flex gap-3">
+                <WishlistButton />
+                <CompareButton />
+              </div>
+            </>
+          )}
         </div>
       </div>
     </>

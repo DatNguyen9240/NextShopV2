@@ -2,18 +2,7 @@ import React, { useState, useRef, useLayoutEffect } from "react";
 import ProductCard from "./ProductCard";
 import { ButtonPrev, ButtonNext } from "./Button";
 import { useBreakpoint } from "@/app/hooks/useBreakpoint";
-
-type Product = {
-  id: string;
-  label: string;
-  priceOld: string;
-  priceNew: string;
-  percent: string;
-  inStock: boolean;
-  image: string;
-  imageHover?: string;
-  rating: number;
-};
+import { Product } from "./ProductCard";
 
 type ProductCarouselProps = {
   products: Product[];

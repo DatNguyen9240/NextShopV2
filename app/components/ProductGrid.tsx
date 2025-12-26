@@ -1,18 +1,7 @@
 import React from "react";
 import ProductCard from "./ProductCard";
 import ProductCardHorizontal from "./ProductCardHorizontal";
-
-type Product = {
-  id?: string;
-  label: string;
-  priceOld: string;
-  priceNew: string;
-  percent: string;
-  inStock: boolean;
-  image: string;
-  imageHover?: string;
-  rating: number;
-};
+import { Product } from "./ProductCard";
 
 interface ProductGridProps {
   products: Product[];
