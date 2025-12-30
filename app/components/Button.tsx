@@ -90,15 +90,17 @@ const Button: React.FC<ButtonProps> = ({
 export const AddToCartButton: React.FC<{
   onClick?: () => void;
   className?: string;
-}> = ({ onClick, className = "" }) => (
+  disabled?: boolean;
+}> = ({ onClick, className = "", disabled = false }) => (
   <Button
     shape="rounded"
     size="md"
-    className={`bg-pink-600 hover:bg-pink-700 text-white flex items-center justify-center ${className}`}
+    className={`bg-pink-600 hover:bg-pink-700 text-white flex items-center justify-center ${disabled ? 'opacity-50 pointer-events-none' : ''} ${className}`}
     icon={<span className="text-xl mr-2">🛒</span>}
     onClick={onClick}
+    disabled={disabled}
   >
-    Add To Cart
+    Thêm vào giỏ hàng
   </Button>
 );
 
@@ -131,7 +133,7 @@ export const WishlistButton: React.FC<{
     icon={<Heart className="w-3.5 h-3.5" strokeWidth={1} />}
     onClick={onClick}
   >
-    ADD TO WISHLIST
+    Thêm yêu thích
   </Button>
 );
 
@@ -146,7 +148,7 @@ export const CompareButton: React.FC<{
     icon={<Shuffle className="w-3.5 h-3.5" strokeWidth={1} />}
     onClick={onClick}
   >
-    COMPARE
+    So sánh
   </Button>
 );
 

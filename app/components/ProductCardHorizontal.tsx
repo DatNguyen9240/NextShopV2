@@ -70,7 +70,7 @@ const ProductCardHorizontal: React.FC<{
         <div className="font-semibold text-gray-800 mb-1 text-left w-full text-[13px] sm:text-base truncate">
           {product.label}
         </div>
-        <ProductStock inStock={product.inStock} />
+        <ProductStock inStock={product.inStock} count={product.totalStockQuantity ?? (product.inStock ? 1 : 0)} />
         <ProductRating
           rating={product.rating}
           className="mb-2 text-[15px] sm:text-[18px]"

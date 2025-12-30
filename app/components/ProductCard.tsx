@@ -15,6 +15,7 @@ export type Product = {
   inStock: boolean;
   image: string;
   rating: number;
+  totalStockQuantity?: number;
 };
 
 export const ProductBadge = ({ percent }: { percent: string }) => (
@@ -124,9 +125,11 @@ const ProductLabel = ({ label }: { label: string }) => (
 export const ProductStock = ({
   inStock,
   bg = false,
+  count,
 }: {
   inStock: boolean;
   bg?: boolean;
+  count?: number | null;
 }) => (
   <span
     className={
@@ -136,10 +139,19 @@ export const ProductStock = ({
           }`
         : inStock
         ? "text-green-600 text-xs mb-1"
-        : "text-red-600 text-xs mb-1") + " text-left"
+        : "text-red-600 text-xs mb-1") + " text-left flex items-center gap-2"
     }
   >
-    {inStock ? "Còn hàng" : "Hết hàng"}
+    {inStock ? (
+      <>
+        <span>{"Còn hàng"}</span>
+        {typeof count === "number" && (
+          <span className="text-gray-600 text-[12px]">({count})</span>
+        )}
+      </>
+    ) : (
+      "Hết hàng"
+    )}
   </span>
 );
 
@@ -171,13 +183,24 @@ export const ProductPrice = ({
   priceNew: string;
   className?: string;
 }) => {
+  // Only show the old price when it represents a true discount (old > new)
+  const parseNumber = (v?: string) => {
+    if (!v) return NaN;
+    const n = Number(String(v).replace(/[^0-9.-]+/g, ""));
+    return Number.isFinite(n) ? n : NaN;
+  };
+
+  const oldN = parseNumber(priceOld);
+  const newN = parseNumber(priceNew);
+  const showOld = !Number.isNaN(oldN) && !Number.isNaN(newN) && oldN > newN;
+
   return (
     <div
       className={`flex items-center gap-2 ${className}
         text-[10px] md:text-xs lg:text-sm xl:text-base pb-4
       `}
     >
-      {priceOld && <MoneyVND value={priceOld} color="text-gray-400" old />}
+      {showOld && priceOld && <MoneyVND value={priceOld} color="text-gray-400" old />}
       <MoneyVND value={priceNew} color="text-pink-600" />
     </div>
   );
@@ -211,12 +234,14 @@ const ProductCard: React.FC<{
         productId={product.id}
         className={imageClassName}
       />
-      <ProductBadge percent={product.percent} />
+      {product.percent && parseFloat(String(product.percent)) > 0 && (
+        <ProductBadge percent={product.percent} />
+      )}
     </div>
     <div className="flex-1 flex flex-col justify-start items-start w-full px-2 md:px-3 lg:px-4">
       <ProductLabel label={product.label} />
       <div className="flex flex-row flex-wrap items-center w-full text-left gap-2">
-        <ProductStock inStock={product.inStock} />
+        <ProductStock inStock={(product.totalStockQuantity ?? (product.inStock ? 1 : 0)) > 0} />
         <ProductRating rating={product.rating} className="mb-2" />
       </div>
       <ProductPrice priceOld={product.priceOld} priceNew={product.priceNew} />

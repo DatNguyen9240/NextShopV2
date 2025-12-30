@@ -1,5 +1,4 @@
-"use client";
-import ProductModal from "@/app/@modal/product/pop-up/[id]/page";
+import ProductModal from "@/app/@modal/product/pop-up/[id]/Client";
 import ProductCarousel from "@/app/components/ProductCarousel";
 import ProductInforTab from "@/app/components/ProductInforTab";
 import ProductsTitle from "@/app/components/ProductsTitle";
@@ -169,7 +168,7 @@ const featuredProducts = [
 export default function ProductPage({ params }: { params: { id: string } }) {
   return (
     <>
-      <ProductModal isModal={false} params={Promise.resolve(params)} />
+      <ProductModal isModal={false} id={params.id} />
       <div className="mt-20">
         <ProductInforTab />
       </div>

@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useRef, useLayoutEffect } from "react";
 import ProductCard from "./ProductCard";
 import { ButtonPrev, ButtonNext } from "./Button";
