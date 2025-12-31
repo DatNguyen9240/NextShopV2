@@ -30,3 +30,23 @@ export async function getProductById(id: string) {
     throw new Error(err?.response?.data?.message ?? 'Failed to fetch product');
   }
 }
+
+export async function updateProduct(id: string, data: any) {
+  try {
+    const res = await axiosClient.put(`/api/Product/${id}`, data);
+    return res.data;
+  } catch (err: any) {
+    console.error('[updateProduct] error:', err?.response?.status, err?.response?.data ?? err.message ?? err);
+    throw new Error(err?.response?.data?.message ?? 'Failed to update product');
+  }
+}
+
+export async function createProduct(data: any) {
+  try {
+    const res = await axiosClient.post('/api/Product', data);
+    return res.data;
+  } catch (err: any) {
+    console.error('[createProduct] error:', err?.response?.status, err?.response?.data ?? err.message ?? err);
+    throw new Error(err?.response?.data?.message ?? 'Failed to create product');
+  }
+}
