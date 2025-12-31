@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { getProducts } from '../../services/productService';
+import { getProducts } from '../../../services/productService';
 
 interface Product {
   productId: string;

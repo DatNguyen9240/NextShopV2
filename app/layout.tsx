@@ -1,10 +1,7 @@
 import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
 import "./globals.css";
-import AnnouncementBar from "./components/AnnouncementBar";
-import Header from "./components/Header";
-import NavWrapper from "./components/NavWrapper";
-import Footer from "./components/Footer";
+import ConditionalLayout from "./components/ConditionalLayout";
 import { AuthProvider } from "./providers/AuthProvider";
 import { getUserFromCookie } from "./lib/getUserFromCookie";
 
@@ -31,11 +28,9 @@ export default async function RootLayout({
     <html lang="en">
       <body className={`${roboto.variable} antialiased`}>
         <AuthProvider initialUser={user}>
-          <AnnouncementBar />
-          <Header />
-          <NavWrapper />
-          {children}
-          <Footer />
+          <ConditionalLayout>
+            {children}
+          </ConditionalLayout>
           {modal}
         </AuthProvider>
       </body>

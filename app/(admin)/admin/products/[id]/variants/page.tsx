@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { getVariantsByProductId, updateVariant, createVariant } from '../../../../services/variantService';
-import { uploadImage } from '../../../../services/uploadService';
+import { getVariantsByProductId, updateVariant, createVariant } from '../../../../../services/variantService';
+import { uploadImage } from '../../../../../services/uploadService';
 
 interface Variant {
   productVariantId: string;

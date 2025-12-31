@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createProduct } from '@/app/services/productService';
-import { getCategories } from '@/app/services/categoryService';
+import { getCategories, Category } from '@/app/services/categoryService';
 
 export default function CreateProductPage() {
   const router = useRouter();
-  const [categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -20,7 +20,7 @@ export default function CreateProductPage() {
   });
 
   // Fetch categories on mount
-  useState(() => {
+  useEffect(() => {
     const fetchCategories = async () => {
       try {
         const data = await getCategories();
@@ -30,7 +30,7 @@ export default function CreateProductPage() {
       }
     };
     fetchCategories();
-  });
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
