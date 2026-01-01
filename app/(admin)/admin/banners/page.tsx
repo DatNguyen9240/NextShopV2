@@ -1,0 +1,216 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { bannerService, Banner, CreateBannerDto, UpdateBannerDto } from '../../../services/bannerService';
+
+export default function BannersAdminPage() {
+  const [banners, setBanners] = useState<Banner[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
+  const [formData, setFormData] = useState<CreateBannerDto>({
+    title: '',
+    imageUrl: '',
+    type: '',
+    sortOrder: 0,
+  });
+
+  useEffect(() => {
+    loadBanners();
+  }, []);
+
+  const loadBanners = async () => {
+    try {
+      const data = await bannerService.getAll();
+      setBanners(data);
+    } catch (error) {
+      console.error('Failed to load banners:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      if (editingBanner) {
+        await bannerService.update({ ...formData, id: editingBanner.id });
+      } else {
+        await bannerService.create(formData);
+      }
+      setShowModal(false);
+      setEditingBanner(null);
+      resetForm();
+      loadBanners();
+    } catch (error) {
+      console.error('Failed to save banner:', error);
+    }
+  };
+
+  const handleEdit = (banner: Banner) => {
+    setEditingBanner(banner);
+    setFormData({
+      title: banner.title,
+      imageUrl: banner.imageUrl,
+      type: banner.type,
+      sortOrder: banner.sortOrder,
+    });
+    setShowModal(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (confirm('Are you sure you want to delete this banner?')) {
+      try {
+        await bannerService.delete(id);
+        loadBanners();
+      } catch (error) {
+        console.error('Failed to delete banner:', error);
+      }
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      title: '',
+      imageUrl: '',
+      type: '',
+      sortOrder: 0,
+    });
+  };
+
+  const openAddModal = () => {
+    setEditingBanner(null);
+    resetForm();
+    setShowModal(true);
+  };
+
+  if (loading) return <div>Loading...</div>;
+
+  return (
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Manage Banners</h1>
+        <button
+          onClick={openAddModal}
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+        >
+          Add Banner
+        </button>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="min-w-full bg-white border border-gray-300">
+          <thead>
+            <tr className="bg-gray-100">
+              <th className="px-4 py-2 border">Title</th>
+              <th className="px-4 py-2 border">Image</th>
+              <th className="px-4 py-2 border">Type</th>
+              <th className="px-4 py-2 border">Sort Order</th>
+              <th className="px-4 py-2 border">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {banners.map((banner) => (
+              <tr key={banner.id} className="hover:bg-gray-50">
+                <td className="px-4 py-2 border">{banner.title}</td>
+                <td className="px-4 py-2 border">
+                  <img 
+                    src={banner.imageUrl} 
+                    alt={banner.title} 
+                    className="w-16 h-16 object-cover" 
+                    onError={(e) => {
+                      e.currentTarget.src = '/images/placeholder.png'; // or some placeholder
+                    }}
+                  />
+                </td>
+                <td className="px-4 py-2 border">{banner.type}</td>
+                <td className="px-4 py-2 border">{banner.sortOrder}</td>
+                <td className="px-4 py-2 border">
+                  <button
+                    onClick={() => handleEdit(banner)}
+                    className="bg-yellow-500 text-white px-2 py-1 rounded mr-2 hover:bg-yellow-600"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(banner.id)}
+                    className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {showModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[99]"
+>
+          <div className="bg-white p-6 rounded-lg w-96">
+            <h2 className="text-xl font-bold mb-4">
+              {editingBanner ? 'Edit Banner' : 'Add Banner'}
+            </h2>
+            <form onSubmit={handleSubmit}>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">Title</label>
+                <input
+                  type="text"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">Image URL</label>
+                <input
+                  type="url"
+                  value={formData.imageUrl}
+                  onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">Type</label>
+                <input
+                  type="text"
+                  value={formData.type}
+                  onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">Sort Order</label>
+                <input
+                  type="number"
+                  value={formData.sortOrder}
+                  onChange={(e) => setFormData({ ...formData, sortOrder: parseInt(e.target.value) || 0 })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded"
+                />
+              </div>
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                  className="bg-gray-500 text-white px-4 py-2 rounded mr-2 hover:bg-gray-600"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                >
+                  {editingBanner ? 'Update' : 'Create'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

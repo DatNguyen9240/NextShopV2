@@ -1,5 +1,4 @@
 import Image from "next/image";
-import { ProductBadge } from "@/app/components/ProductCard";
 import { useState } from "react";
 import ImageLightbox from "@/app/components/ImageLightbox";
 
@@ -81,9 +80,6 @@ export default function ProductImages({ images, badgePercent, selectedIndex = 0,
           <div className="absolute left-3 top-3 bg-black/60 text-white text-xs rounded-full px-2 py-0.5 z-30">
             {selectedIndex + 1}/{thumbs.length}
           </div>
-        )}
-        {badgePercent && parseFloat(String(badgePercent)) > 0 && (
-          <ProductBadge percent={badgePercent} />
         )}
       </div>
 

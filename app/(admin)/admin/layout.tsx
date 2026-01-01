@@ -26,6 +26,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           <Link href="/admin/categories" className="block px-6 py-3 text-gray-700 hover:bg-gray-200 hover:text-gray-900">
             Categories
           </Link>
+          <Link href="/admin/banners" className="block px-6 py-3 text-gray-700 hover:bg-gray-200 hover:text-gray-900">
+            Banners
+          </Link>
           <div className="mt-8 pt-6 border-t border-gray-200">
             <Link href="/" className="flex items-center px-6 py-3 text-blue-600 hover:bg-blue-50 hover:text-blue-800 rounded-md transition-colors">
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
