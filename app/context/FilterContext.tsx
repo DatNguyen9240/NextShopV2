@@ -23,6 +23,8 @@ export const FilterProvider: React.FC<{ children: React.ReactNode; initial?: Fil
   const [filters, setFiltersState] = useState<FilterState>({ ...defaultFilters, ...(initial ?? {}) });
 
   const setFilters = useCallback((next: Partial<FilterState>) => {
+    // debug: log who/what is changing filters in development
+    console.debug('[FilterContext] setFilters', next, new Error().stack?.split('\n').slice(1,4));
     setFiltersState((prev) => ({ ...prev, ...next }));
   }, []);
 

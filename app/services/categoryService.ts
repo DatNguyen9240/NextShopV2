@@ -47,13 +47,92 @@ export async function getCategoryById(id: string): Promise<Category> {
   }
 }
 
+const childCache = new Map<string, Promise<Category[] | null> | Category[] | null>();
+
+// global all-categories cache (single fetch) to avoid many per-parent requests
+let allCategoriesCache: Promise<Category[] | null> | Category[] | null = null;
+
+export async function getAllCategoriesCached(): Promise<Category[] | null> {
+  if (allCategoriesCache) {
+    if (allCategoriesCache instanceof Promise) return allCategoriesCache;
+    return allCategoriesCache;
+  }
+
+  const p = (async () => {
+    try {
+      const res = await axiosClient.get('/api/Category');
+      const list: Category[] = res.data?.data ?? [];
+      allCategoriesCache = list;
+      return list;
+    } catch {
+      allCategoriesCache = null;
+      return null;
+    }
+  })();
+
+  allCategoriesCache = p;
+  return p;
+}
+
+export function clearAllCategoriesCache() {
+  allCategoriesCache = null;
+  childCache.clear();
+}
+
+export function getChildrenFromAll(parentId: string): Category[] {
+  if (!allCategoriesCache || !(allCategoriesCache instanceof Array)) return [];
+  return (allCategoriesCache as Category[]).filter(c => c.parentId === parentId);
+}
+
+export function hasChildrenFromAll(parentId: string): boolean {
+  const arr = getChildrenFromAll(parentId);
+  return arr && arr.length > 0;
+}
+
 export async function getChildCategories(parentId: string): Promise<Category[]> {
   try {
+    // fallback to single-parent endpoint for backward compatibility
     const res = await axiosClient.get(`/api/Category/${parentId}/children`);
     return res.data?.data || [];
   } catch {
     throw new Error('Failed to fetch child categories');
   }
+}
+
+export async function getChildCategoriesCached(parentId: string): Promise<Category[] | null> {
+  // if we already fetched the full list, return filtered children instead
+  if (allCategoriesCache && !(allCategoriesCache instanceof Promise)) {
+    return getChildrenFromAll(parentId);
+  }
+
+  const existing = childCache.get(parentId);
+  if (existing) {
+    if (existing instanceof Promise) return existing;
+    return existing;
+  }
+
+  const p = (async () => {
+    try {
+      const res = await axiosClient.get(`/api/Category/${parentId}/children`);
+      const list: Category[] = res.data?.data ?? [];
+      childCache.set(parentId, list);
+      return list;
+    } catch {
+      childCache.set(parentId, null);
+      return null;
+    }
+  })();
+
+  childCache.set(parentId, p);
+  return p;
+}
+
+export function hasChildrenInCache(parentId: string): boolean {
+  const got = childCache.get(parentId);
+  if (Array.isArray(got) && got.length > 0) return true;
+  // if all categories available, check those
+  if (allCategoriesCache && (allCategoriesCache instanceof Array)) return hasChildrenFromAll(parentId);
+  return false;
 }
 
 export async function createCategory(data: {

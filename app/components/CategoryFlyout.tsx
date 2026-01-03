@@ -1,11 +1,8 @@
 "use client";
 import Link from "next/link";
 import React, { useEffect, useRef, useState } from "react";
-import { getChildCategories, Category } from "@/app/services/categoryService";
+import { getChildCategoriesCached, getAllCategoriesCached, getChildrenFromAll, Category } from "@/app/services/categoryService";
 import { ChevronRight } from "./ChevronRight";
-
-// simple cache to avoid refetching same parent multiple times
-const childrenCache = new Map<string, Promise<Category[] | null> | Category[] | null>();
 
 export default function CategoryFlyout({ parentId }: { parentId: string }) {
   const [children, setChildren] = useState<Category[]>([]);
@@ -21,30 +18,18 @@ export default function CategoryFlyout({ parentId }: { parentId: string }) {
     };
   }, []);
 
-  async function fetchOnce(pid: string) {
-    const existing = childrenCache.get(pid);
-    if (existing) {
-      if (existing instanceof Promise) return existing;
-      return existing;
-    }
-    const p = (async () => {
-      try {
-        const list = await getChildCategories(pid);
-        childrenCache.set(pid, list ?? []);
-        return list ?? [];
-      } catch {
-        childrenCache.set(pid, null);
-        return null;
-      }
-    })();
-    childrenCache.set(pid, p);
-    return p;
-  }
-
   useEffect(() => {
     let mounted = true;
     void (async () => {
-      const list = await fetchOnce(parentId);
+      // prefer using the all-categories cache if available
+      const all = await getAllCategoriesCached();
+      if (all && mounted) {
+        setChildren(getChildrenFromAll(parentId));
+        return;
+      }
+
+      // fallback to fetch children for this parent
+      const list = await getChildCategoriesCached(parentId);
       if (mounted) setChildren(list ?? []);
     })();
     return () => { mounted = false; };

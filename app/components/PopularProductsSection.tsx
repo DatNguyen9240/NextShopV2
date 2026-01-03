@@ -12,7 +12,17 @@ import useProducts from "@/app/hooks/useProducts";
 const PopularProductsSection: React.FC = () => {
   const currentMonth = new Date().getMonth() + 1;
 
-  const [categoryId, setCategoryId] = React.useState<string | undefined>(undefined);  const handleCategoryChange = React.useCallback((id?: string) => setCategoryId(id), []);  const { products, loading, error, refresh } = useProducts({ section: '', pageSize: 20, categoryId });
+  const [categoryId, setCategoryId] = React.useState<string | undefined>(undefined);
+  const handleCategoryChange = React.useCallback((id?: string) => {
+    // ignore duplicate selections
+    if (id === categoryId) {
+      console.debug('[PopularProductsSection] handleCategoryChange ignored duplicate', id);
+      return;
+    }
+    console.debug('[PopularProductsSection] handleCategoryChange', id);
+    setCategoryId(id);
+  }, [categoryId]);
+  const { products, loading, error, refresh } = useProducts({ section: '', pageSize: 20, categoryId });
   return (
     <section className="w-full xl:mx-[100px] lg:mx-0 mt-10 flex relative">
       <div className="hidden xl:block flex-shrink-0" style={{ width: 260 }}>

@@ -13,7 +13,8 @@ export const login = async (credentials: LoginRequest) => {
   const data = res.data;
   if (typeof window !== 'undefined' && data) {
     if (data.accessToken) setCookie('accessToken', data.accessToken, 1);
-    if (data.refreshToken) setCookie('refreshToken', data.refreshToken, 7);
+    // only persist refresh token if it's a real non-null string
+    if (data.refreshToken && data.refreshToken !== 'null') setCookie('refreshToken', data.refreshToken, 7);
     // Attempt to extract and persist userId from accessToken for refresh endpoint compatibility
     try {
       const parts = (data.accessToken || '').split('.');

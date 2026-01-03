@@ -3,38 +3,31 @@
 import ProductGrid from "@/app/components/ProductGrid";
 import ViewModeSwitcher from "@/app/components/ViewModeSwitcher";
 import { useGridMode } from "@/app/hooks/useGridMode";
-
-import { useParams } from 'next/navigation';
 import useProducts from '@/app/hooks/useProducts';
 import { useEffect } from 'react';
 import { useFilter } from '@/app/context/FilterContext';
+import { usePathname } from 'next/navigation';
 import CategoryBreadcrumb from '@/app/components/CategoryBreadcrumb';
 
-
-
-const CategoryPage = () => {
+const CategoryIndexPage = () => {
   const { cols, setCols, modes } = useGridMode();
-  // Normalise route param to string (useParams can return string | string[] | undefined)
-  const rawId = useParams().id;
-  const id = Array.isArray(rawId) ? rawId[0] : rawId;
-
   const { filters, setFilters } = useFilter();
 
-  // keep filters.categoryId synced with route id
-  // only update global filters if they actually differ to avoid triggering duplicate fetches
-  useEffect(() => {
-    if (!id) return;
-    const current = (filters && 'categoryId' in filters) ? filters.categoryId : undefined;
-    if (current === id) return;
-    setFilters({ categoryId: id });
-    // we intentionally depend on the whole `filters` object so the hook re-checks when filters change
-  }, [id, setFilters, filters]);
+  // Selecting "Tất cả" navigates here; ensure filters.categoryId is explicitly null to mean "no category"
+  const pathname = usePathname();
 
-  // Prefer the route id when present (avoids using a stale filter on navigation). If
-  // filters.categoryId is explicitly set to null it means "Tất cả" (no category filter).
-  const effectiveCategoryId = id ?? ((filters && 'categoryId' in filters && filters.categoryId === null)
+  useEffect(() => {
+    // Only set when on the index path and not already null to avoid unnecessary re-renders
+    if (pathname !== '/products/category') return;
+    if (!(filters && 'categoryId' in filters && filters.categoryId === null)) {
+      setFilters({ categoryId: null });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
+
+  const effectiveCategoryId = (filters && 'categoryId' in filters && filters.categoryId === null)
     ? undefined
-    : (filters?.categoryId ?? undefined));
+    : (filters?.categoryId ?? undefined);
 
   const { products, loading, error } = useProducts({
     categoryId: effectiveCategoryId,
@@ -67,4 +60,4 @@ const CategoryPage = () => {
   );
 };
 
-export default CategoryPage;
+export default CategoryIndexPage;

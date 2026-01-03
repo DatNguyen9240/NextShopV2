@@ -24,7 +24,11 @@ const processQueue = (error: unknown, token: string | null = null) => {
 const getCookie = (name: string) => {
   if (typeof document === 'undefined') return null;
   const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-  return match ? decodeURIComponent(match[2]) : null;
+  if (!match) return null;
+  const val = decodeURIComponent(match[2]);
+  // treat literal strings 'null' or 'undefined' as no value
+  if (val === 'null' || val === 'undefined') return null;
+  return val;
 };
 
 // Decode JWT payload without verifying signature — safe for extracting non-sensitive fields like userId
@@ -42,8 +46,13 @@ const decodeJwt = (token: string | null): Record<string, unknown> | null => {
   }
 };
 
-const setCookie = (name: string, value: string, days = 7) => {
+const setCookie = (name: string, value: string | null, days = 7) => {
   if (typeof document === 'undefined') return;
+  // do not set cookie when value is null or literal 'null' (backend sometimes returns 'null' string)
+  if (value === null || value === 'null' || value === 'undefined') {
+    console.debug(`[axiosClient] setCookie skipped for ${name} because value is nullish`);
+    return;
+  }
   let expires = '';
   if (days) {
     const date = new Date();
@@ -51,7 +60,7 @@ const setCookie = (name: string, value: string, days = 7) => {
     expires = '; expires=' + date.toUTCString();
   }
   const secure = window.location.protocol === 'https:' ? '; Secure' : '';
-  document.cookie = `${name}=${encodeURIComponent(value)}${expires}; path=/${secure}; SameSite=Lax`;
+  document.cookie = `${name}=${encodeURIComponent(String(value))}${expires}; path=/${secure}; SameSite=Lax`;
   console.debug(`[axiosClient] setCookie ${name} (days=${days}). document.cookie=`, document.cookie);
 };
 
@@ -101,10 +110,11 @@ instance.interceptors.response.use(
 
       return new Promise(async (resolve, reject) => {
         try {
-          // If there's no refresh token, avoid calling the refresh endpoint which will 400 when unauthenticated
-          if (!refreshToken) {
+          // If there's no refresh token (or it's the literal string 'null'), avoid calling the refresh endpoint
+          // which will 400/401 when unauthenticated
+          if (!refreshToken || refreshToken === 'null') {
             if (typeof window !== 'undefined') {
-              console.warn('[axiosClient] No refresh token present before refresh attempt. document.cookie=', document.cookie);
+              console.warn('[axiosClient] No valid refresh token present before refresh attempt. document.cookie=', document.cookie);
               eraseCookie('accessToken');
               eraseCookie('refreshToken');
             }
@@ -124,9 +134,16 @@ instance.interceptors.response.use(
           const resp = await axios.post(`${baseURL}/api/auth/refresh`, refreshPayload);
           const { accessToken, refreshToken: newRefresh } = resp.data;
           console.debug('[axiosClient] Refresh response', { status: resp.status, accessToken: Boolean(accessToken), hasRefreshToken: Boolean(newRefresh) });
+          if (!accessToken) throw new Error('Refresh did not return an access token');
           if (typeof window !== 'undefined') {
+            // always update access token
             setCookie('accessToken', accessToken, 1); // short lived
-            setCookie('refreshToken', newRefresh, 7);
+            // only set refresh cookie when we actually received a value (avoid writing 'null')
+            if (newRefresh) {
+              setCookie('refreshToken', newRefresh, 7);
+            } else {
+              eraseCookie('refreshToken');
+            }
             console.debug('[axiosClient] Cookies after refresh set. document.cookie=', document.cookie);
           }
           instance.defaults.headers.common['Authorization'] = 'Bearer ' + accessToken;

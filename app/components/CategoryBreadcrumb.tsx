@@ -3,16 +3,13 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCategories } from "@/app/context/CategoryContext";
-import { getCategoryById, Category } from "@/app/services/categoryService";
+import { getCategoryById, hasChildrenInCache, getAllCategoriesCached, hasChildrenFromAll, Category } from "@/app/services/categoryService";
 import CategoryFlyout from "./CategoryFlyout";
 import { ChevronRight } from "./ChevronRight";
 import { useFilter } from '@/app/context/FilterContext';
 
 // cache to prevent duplicate category fetches
 const fetchedCategoryCache = new Map<string, Promise<Category | null> | Category | null>();
-// cache for children lists for parents
-const fetchedChildrenCache = new Map<string, Promise<Category[] | null> | Category[] | null>();
-
 async function fetchCategoryOnce(id: string) {
   const existing = fetchedCategoryCache.get(id);
   if (existing) {
@@ -30,29 +27,6 @@ async function fetchCategoryOnce(id: string) {
     }
   })();
   fetchedCategoryCache.set(id, p);
-  return p;
-}
-
-async function fetchChildrenOnce(parentId: string): Promise<Category[] | null> {
-  const existing = fetchedChildrenCache.get(parentId);
-  if (existing) {
-    if (existing instanceof Promise) return existing;
-    return existing;
-  }
-  const p = (async () => {
-    try {
-      const res = await fetch(`/api/Category/${parentId}/children`);
-      if (!res.ok) return null;
-      const payload = await res.json();
-      const list: Category[] = payload?.data ?? [];
-      fetchedChildrenCache.set(parentId, list);
-      return list;
-    } catch {
-      fetchedChildrenCache.set(parentId, null);
-      return null;
-    }
-  })();
-  fetchedChildrenCache.set(parentId, p);
   return p;
 }
 
@@ -74,8 +48,6 @@ const CategoryBreadcrumb: React.FC = () => {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const hideTimeoutRef = useRef<number | null>(null);
 
-  const [rootChildren, setRootChildren] = useState<Category[]>([]);
-  const [loadingChildren, setLoadingChildren] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -140,37 +112,8 @@ const CategoryBreadcrumb: React.FC = () => {
     return () => { mounted = false; };
   }, [effectiveId, catMap]);
 
-  // load root's immediate children (context first, then API)
-  useEffect(() => {
-    let mounted = true;
-    async function loadRootChildren() {
-      if (!chain || chain.length === 0) {
-        if (mounted) setRootChildren([]);
-        return;
-      }
-      const root = chain[0];
-      const fromContext = (categories || []).filter(c => c.parentId === root.categoryId);
-      if (fromContext.length > 0) {
-        if (mounted) setRootChildren(fromContext);
-        return;
-      }
-      if (mounted) setLoadingChildren(true);
-      try {
-        const fetched = await fetchChildrenOnce(root.categoryId);
-        if (mounted) setRootChildren(fetched ?? []);
-      } finally {
-        if (mounted) setLoadingChildren(false);
-      }
-    }
-    void loadRootChildren();
-    return () => { mounted = false; };
-  }, [chain, categories]);
 
-  const root = chain[0];
-  // reflect selection coming from filter sidebar
-  const activeCategoryId = (filters && 'categoryId' in filters && filters.categoryId !== undefined)
-    ? filters.categoryId
-    : routeId;
+  const leaf = chain.length ? chain[chain.length - 1] : undefined;
 
   return (
     <>
@@ -198,20 +141,17 @@ const CategoryBreadcrumb: React.FC = () => {
             <Link
               href={`/products/category/${c.categoryId}`}
               className="hover:underline flex items-center gap-1"
-              onMouseEnter={async () => {
-                // lazy preload children so indicator shows when available
-                const existing = fetchedChildrenCache.get(c.categoryId);
-                if (!existing) {
-                  // trigger a fetch but don't block hover
-                  void fetchChildrenOnce(c.categoryId);
-                }
+              onMouseEnter={() => {
+                // lazy preload full category list so indicator shows when available
+                void getAllCategoriesCached();
               }}
             >
               {c.name}
-              {/* show indicator only when we know children exist */}
-              {((categories || []).some(ch => ch.parentId === c.categoryId) || (Array.isArray(fetchedChildrenCache.get(c.categoryId)) && (fetchedChildrenCache.get(c.categoryId) as Category[]).length > 0)) && (
-                <span className="ml-1">
-                  <ChevronRight className="text-gray-400 w-3 h-3" />
+              {c.categoryId === leaf?.categoryId && ((categories || []).some(ch => ch.parentId === c.categoryId) || hasChildrenFromAll(c.categoryId) || hasChildrenInCache(c.categoryId)) && (
+                <span className="ml-1 inline-block text-gray-400 w-3 h-3" aria-hidden>
+                  <svg viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3">
+                    <path d="M5.23 7.21a.75.75 0 011.06-.02L10 10.585l3.71-3.4a.75.75 0 011.04 1.08l-4.24 3.89a.75.75 0 01-1.02 0L5.25 8.28a.75.75 0 01-.02-1.06z"/>
+                  </svg>
                 </span>
               )}
             </Link>
@@ -235,26 +175,7 @@ const CategoryBreadcrumb: React.FC = () => {
       )}
       </nav>
 
-      {/* persistent root children chips (visible under breadcrumb) */}
-      {root && (
-        <div>
-          {loadingChildren ? (
-            <div className="text-sm text-gray-500">Đang tải danh mục con...</div>
-          ) : rootChildren?.length ? (
-            <div className="flex flex-wrap gap-2">
-              {rootChildren.map(ch => (
-                <Link
-                  key={ch.categoryId}
-                  href={`/products/category/${ch.categoryId}`}
-                  className={`px-3 py-1 rounded border ${ch.categoryId === activeCategoryId ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'}`}
-                >
-                  {ch.name}
-                </Link>
-              ))}
-            </div>
-          ) : null}
-        </div>
-      )}
+
     </>
   );
 };

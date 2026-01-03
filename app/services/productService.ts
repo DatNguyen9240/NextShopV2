@@ -12,16 +12,36 @@ export type GetProductsParams = {
   rating?: number;
 };
 
+const pendingGetProducts = new Map<string, Promise<unknown>>();
+
 export async function getProducts(params?: GetProductsParams) {
-  try {
-    console.log('[getProducts] request params:', params);
-    const res = await axiosClient.get('/api/Product', { params });
-    console.log('[getProducts] response data keys:', Object.keys(res.data ?? {}));
-    return res.data?.data ?? res.data ?? [];
-  } catch (err: unknown) {
-    console.error('[getProducts] error:', err);
-    throw new Error('Failed to fetch products');
+  const key = JSON.stringify(params ?? {});
+  // Reuse in-flight identical requests to avoid duplicate network calls
+  const existing = pendingGetProducts.get(key);
+  if (existing) {
+    console.debug('[getProducts] cache hit for', key);
+    return existing;
   }
+
+  const p = (async () => {
+    try {
+      console.debug('[getProducts] network fetch start for', key, params);
+      const res = await axiosClient.get('/api/Product', { params });
+      console.debug('[getProducts] network fetch response for', key, Object.keys(res.data ?? {}));
+      // log cache hit or miss
+      console.debug('[getProducts] cache pending count', pendingGetProducts.size);
+      return res.data?.data ?? res.data ?? [];
+    } catch (err: unknown) {
+      console.error('[getProducts] error fetching', key, err);
+      throw new Error('Failed to fetch products');
+    } finally {
+      // remove from pending map when finished
+      pendingGetProducts.delete(key);
+    }
+  })();
+
+  pendingGetProducts.set(key, p);
+  return p;
 }
 
 export async function getProductById(id: string) {

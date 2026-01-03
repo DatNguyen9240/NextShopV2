@@ -22,6 +22,7 @@ const ProductTabs = React.memo(function ProductTabs({ onChange }: { onChange?: (
     const list = [{ name: "Tất cả", categoryId: "" }, ...((categories || []).map((c) => ({ name: c.name, categoryId: c.categoryId })))] as { name: string; categoryId: string }[];
     setTabs(list);
     if (!initializedRef.current && typeof onChange === 'function') {
+      console.debug('[ProductTabs] initial onChange(undefined)');
       onChange(undefined);
       initializedRef.current = true;
     }
@@ -108,6 +109,7 @@ const ProductTabs = React.memo(function ProductTabs({ onChange }: { onChange?: (
                 key={tab.categoryId || `all-${idx}`}
                 onClick={() => {
                   setActiveTab(idx);
+                  console.debug('[ProductTabs] onClick', tab.categoryId || undefined);
                   if (typeof onChange === 'function') onChange(tab.categoryId || undefined);
                 }}
                 className={`pb-1 text-sm font-medium flex-1 text-center lg:min-w-[80px] min-w-[100px] ${

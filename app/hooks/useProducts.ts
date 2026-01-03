@@ -48,15 +48,54 @@ export default function useProducts({
       };
     }), []);
 
+  const inflightKeysRef = useRef<Set<string>>(new Set());
+  // remember last completed request key to avoid immediately refetching the exact same params
+  const lastCompletedKeyRef = useRef<string | null>(null);
+  // timer handle to clear delayed reset of lastCompletedKeyRef
+  const lastCompletedTimerRef = useRef<number | null>(null);
+
+  // debounce timer to batch quick successive filter changes into one fetch
+  const fetchTimerRef = useRef<number | null>(null);
+
+  // clear any outstanding timers on unmount
+  useEffect(() => () => {
+    if (lastCompletedTimerRef.current) {
+      clearTimeout(lastCompletedTimerRef.current);
+      lastCompletedTimerRef.current = null;
+    }
+    if (fetchTimerRef.current) {
+      clearTimeout(fetchTimerRef.current);
+      fetchTimerRef.current = null;
+    }
+  }, []);
+
   const fetchPage = useCallback(async (pageNumber: number) => {
-    setLoading(true);
-    setError(null);
     const usedCategory = categoryId;
     const usedSection = section;
     const usedMinPrice = minPrice;
     const usedMaxPrice = maxPrice;
     const usedSort = sort;
     const usedRating = rating;
+
+    const keyObj = { categoryId: usedCategory, page: pageNumber, pageSize } as GetProductsParams;
+    const key = JSON.stringify(keyObj);
+
+    // If we already completed the exact same request recently, skip refetching
+    if (lastCompletedKeyRef.current === key) {
+      console.debug('[useProducts] skipping fetch because identical request was just completed', key);
+      return;
+    }
+
+    // Skip duplicate processing if same request is already in-flight
+    if (inflightKeysRef.current.has(key)) {
+      console.debug('[useProducts] skipping duplicate in-flight fetch for', key);
+      return;
+    }
+
+    inflightKeysRef.current.add(key);
+    setLoading(true);
+    setError(null);
+
     try {
       const params: GetProductsParams = {};
       if (usedCategory) params.categoryId = usedCategory;
@@ -88,6 +127,9 @@ export default function useProducts({
 
       console.log('[useProducts] accepted response for', params, 'dataCount', Array.isArray(data) ? data.length : (data.items || []).length);
 
+      // mark this key as the last completed request so we avoid immediate duplicate refetches
+      lastCompletedKeyRef.current = key;
+
       if (Array.isArray(data)) {
         setProducts(mapProducts(data));
         setTotalPages(1);
@@ -100,7 +142,13 @@ export default function useProducts({
       setError(err instanceof Error ? err.message : "Failed to load products");
       setProducts([]);
     } finally {
+      inflightKeysRef.current.delete(key);
       setLoading(false);
+
+      // reset lastCompletedKey after a short delay so future intentional refreshes are allowed
+      // (prevents skipping legitimate follow-up requests while still avoiding immediate duplicates)
+      if (lastCompletedTimerRef.current) clearTimeout(lastCompletedTimerRef.current);
+      lastCompletedTimerRef.current = window.setTimeout(() => { lastCompletedKeyRef.current = null; lastCompletedTimerRef.current = null; }, 250);
     }
   }, [categoryId, limit, sort, section, pageSize, minPrice, maxPrice, rating, mapProducts]);
 
@@ -130,7 +178,15 @@ export default function useProducts({
       return;
     }
 
-    fetchPage(page);
+    // Debounce rapid consecutive changes to avoid duplicate requests (e.g., route + filter sync)
+    if (fetchTimerRef.current) {
+      clearTimeout(fetchTimerRef.current);
+      fetchTimerRef.current = null;
+    }
+    fetchTimerRef.current = window.setTimeout(() => {
+      fetchPage(page);
+      fetchTimerRef.current = null;
+    }, 80);
   }, [page, fetchPage, autoFetch, section, categoryId, minPrice, maxPrice, sort, rating]);
 
   const refresh = useCallback(() => fetchPage(page), [fetchPage, page]);
