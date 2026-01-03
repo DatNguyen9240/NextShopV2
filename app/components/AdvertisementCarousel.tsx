@@ -9,7 +9,7 @@ const banners = [
   "/banners/banner3.jpg",
 ];
 
-const BannerCarousel: React.FC = () => {
+const AdvertisementCarousel: React.FC = () => {
   const [active, setActive] = useState(0);
 
   const prev = () =>
@@ -45,4 +45,4 @@ const BannerCarousel: React.FC = () => {
   );
 };
 
-export default BannerCarousel;
+export default AdvertisementCarousel;

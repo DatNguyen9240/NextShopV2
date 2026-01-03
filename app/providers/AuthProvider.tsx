@@ -1,6 +1,7 @@
 "use client";
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import * as authService from '@/app/lib/authService';
+import * as authService from '@/app/services/authService';
+import { getCookie, eraseCookie } from '@/app/lib/axiosClient';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 
@@ -9,15 +10,16 @@ interface User {
   email: string;
   fullName?: string;
   avatar?: string;
+  role?: string;
 }
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (credentials: { email: string; password: string }) => Promise<void>;
+  login: (credentials: { email: string; password: string }) => Promise<User | null>;
   logout: () => Promise<void>;
-  refreshUser: () => Promise<void>;
+  refreshUser: () => Promise<User | null>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -42,27 +44,48 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, initialUse
 
   const refreshUser = useCallback(async () => {
     try {
+      // If no tokens are present, skip calling /me which would otherwise trigger an unnecessary 401/refresh attempt
+      const accessToken = getCookie('accessToken');
+      const refreshToken = getCookie('refreshToken');
+      console.debug('[AuthProvider.refreshUser] cookies on refresh attempt', { accessToken: !!accessToken, refreshToken: !!refreshToken });
+      if (!accessToken && !refreshToken) {
+        setUser(null);
+        return null;
+      }
+
       const userData = await authService.me();
       setUser(userData);
-    } catch (error) {
+      return userData as User | null;
+    } catch (error: any) {
+      // If /me returned NotFound or Unauthorized, clear auth cookies to avoid repeated failing calls
+      const status = error?.response?.status;
+      console.warn('[AuthProvider.refreshUser] /me failed', { status, message: error?.message, response: error?.response?.data });
+      if (status === 401 || status === 404 || status === 400) {
+        console.warn('[AuthProvider.refreshUser] clearing cookies due to failed /me');
+        eraseCookie('accessToken');
+        eraseCookie('refreshToken');
+      }
       setUser(null);
+      return null;
     }
   }, []);
-
-  useEffect(() => {
-    // Kiểm tra user khi mount
-    refreshUser().finally(() => setIsLoading(false));
-  }, [refreshUser]);
 
   const login = useCallback(async (credentials: { email: string; password: string }) => {
     setIsLoading(true);
     try {
       await authService.login(credentials);
-      await refreshUser();
+      const userData = await refreshUser();
+      return userData;
     } finally {
       setIsLoading(false);
     }
   }, [refreshUser]);
+  useEffect(() => {
+    // Kiểm tra user khi mount
+    refreshUser().finally(() => setIsLoading(false));
+  }, [refreshUser]);
+
+
 
   const logout = useCallback(async () => {
     setIsLoading(true);

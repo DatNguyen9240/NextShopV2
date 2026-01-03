@@ -3,7 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { getVariantsByProductId, updateVariant, createVariant } from '../../../../../services/variantService';
-import { uploadImage } from '../../../../../services/uploadService';
+import ImageUploader from '@/app/components/ImageUploader';
+import { PRESET_COLORS, PRESET_SIZES } from '@/app/config/colors';
+import { formatVND } from '@/app/utils/priceUtils';
 
 interface Variant {
   productVariantId: string;
@@ -67,69 +69,11 @@ export default function ProductVariants() {
     setEditData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setUploading(true);
-    try {
-      const imageUrl = await uploadImage(file);
-      handleChange('imageUrl', imageUrl);
-    } catch (error) {
-      console.error('Error uploading image:', error);
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleHoverFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setUploading(true);
-    try {
-      const imageUrl = await uploadImage(file);
-      handleChange('imgHover', imageUrl);
-    } catch (error) {
-      console.error('Error uploading hover image:', error);
-    } finally {
-      setUploading(false);
-    }
-  };
 
   const handleNewVariantChange = (field: string, value: any) => {
     setNewVariant(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleNewFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setUploading(true);
-    try {
-      const imageUrl = await uploadImage(file);
-      setNewVariant(prev => ({ ...prev, imageUrl }));
-    } catch (error) {
-      console.error('Error uploading image:', error);
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleNewHoverFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setUploading(true);
-    try {
-      const imgHover = await uploadImage(file);
-      setNewVariant(prev => ({ ...prev, imgHover }));
-    } catch (error) {
-      console.error('Error uploading hover image:', error);
-    } finally {
-      setUploading(false);
-    }
-  };
 
   const addNewVariant = async () => {
     try {
@@ -198,51 +142,93 @@ export default function ProductVariants() {
         <div className="bg-white shadow-md rounded-lg p-6 mb-6">
           <h3 className="text-lg font-semibold mb-4">Add New Variant</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-            <input
-              type="text"
-              placeholder="SKU"
-              value={newVariant.sku}
-              onChange={(e) => handleNewVariantChange('sku', e.target.value)}
-              className="border border-gray-300 rounded px-3 py-2"
-            />
-            <input
-              type="text"
-              placeholder="Color"
-              value={newVariant.color}
-              onChange={(e) => handleNewVariantChange('color', e.target.value)}
-              className="border border-gray-300 rounded px-3 py-2"
-            />
-            <input
-              type="text"
-              placeholder="Size"
-              value={newVariant.size}
-              onChange={(e) => handleNewVariantChange('size', e.target.value)}
-              className="border border-gray-300 rounded px-3 py-2"
-            />
-            <input
-              type="number"
-              placeholder="Stock"
-              value={newVariant.stockQuantity}
-              onChange={(e) => handleNewVariantChange('stockQuantity', parseInt(e.target.value))}
-              className="border border-gray-300 rounded px-3 py-2"
-            />
-            <input
-              type="number"
-              step="0.01"
-              placeholder="Base Price"
-              value={newVariant.basePrice}
-              onChange={(e) => handleNewVariantChange('basePrice', parseFloat(e.target.value))}
-              className="border border-gray-300 rounded px-3 py-2"
-            />
-            <input
-              type="number"
-              step="0.01"
-              placeholder="Discount %"
-              value={newVariant.discountPercent}
-              onChange={(e) => handleNewVariantChange('discountPercent', parseFloat(e.target.value))}
-              className="border border-gray-300 rounded px-3 py-2"
-            />
-            <div className="flex items-center">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">SKU</label>
+              <input
+                type="text"
+                placeholder="SKU"
+                value={newVariant.sku}
+                onChange={(e) => handleNewVariantChange('sku', e.target.value)}
+                className="border border-gray-300 rounded px-3 py-2"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Color</label>
+              <select
+                value={newVariant.color || ''}
+                onChange={(e) => handleNewVariantChange('color', e.target.value)}
+                className="w-full border border-gray-300 rounded px-3 py-2 bg-white"
+              >
+                <option value="">-- Select color --</option>
+                {PRESET_COLORS.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div> 
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Size</label>
+              <select
+                value={newVariant.size || ''}
+                onChange={(e) => handleNewVariantChange('size', e.target.value)}
+                className="w-full border border-gray-300 rounded px-3 py-2 bg-white"
+              >
+                <option value="">-- Select size --</option>
+                {PRESET_SIZES.map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Stock</label>
+              <input
+                type="number"
+                placeholder="Stock"
+                value={newVariant.stockQuantity}
+                onChange={(e) => handleNewVariantChange('stockQuantity', parseInt(e.target.value))}
+                className="border border-gray-300 rounded px-3 py-2"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Base Price</label>
+              <input
+                type="number"
+                step="0.01"
+                placeholder="Base Price"
+                value={newVariant.basePrice}
+                onChange={(e) => handleNewVariantChange('basePrice', parseFloat(e.target.value))}
+                className="border border-gray-300 rounded px-3 py-2"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Discount %</label>
+              <input
+                type="number"
+                step="0.01"
+                placeholder="Discount %"
+                value={newVariant.discountPercent}
+                onChange={(e) => handleNewVariantChange('discountPercent', parseFloat(e.target.value))}
+                className="border border-gray-300 rounded px-3 py-2"
+              />
+            </div>
+            <div className="flex space-x-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Image</label>
+                <ImageUploader
+                  value={newVariant.imageUrl}
+                  onChange={(url) => setNewVariant(prev => ({ ...prev, imageUrl: url || '' }))}
+                  previewSize="h-8 w-8"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Hover image</label>
+                <ImageUploader
+                  value={newVariant.imgHover}
+                  onChange={(url) => setNewVariant(prev => ({ ...prev, imgHover: url || '' }))}
+                  previewSize="h-8 w-8"
+                />
+              </div>
+            </div>
+            <div className="col-span-full flex items-center">
               <input
                 type="checkbox"
                 checked={newVariant.isDefault}
@@ -251,62 +237,6 @@ export default function ProductVariants() {
               />
               <label>Is Default</label>
             </div>
-            <div className="relative">
-              <div className="w-full h-10 border-2 border-dashed border-gray-300 rounded flex items-center justify-center bg-gray-50 hover:bg-gray-100">
-                {newVariant.imageUrl ? (
-                  <img src={newVariant.imageUrl} alt="New" className="h-8 w-8 object-cover rounded" />
-                ) : (
-                  <span className="text-xs text-gray-500">Upload</span>
-                )}
-              </div>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleNewFileChange}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                disabled={uploading}
-              />
-              {uploading && (
-                <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center rounded">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
-                </div>
-              )}
-            </div>
-            <div className="relative">
-              <div className="w-full h-10 border-2 border-dashed border-gray-300 rounded flex items-center justify-center bg-gray-50 hover:bg-gray-100">
-                {newVariant.imgHover ? (
-                  <img src={newVariant.imgHover} alt="Hover" className="h-8 w-8 object-cover rounded" />
-                ) : (
-                  <span className="text-xs text-gray-500">Hover Upload</span>
-                )}
-              </div>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleNewHoverFileChange}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                disabled={uploading}
-              />
-              {uploading && (
-                <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center rounded">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
-                </div>
-              )}
-            </div>
-            <input
-              type="text"
-              placeholder="Or paste image URL"
-              value={newVariant.imageUrl}
-              onChange={(e) => handleNewVariantChange('imageUrl', e.target.value)}
-              className="border border-gray-300 rounded px-3 py-2 text-xs"
-            />
-            <input
-              type="text"
-              placeholder="Hover image URL"
-              value={newVariant.imgHover}
-              onChange={(e) => handleNewVariantChange('imgHover', e.target.value)}
-              className="border border-gray-300 rounded px-3 py-2 text-xs"
-            />
           </div>
           <button
             onClick={addNewVariant}
@@ -317,26 +247,27 @@ export default function ProductVariants() {
         </div>
       )}
       <div className="bg-white shadow-md rounded-lg overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
+        <div className="overflow-x-auto">
+          <table className="min-w-[1500px] divide-y divide-gray-200 whitespace-nowrap">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SKU</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Color</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Size</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Base Price</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Discount %</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Final Price</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Default</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hover Image</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SKU</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Color</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Size</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Base Price</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Discount %</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Final Price</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Default</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hover Image</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {variants.map((variant) => (
               <tr key={variant.productVariantId}>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
                   {editingId === variant.productVariantId ? (
                     <input
                       type="text"
@@ -350,29 +281,37 @@ export default function ProductVariants() {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {editingId === variant.productVariantId ? (
-                    <input
-                      type="text"
-                      value={editData.color || ''}
+                    <select
+                      value={String(editData.color ?? '')}
                       onChange={(e) => handleChange('color', e.target.value)}
-                      className="w-full border border-gray-300 rounded px-2 py-1"
-                    />
+                      className="w-full border border-gray-300 rounded px-2 py-1 bg-white"
+                    >
+                      <option value="">-- Select color --</option>
+                      {PRESET_COLORS.map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
                   ) : (
                     variant.color || '-'
                   )}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {editingId === variant.productVariantId ? (
-                    <input
-                      type="text"
-                      value={editData.size || ''}
+                    <select
+                      value={String(editData.size ?? '')}
                       onChange={(e) => handleChange('size', e.target.value)}
-                      className="w-full border border-gray-300 rounded px-2 py-1"
-                    />
+                      className="w-full border border-gray-300 rounded px-2 py-1 bg-white"
+                    >
+                      <option value="">-- Select size --</option>
+                      {PRESET_SIZES.map((s) => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                    </select>
                   ) : (
                     variant.size || '-'
                   )}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
                   {editingId === variant.productVariantId ? (
                     <input
                       type="number"
@@ -384,7 +323,7 @@ export default function ProductVariants() {
                     variant.stockQuantity
                   )}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
                   {editingId === variant.productVariantId ? (
                     <input
                       type="number"
@@ -394,10 +333,10 @@ export default function ProductVariants() {
                       className="w-full border border-gray-300 rounded px-2 py-1"
                     />
                   ) : (
-                    `$${variant.basePrice}`
-                  )}
+                    formatVND(variant.basePrice)
+                  )} 
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
                   {editingId === variant.productVariantId ? (
                     <input
                       type="number"
@@ -410,8 +349,8 @@ export default function ProductVariants() {
                     `${variant.discountPercent}%`
                   )}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${variant.priceAfterDiscount}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{formatVND(variant.priceAfterDiscount)}</td>
+                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
                   {editingId === variant.productVariantId ? (
                     <input
                       type="checkbox"
@@ -422,89 +361,35 @@ export default function ProductVariants() {
                     variant.isDefault ? 'Yes' : 'No'
                   )}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-4 py-2 whitespace-nowrap">
                   {editingId === variant.productVariantId ? (
-                    <div className="space-y-2">
-                      <div className="relative">
-                        <div className="w-16 h-16 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-gray-50 hover:bg-gray-100 transition-colors">
-                          {editData.imageUrl ? (
-                            <img src={editData.imageUrl} alt="Variant" className="w-full h-full object-cover rounded-lg" />
-                          ) : (
-                            <div className="text-center">
-                              <svg className="mx-auto h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                              </svg>
-                              <p className="text-xs text-gray-500 mt-1">Upload</p>
-                            </div>
-                          )}
-                        </div>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleFileChange}
-                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                          disabled={uploading}
-                        />
-                        {uploading && (
-                          <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center rounded-lg">
-                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
-                          </div>
-                        )}
-                      </div>
-                      <input
-                        type="text"
-                        placeholder="Or paste image URL"
-                        value={editData.imageUrl || ''}
-                        onChange={(e) => handleChange('imageUrl', e.target.value)}
-                        className="w-full text-xs border border-gray-300 rounded px-2 py-1"
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Image</label>
+                      <ImageUploader
+                        value={String(editData.imageUrl ?? '')}
+                        onChange={(url) => handleChange('imageUrl', url || '')}
+                        previewSize="h-12 w-12"
                       />
                     </div>
                   ) : (
                     variant.imageUrl && <img src={variant.imageUrl} alt="Variant" className="h-12 w-12 object-cover rounded" />
                   )}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-4 py-2 whitespace-nowrap">
                   {editingId === variant.productVariantId ? (
-                    <div className="space-y-2">
-                      <div className="relative">
-                        <div className="w-16 h-16 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-gray-50 hover:bg-gray-100 transition-colors">
-                          {editData.imgHover ? (
-                            <img src={editData.imgHover} alt="Hover" className="w-full h-full object-cover rounded-lg" />
-                          ) : (
-                            <div className="text-center">
-                              <svg className="mx-auto h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                              </svg>
-                              <p className="text-xs text-gray-500 mt-1">Upload</p>
-                            </div>
-                          )}
-                        </div>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleHoverFileChange}
-                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                          disabled={uploading}
-                        />
-                        {uploading && (
-                          <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center rounded-lg">
-                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
-                          </div>
-                        )}
-                      </div>
-                      <input
-                        type="text"
-                        placeholder="Or paste hover URL"
-                        value={editData.imgHover || ''}
-                        onChange={(e) => handleChange('imgHover', e.target.value)}
-                        className="w-full text-xs border border-gray-300 rounded px-2 py-1"
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Hover image</label>
+                      <ImageUploader
+                        value={String(editData.imgHover ?? '')}
+                        onChange={(url) => handleChange('imgHover', url || '')}
+                        previewSize="h-12 w-12"
                       />
                     </div>
                   ) : (
                     variant.imgHover && <img src={variant.imgHover} alt="Hover" className="h-12 w-12 object-cover rounded" />
                   )}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <td className="px-4 py-2 whitespace-nowrap text-sm font-medium">
                   {editingId === variant.productVariantId ? (
                     <div className="flex space-x-2">
                       <button onClick={saveEdit} className="text-green-600 hover:text-green-900">Save</button>
@@ -517,7 +402,8 @@ export default function ProductVariants() {
               </tr>
             ))}
           </tbody>
-        </table>
+          </table>
+        </div>
       </div>
     </div>
   );

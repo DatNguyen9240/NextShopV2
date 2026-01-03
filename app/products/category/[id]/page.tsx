@@ -4,208 +4,60 @@ import ProductGrid from "@/app/components/ProductGrid";
 import ViewModeSwitcher from "@/app/components/ViewModeSwitcher";
 import { useGridMode } from "@/app/hooks/useGridMode";
 
-const newProducts = [
-  {
-    id: "1",
-    label: "POCO C61, 4GB RAM, 6...",
-    priceOld: "15000",
-    priceNew: "20000",
-    percent: "10%",
-    inStock: true,
-    image: "/sell_off/01.jpg",
-    rating: 5,
-  },
-  {
-    id: "2",
-    label: 'KSC "KHATUSHYAM COLL...',
-    priceOld: "520",
-    priceNew: "750",
-    percent: "9%",
-    inStock: true,
-    image: "/sell_off/02.jpg",
-    rating: 4,
-  },
-  {
-    id: "3",
-    label: 'KSC "KHATUSHYAM COLL...',
-    priceOld: "490",
-    priceNew: "460",
-    percent: "10%",
-    inStock: true,
-    image: "/sell_off/03.jpg",
-    rating: 5,
-  },
-  {
-    id: "4",
-    label: "ZAALIQA Girls Black ...",
-    priceOld: "750",
-    priceNew: "620",
-    percent: "11%",
-    inStock: true,
-    image: "/products/bag-black2.jpg",
-    rating: 5,
-  },
-  {
-    id: "5",
-    label: "ZAALIQA Girls Black ...",
-    priceOld: "750",
-    priceNew: "620",
-    percent: "11%",
-    inStock: true,
-    image: "/products/bag-black2.jpg",
-    rating: 5,
-  },
-  {
-    id: "6",
-    label: "ZAALIQA Girls Black ...",
-    priceOld: "750",
-    priceNew: "620",
-    percent: "11%",
-    inStock: true,
-    image: "/products/bag-black2.jpg",
-    rating: 5,
-  },
-  {
-    id: "7",
-    label: "ZAALIQA Girls Black ...",
-    priceOld: "750",
-    priceNew: "620",
-    percent: "11%",
-    inStock: true,
-    image: "/products/bag-black2.jpg",
-    rating: 5,
-  },
-  {
-    id: "8",
-    label: "ZAALIQA Girls Black ...",
-    priceOld: "750",
-    priceNew: "620",
-    percent: "11%",
-    inStock: true,
-    image: "/products/bag-black2.jpg",
-    rating: 5,
-  },
-  {
-    id: "9",
-    label: "ZAALIQA Girls Black 9",
-    priceOld: "750",
-    priceNew: "620",
-    percent: "11%",
-    inStock: true,
-    image: "/products/bag-black2.jpg",
-    rating: 5,
-  },
-  {
-    id: "10",
-    label: "ZAALIQA Girls Black 10",
-    priceOld: "750",
-    priceNew: "620",
-    percent: "11%",
-    inStock: true,
-    image: "/products/bag-black2.jpg",
-    rating: 5,
-  },
-  {
-    id: "11",
-    label: "ZAALIQA Girls Black 11",
-    priceOld: "750",
-    priceNew: "620",
-    percent: "11%",
-    inStock: true,
-    image: "/products/bag-black2.jpg",
-    rating: 5,
-  },
-  {
-    id: "12",
-    label: "ZAALIQA Girls Black 12",
-    priceOld: "750",
-    priceNew: "620",
-    percent: "11%",
-    inStock: true,
-    image: "/products/bag-black2.jpg",
-    rating: 5,
-  },
-  {
-    id: "13",
-    label: "ZAALIQA Girls Black 13",
-    priceOld: "750",
-    priceNew: "620",
-    percent: "11%",
-    inStock: true,
-    image: "/products/bag-black2.jpg",
-    rating: 5,
-  },
-  {
-    id: "14",
-    label: "ZAALIQA Girls Black 14",
-    priceOld: "750",
-    priceNew: "620",
-    percent: "11%",
-    inStock: true,
-    image: "/products/bag-black2.jpg",
-    rating: 5,
-  },
-  {
-    id: "15",
-    label: "ZAALIQA Girls Black 15",
-    priceOld: "750",
-    priceNew: "620",
-    percent: "11%",
-    inStock: true,
-    image: "/products/bag-black2.jpg",
-    rating: 5,
-  },
-  {
-    id: "16",
-    label: "ZAALIQA Girls Black 16",
-    priceOld: "750",
-    priceNew: "620",
-    percent: "11%",
-    inStock: true,
-    image: "/products/bag-black2.jpg",
-    rating: 5,
-  },
-  {
-    id: "17",
-    label: "ZAALIQA Girls Black 17",
-    priceOld: "750",
-    priceNew: "620",
-    percent: "11%",
-    inStock: true,
-    image: "/products/bag-black2.jpg",
-    rating: 5,
-  },
-  {
-    id: "18",
-    label: "ZAALIQA Girls Black 18",
-    priceOld: "750",
-    priceNew: "620",
-    percent: "11%",
-    inStock: true,
-    image: "/products/bag-black2.jpg",
-    rating: 5,
-  },
-  {
-    id: "19",
-    label: "ZAALIQA Girls Black 19",
-    priceOld: "750",
-    priceNew: "620",
-    percent: "11%",
-    inStock: true,
-    image: "/products/bag-black2.jpg",
-    rating: 5,
-  },
-];
+import { useParams } from 'next/navigation';
+import useProducts from '@/app/hooks/useProducts';
+import { useEffect } from 'react';
+import { useFilter } from '@/app/context/FilterContext';
+import CategoryBreadcrumb from '@/app/components/CategoryBreadcrumb';
+
+// We'll fetch products for the category id from the route
+const newProducts: any[] = [];
 
 const CategoryPage = () => {
   const { cols, setCols, modes } = useGridMode();
+  // Normalise route param to string (useParams can return string | string[] | undefined)
+  const rawId = useParams().id;
+  const id = Array.isArray(rawId) ? rawId[0] : rawId;
+
+  const { filters, setFilters } = useFilter();
+
+  // keep filters.categoryId synced with route id
+  useEffect(() => {
+    if (id) setFilters({ categoryId: id });
+  }, [id, setFilters]);
+
+  // If filters.categoryId is explicitly set to null it means "Tất cả" (no category filter)
+  const effectiveCategoryId = (filters && 'categoryId' in filters && filters.categoryId === null)
+    ? undefined
+    : (filters?.categoryId ?? id);
+
+  const { products, loading, error } = useProducts({
+    categoryId: effectiveCategoryId,
+    minPrice: filters?.minPrice ?? undefined,
+    maxPrice: filters?.maxPrice ?? undefined,
+    sort: filters?.sort ?? undefined,
+    pageSize: 24,
+  });
 
   return (
     <div className="overflow-hidden lg:px-4">
+      <div className="mt-4">
+        <CategoryBreadcrumb />
+      </div>
+
       <div className="mb-8">
         <ViewModeSwitcher value={cols} onChange={setCols} modes={modes} />
       </div>
-      <ProductGrid products={newProducts} cols={cols} />
+
+      {loading ? (
+        <div className="flex items-center justify-center h-48">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+        </div>
+      ) : error ? (
+        <div className="text-center text-red-600">{error}</div>
+      ) : (
+        <ProductGrid products={products} cols={cols} />
+      )}
     </div>
   );
 };

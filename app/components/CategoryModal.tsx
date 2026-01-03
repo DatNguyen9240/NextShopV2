@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Category, getCategories } from '../services/categoryService';
-import { uploadImage } from '../services/uploadService';
+import ImageUploader from './ImageUploader';
 
 interface CategoryModalProps {
   isOpen: boolean;
@@ -31,7 +31,6 @@ export default function CategoryModal({
     icon: ''
   });
   const [categories, setCategories] = useState<Category[]>([]);
-  const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -81,21 +80,6 @@ export default function CategoryModal({
       console.error('Error saving category:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setUploading(true);
-    try {
-      const imageUrl = await uploadImage(file);
-      setFormData(prev => ({ ...prev, imageUrl }));
-    } catch (error) {
-      console.error('Error uploading image:', error);
-    } finally {
-      setUploading(false);
     }
   };
 
@@ -183,42 +167,9 @@ export default function CategoryModal({
                 Image
               </label>
               <div className="space-y-2">
-                <div className="relative">
-                  <div className="w-full h-20 border-2 border-dashed border-gray-300 rounded flex items-center justify-center bg-gray-50 hover:bg-gray-100 transition-colors">
-                    {formData.imageUrl ? (
-                      <img
-                        src={formData.imageUrl}
-                        alt="Category"
-                        className="h-16 w-16 object-cover rounded"
-                      />
-                    ) : (
-                      <div className="text-center">
-                        <svg className="mx-auto h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        <p className="text-xs text-gray-500 mt-1">Upload image</p>
-                      </div>
-                    )}
-                  </div>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                    disabled={uploading}
-                  />
-                  {uploading && (
-                    <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center rounded">
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
-                    </div>
-                  )}
-                </div>
-                <input
-                  type="text"
+                <ImageUploader
                   value={formData.imageUrl}
-                  onChange={(e) => setFormData(prev => ({ ...prev, imageUrl: e.target.value }))}
-                  className="w-full text-xs border border-gray-300 rounded px-2 py-1"
-                  placeholder="Or paste image URL"
+                  onChange={(url) => setFormData(prev => ({ ...prev, imageUrl: url || '' }))}
                 />
               </div>
             </div>

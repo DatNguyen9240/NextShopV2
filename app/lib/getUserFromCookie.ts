@@ -4,11 +4,16 @@ import axiosClient from "./axiosClient";
 export async function getUserFromCookie() {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get("accessToken")?.value;
-  if (!accessToken) return null;
+  if (!accessToken) {
+    console.debug('[getUserFromCookie] no accessToken cookie found');
+    return null;
+  }
   try {
     const res = await axiosClient.get('/api/auth/me', { headers: { Authorization: `Bearer ${accessToken}` } });
+    console.debug('[getUserFromCookie] /me success');
     return res.data;
-  } catch {
+  } catch (err: any) {
+    console.warn('[getUserFromCookie] /me failed', err?.response?.status || err?.message);
     return null;
   }
 }

@@ -1,14 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { bannerService, Banner, CreateBannerDto, UpdateBannerDto } from '../../../services/bannerService';
+import { advertisementService, Advertisement, CreateAdvertisementDto, UpdateAdvertisementDto } from '../../../services/advertisementService';
+import ImageUploader from '@/app/components/ImageUploader';
 
 export default function BannersAdminPage() {
-  const [banners, setBanners] = useState<Banner[]>([]);
+  const [banners, setBanners] = useState<Advertisement[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
-  const [formData, setFormData] = useState<CreateBannerDto>({
+  const [editingAdvertisement, seteditingAdvertisement] = useState<Advertisement | null>(null);
+  const [formData, setFormData] = useState<CreateAdvertisementDto>({
     title: '',
     imageUrl: '',
     type: '',
@@ -21,7 +22,7 @@ export default function BannersAdminPage() {
 
   const loadBanners = async () => {
     try {
-      const data = await bannerService.getAll();
+      const data = await advertisementService.getAll();
       setBanners(data);
     } catch (error) {
       console.error('Failed to load banners:', error);
@@ -33,13 +34,13 @@ export default function BannersAdminPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      if (editingBanner) {
-        await bannerService.update({ ...formData, id: editingBanner.id });
+      if (editingAdvertisement) {
+        await advertisementService.update({ ...formData, id: editingAdvertisement.id });
       } else {
-        await bannerService.create(formData);
+        await advertisementService.create(formData);
       }
       setShowModal(false);
-      setEditingBanner(null);
+      seteditingAdvertisement(null);
       resetForm();
       loadBanners();
     } catch (error) {
@@ -47,13 +48,13 @@ export default function BannersAdminPage() {
     }
   };
 
-  const handleEdit = (banner: Banner) => {
-    setEditingBanner(banner);
+  const handleEdit = (advertisement: Advertisement) => {
+    seteditingAdvertisement(advertisement);
     setFormData({
-      title: banner.title,
-      imageUrl: banner.imageUrl,
-      type: banner.type,
-      sortOrder: banner.sortOrder,
+      title: advertisement.title,
+      imageUrl: advertisement.imageUrl,
+      type: advertisement.type,
+      sortOrder: advertisement.sortOrder,
     });
     setShowModal(true);
   };
@@ -61,7 +62,7 @@ export default function BannersAdminPage() {
   const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this banner?')) {
       try {
-        await bannerService.delete(id);
+        await advertisementService.delete(id);
         loadBanners();
       } catch (error) {
         console.error('Failed to delete banner:', error);
@@ -79,7 +80,7 @@ export default function BannersAdminPage() {
   };
 
   const openAddModal = () => {
-    setEditingBanner(null);
+    seteditingAdvertisement(null);
     resetForm();
     setShowModal(true);
   };
@@ -114,14 +115,18 @@ export default function BannersAdminPage() {
               <tr key={banner.id} className="hover:bg-gray-50">
                 <td className="px-4 py-2 border">{banner.title}</td>
                 <td className="px-4 py-2 border">
-                  <img 
-                    src={banner.imageUrl} 
-                    alt={banner.title} 
-                    className="w-16 h-16 object-cover" 
-                    onError={(e) => {
-                      e.currentTarget.src = '/images/placeholder.png'; // or some placeholder
-                    }}
-                  />
+                  {banner.imageUrl ? (
+                    <img
+                      src={banner.imageUrl}
+                      alt={banner.title}
+                      className="w-16 h-16 object-cover"
+                      onError={(e) => { e.currentTarget.src = '/images/placeholder.png'; }}
+                    />
+                  ) : (
+                    <div className="w-16 h-16 bg-gray-100 flex items-center justify-center text-xs text-gray-400">
+                      No image
+                    </div>
+                  )}
                 </td>
                 <td className="px-4 py-2 border">{banner.type}</td>
                 <td className="px-4 py-2 border">{banner.sortOrder}</td>
@@ -150,7 +155,7 @@ export default function BannersAdminPage() {
 >
           <div className="bg-white p-6 rounded-lg w-96">
             <h2 className="text-xl font-bold mb-4">
-              {editingBanner ? 'Edit Banner' : 'Add Banner'}
+              {editingAdvertisement ? 'Edit Banner' : 'Add Banner'}
             </h2>
             <form onSubmit={handleSubmit}>
               <div className="mb-4">
@@ -164,13 +169,11 @@ export default function BannersAdminPage() {
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-1">Image URL</label>
-                <input
-                  type="url"
+                <label className="block text-sm font-medium mb-1">Image</label>
+                <ImageUploader
                   value={formData.imageUrl}
-                  onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded"
-                  required
+                  onChange={(url) => setFormData({ ...formData, imageUrl: url || '' })}
+                  previewSize="h-20 w-40"
                 />
               </div>
               <div className="mb-4">
@@ -204,7 +207,7 @@ export default function BannersAdminPage() {
                   type="submit"
                   className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
                 >
-                  {editingBanner ? 'Update' : 'Create'}
+                  {editingAdvertisement ? 'Update' : 'Create'}
                 </button>
               </div>
             </form>
@@ -214,3 +217,4 @@ export default function BannersAdminPage() {
     </div>
   );
 }
+

@@ -3,6 +3,7 @@ import { Roboto } from "next/font/google";
 import "./globals.css";
 import ConditionalLayout from "./components/ConditionalLayout";
 import { AuthProvider } from "./providers/AuthProvider";
+import CategoryProvider from "./context/CategoryContext";
 import { getUserFromCookie } from "./lib/getUserFromCookie";
 
 const roboto = Roboto({
@@ -28,10 +29,12 @@ export default async function RootLayout({
     <html lang="en">
       <body className={`${roboto.variable} antialiased`}>
         <AuthProvider initialUser={user}>
-          <ConditionalLayout>
-            {children}
-          </ConditionalLayout>
-          {modal}
+          <CategoryProvider>
+            <ConditionalLayout>
+              {children}
+            </ConditionalLayout>
+            {modal}
+          </CategoryProvider>
         </AuthProvider>
       </body>
     </html>

@@ -3,36 +3,29 @@
 import React, { useState, useRef, useEffect } from "react";
 import { ButtonPrev, ButtonNext } from "./Button";
 import ProductsTitle from "./ProductsTitle";
-import { getCategories } from "../services/categoryService";
+import { useCategories } from '@/app/context/CategoryContext';
 
 const ProductTabs = React.memo(function ProductTabs({ onChange }: { onChange?: (categoryId?: string) => void }) {
 
   const [activeTab, setActiveTab] = useState(0);
   const [tabs, setTabs] = useState<{ name: string; categoryId: string }[]>([]);
-  const [loading, setLoading] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showPrev, setShowPrev] = useState(false);
   const [showNext, setShowNext] = useState(false);
 
   const initializedRef = useRef(false);
 
+  const { categories, loading } = useCategories();
+
   useEffect(() => {
-    setLoading(true);
-    getCategories()
-      .then((data) => {
-        if (Array.isArray(data)) {
-          // prepend an "Tất cả" tab so users can clear the category filter
-          const list = [{ name: "Tất cả", categoryId: "" }, ...data.map((c: any) => ({ name: c.name, categoryId: c.categoryId }))];
-          setTabs(list);
-          // notify parent with initial selection (All) only once
-          if (!initializedRef.current && typeof onChange === 'function') {
-            onChange(undefined);
-            initializedRef.current = true;
-          }
-        }
-      })
-      .finally(() => setLoading(false));
-  }, [onChange]);
+    if (loading) return;
+    const list = [{ name: "Tất cả", categoryId: "" }, ...((categories || []).map((c: any) => ({ name: c.name, categoryId: c.categoryId })))];
+    setTabs(list);
+    if (!initializedRef.current && typeof onChange === 'function') {
+      onChange(undefined);
+      initializedRef.current = true;
+    }
+  }, [loading, categories, onChange]);
 
   const handlePrev = () => {
     if (scrollRef.current) {

@@ -13,6 +13,9 @@ export default function useProducts({
   categoryId,
   limit,
   sort,
+  minPrice,
+  maxPrice,
+  rating,
   initialPage = 1,
   pageSize = 12,
   autoFetch = true,
@@ -23,7 +26,7 @@ export default function useProducts({
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   // keep current filter ref to avoid race conditions where older fetches overwrite newer filtered results
-  const filterRef = useRef<{ section?: string; categoryId?: string | undefined }>({ section, categoryId });
+  const filterRef = useRef<{ section?: string; categoryId?: string | undefined; minPrice?: number; maxPrice?: number; sort?: string; rating?: number | null }>({ section, categoryId, minPrice, maxPrice, sort, rating });
 
   const mapProducts = (items: any[]): Product[] =>
     items.map((p: any) => {
@@ -47,20 +50,34 @@ export default function useProducts({
     setError(null);
     const usedCategory = categoryId;
     const usedSection = section;
+    const usedMinPrice = minPrice;
+    const usedMaxPrice = maxPrice;
+    const usedSort = sort;
+    const usedRating = rating;
     try {
       const params: GetProductsParams = {};
       if (usedCategory) params.categoryId = usedCategory;
       if (limit) params.limit = limit;
-      if (sort) params.sort = sort;
+      if (usedSort) params.sort = usedSort;
       if (usedSection) params.section = usedSection;
       if (pageNumber !== undefined) params.page = pageNumber;
       if (pageSize !== undefined) (params as any).pageSize = pageSize;
+      if (usedMinPrice !== undefined) (params as any).minPrice = usedMinPrice;
+      if (usedMaxPrice !== undefined) (params as any).maxPrice = usedMaxPrice;
+      if (usedRating !== undefined && usedRating !== null) (params as any).rating = usedRating;
 
       console.log('[useProducts] requesting', params, 'currentFilter', filterRef.current);
       const data = await getProducts(params);
 
       // ensure this response still matches current filter to avoid stale overwrite
-      if (filterRef.current.section !== usedSection || filterRef.current.categoryId !== usedCategory) {
+      if (
+        filterRef.current.section !== usedSection ||
+        filterRef.current.categoryId !== usedCategory ||
+        filterRef.current.minPrice !== usedMinPrice ||
+        filterRef.current.maxPrice !== usedMaxPrice ||
+        filterRef.current.sort !== usedSort ||
+        filterRef.current.rating !== usedRating
+      ) {
         // discard stale response
         console.log('[useProducts] discarding stale response for', params, 'currentFilter', filterRef.current);
         return;
@@ -82,15 +99,36 @@ export default function useProducts({
     } finally {
       setLoading(false);
     }
-  }, [categoryId, limit, sort, section, pageSize]);
+  }, [categoryId, limit, sort, section, pageSize, minPrice, maxPrice, rating]);
+
+  // track current filters and avoid duplicate fetches when filters change
+  const prevFiltersRef = useRef<{ section?: string; categoryId?: string | undefined; minPrice?: number; maxPrice?: number; sort?: string; rating?: number | null }>({ section, categoryId, minPrice, maxPrice, sort, rating });
 
   useEffect(() => {
-    // track current filters to prevent stale responses overwriting results
-    filterRef.current = { section, categoryId };
+    const filtersChanged =
+      prevFiltersRef.current.section !== section ||
+      prevFiltersRef.current.categoryId !== categoryId ||
+      prevFiltersRef.current.minPrice !== minPrice ||
+      prevFiltersRef.current.maxPrice !== maxPrice ||
+      prevFiltersRef.current.sort !== sort ||
+      prevFiltersRef.current.rating !== rating;
+
+    // update previous snapshot and current filter ref
+    prevFiltersRef.current = { section, categoryId, minPrice, maxPrice, sort, rating };
+    filterRef.current = { section, categoryId, minPrice, maxPrice, sort, rating };
 
     if (!autoFetch) return;
+
+    // If filters changed and we're not already on page 1, reset to page 1 and skip fetching the previous page.
+    // The page update will trigger this effect again and then fetch page 1 once.
+    if (filtersChanged && page !== 1) {
+      console.log('[useProducts] filters changed — resetting to page 1 and skipping fetch for old page', { page, section, categoryId, minPrice, maxPrice, sort, rating });
+      setPage(1);
+      return;
+    }
+
     fetchPage(page);
-  }, [page, fetchPage, autoFetch, section, categoryId]);
+  }, [page, fetchPage, autoFetch, section, categoryId, minPrice, maxPrice, sort, rating]);
 
   const refresh = useCallback(() => fetchPage(page), [fetchPage, page]);
 

@@ -1,4 +1,4 @@
-import axiosClient, { getCookie, setCookie, eraseCookie } from './axiosClient';
+import axiosClient, { getCookie, setCookie, eraseCookie } from '../lib/axiosClient';
 
 type LoginRequest = { email: string; password: string };
 type RegisterRequest = { email: string; password: string; fullName?: string };
@@ -14,20 +14,11 @@ export const login = async (credentials: LoginRequest) => {
   if (typeof window !== 'undefined' && data) {
     if (data.accessToken) setCookie('accessToken', data.accessToken, 1);
     if (data.refreshToken) setCookie('refreshToken', data.refreshToken, 7);
+    console.debug('[authService.login] login response and cookies set. document.cookie=', document.cookie);
   }
   return data;
 };
 
-export const refresh = async () => {
-  const refreshToken = typeof window !== 'undefined' ? getCookie('refreshToken') : null;
-  const res = await axiosClient.post('/api/auth/refresh', { refreshToken });
-  const data = res.data;
-  if (typeof window !== 'undefined' && data) {
-    if (data.accessToken) setCookie('accessToken', data.accessToken, 1);
-    if (data.refreshToken) setCookie('refreshToken', data.refreshToken, 7);
-  }
-  return data;
-};
 
 export const logout = async () => {
   try {
@@ -46,5 +37,6 @@ export const logout = async () => {
 
 export const me = async () => {
   const res = await axiosClient.get('/api/auth/me');
-  return res.data;
+  // API returns { success, message, data } — unwrap `data` when present
+  return res.data?.data ?? res.data;
 };

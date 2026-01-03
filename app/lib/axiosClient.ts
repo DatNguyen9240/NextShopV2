@@ -31,11 +31,14 @@ const setCookie = (name: string, value: string, days = 7) => {
   }
   const secure = window.location.protocol === 'https:' ? '; Secure' : '';
   document.cookie = `${name}=${encodeURIComponent(value)}${expires}; path=/${secure}; SameSite=Lax`;
+  console.debug(`[axiosClient] setCookie ${name} (days=${days}). document.cookie=`, document.cookie);
 };
 
 const eraseCookie = (name: string) => {
   if (typeof document === 'undefined') return;
+  console.warn(`[axiosClient] eraseCookie ${name}. Before:`, document.cookie);
   document.cookie = `${name}=; Max-Age=0; path=/; SameSite=Lax`;
+  console.warn(`[axiosClient] eraseCookie ${name}. After:`, document.cookie);
 };
 
 instance.interceptors.request.use((config) => {
@@ -76,11 +79,25 @@ instance.interceptors.response.use(
 
       return new Promise(async (resolve, reject) => {
         try {
+          // If there's no refresh token, avoid calling the refresh endpoint which will 400 when unauthenticated
+                  if (!refreshToken) {
+            if (typeof window !== 'undefined') {
+              console.warn('[axiosClient] No refresh token present before refresh attempt. document.cookie=', document.cookie);
+              eraseCookie('accessToken');
+              eraseCookie('refreshToken');
+            }
+            isRefreshing = false;
+            return reject(error);
+          }
+
+          console.debug('[axiosClient] Attempting token refresh; refreshToken present? ', typeof window !== 'undefined' ? Boolean(getCookie('refreshToken')) : 'server');
           const resp = await axios.post(`${baseURL}/api/auth/refresh`, { refreshToken });
           const { accessToken, refreshToken: newRefresh } = resp.data;
+          console.debug('[axiosClient] Refresh response', { status: resp.status, accessToken: Boolean(accessToken), hasRefreshToken: Boolean(newRefresh) });
           if (typeof window !== 'undefined') {
             setCookie('accessToken', accessToken, 1); // short lived
             setCookie('refreshToken', newRefresh, 7);
+            console.debug('[axiosClient] Cookies after refresh set. document.cookie=', document.cookie);
           }
           instance.defaults.headers.common['Authorization'] = 'Bearer ' + accessToken;
           processQueue(null, accessToken);

@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react';
-import * as authService from '../lib/authService';
+import * as authService from '../services/authService';
 
 export function useAuth() {
   const [user, setUser] = useState<any>(null);

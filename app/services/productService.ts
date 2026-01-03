@@ -7,6 +7,9 @@ export type GetProductsParams = {
   section?: string;
   page?: number;
   pageSize?: number;
+  minPrice?: number;
+  maxPrice?: number;
+  rating?: number;
 };
 
 export async function getProducts(params?: GetProductsParams) {

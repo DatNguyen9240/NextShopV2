@@ -1,11 +1,11 @@
-import BannerCarouselRemote from "./components/BannerCarouselRemote";
+import AdvertisementCarouselRemote from "./components/AdvertisementCarouselRemote";
 import FeaturedCategories from "./components/FeaturedCategories";
 import PopularProductsSection from "./components/PopularProductsSection";
 import FeaturedProductsSection from "./components/FeaturedProductsSection";
 export default function HomePage() {
   return (
     <main>
-      <BannerCarouselRemote type="sell_off" timeout={4000} />
+      <AdvertisementCarouselRemote type="home_sell_off" timeout={4000} />
       <FeaturedCategories />
       <PopularProductsSection />
       <FeaturedProductsSection />
