@@ -61,18 +61,25 @@ function ProductInfo({ product }: { product?: ProductDto | null }) {
   );
 }
 
-export default function ProductModal({ id, isModal = true }: { id: string; isModal?: boolean }) {
+export default function ProductModal({ id, isModal = true, product: initialProduct }: { id: string; isModal?: boolean; product?: ProductDto | null }) {
   const router = useRouter();
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
-  const [product, setProduct] = useState<ProductDto | null>(null);
+  const [product, setProduct] = useState<ProductDto | null>(initialProduct ?? null);
   const [loading, setLoading] = useState(true);
   const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null);
 
   useEffect(() => {
     let mounted = true;
     async function load() {
+      // If parent provided product, use it and skip network fetch
+      if (initialProduct) {
+        setProduct(initialProduct);
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       try {
         const p = await getProductById(id);
@@ -106,7 +113,7 @@ export default function ProductModal({ id, isModal = true }: { id: string; isMod
     return () => {
       mounted = false;
     };
-  }, [id]);
+  }, [id, initialProduct]);
 
   const allVariantImages = (product?.variants || []).map((v) => v.imageUrl).filter((u): u is string => !!u);
   const uniqueImages = Array.from(new Set(allVariantImages));
@@ -186,7 +193,7 @@ export default function ProductModal({ id, isModal = true }: { id: string; isMod
                 <ProductStock inStock={(selectedVariant ? (selectedVariant.stockQuantity ?? product?.totalStockQuantity ?? 0) : (product?.totalStockQuantity ?? 0)) > 0} bg count={selectedVariant ? (selectedVariant.stockQuantity ?? product?.totalStockQuantity ?? 0) : (product?.totalStockQuantity ?? 0)} />
               </div>
 
-              <p className="text-gray-700 mb-16">{product?.description}</p>
+              <p className="text-gray-700 mb-12">{product?.description}</p>
 
               <div className="mb-4 flex items-center">
                 <span className="mr-2 text-black">Color:</span>

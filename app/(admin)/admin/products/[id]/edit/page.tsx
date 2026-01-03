@@ -19,6 +19,7 @@ export default function EditProductPage() {
     brand: '',
     isActive: true,
     tags: '',
+    additionalInfo: '',
     categoryIds: [] as string[]
   });
 
@@ -40,6 +41,7 @@ export default function EditProductPage() {
           brand: productRes.brand || '',
           isActive: productRes.isActive ?? true,
           tags: (productRes.tags || []).join(', '),
+          additionalInfo: productRes.additionalInfo || '',
           categoryIds: currentCategoryIds
         });
       } catch (error) {
@@ -55,6 +57,13 @@ export default function EditProductPage() {
     e.preventDefault();
     setSaving(true);
     try {
+      // validate additionalInfo length
+      if (formData.additionalInfo && formData.additionalInfo.length > 1000) {
+        alert('Additional info must be 1000 characters or less');
+        setSaving(false);
+        return;
+      }
+
       const updateData = {
         name: formData.name,
         description: formData.description,
@@ -62,6 +71,7 @@ export default function EditProductPage() {
         brand: formData.brand,
         isActive: formData.isActive,
         tags: formData.tags.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag),
+        additionalInfo: formData.additionalInfo,
         categoryIds: formData.categoryIds
       };
       await updateProduct(id as string, updateData);
@@ -117,6 +127,18 @@ export default function EditProductPage() {
             className="mt-1 block w-full border border-gray-300 rounded-md p-2"
             rows={4}
           />
+        </div>
+        <div>
+          <label className="block text-sm font-medium">Thông tin bổ sung (Additional Info)</label>
+          <textarea
+            name="additionalInfo"
+            value={formData.additionalInfo}
+            onChange={handleChange}
+            maxLength={1000}
+            className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+            rows={4}
+          />
+          <div className="text-sm text-gray-500 mt-1">{formData.additionalInfo.length}/1000</div>
         </div>
         <div>
           <label className="block text-sm font-medium">Gender Target</label>
