@@ -19,7 +19,7 @@ const ProductTabs = React.memo(function ProductTabs({ onChange }: { onChange?: (
 
   useEffect(() => {
     if (loading) return;
-    const list = [{ name: "Tất cả", categoryId: "" }, ...((categories || []).map((c: any) => ({ name: c.name, categoryId: c.categoryId })))];
+    const list = [{ name: "Tất cả", categoryId: "" }, ...((categories || []).map((c) => ({ name: c.name, categoryId: c.categoryId })))] as { name: string; categoryId: string }[];
     setTabs(list);
     if (!initializedRef.current && typeof onChange === 'function') {
       onChange(undefined);

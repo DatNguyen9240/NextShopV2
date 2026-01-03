@@ -57,7 +57,7 @@ const PriceFilter: React.FC = () => {
         debounceRef.current = null;
       }
     };
-  }, [min, max, setFilters, filters?.minPrice, filters?.maxPrice]);
+  }, [min, max, setFilters, filters]);
 
   // Sync local state when external filters change (route/navigation)
   React.useEffect(() => {

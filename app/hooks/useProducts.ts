@@ -28,12 +28,15 @@ export default function useProducts({
   // keep current filter ref to avoid race conditions where older fetches overwrite newer filtered results
   const filterRef = useRef<{ section?: string; categoryId?: string | undefined; minPrice?: number; maxPrice?: number; sort?: string; rating?: number | null }>({ section, categoryId, minPrice, maxPrice, sort, rating });
 
-  const mapProducts = (items: any[]): Product[] =>
-    items.map((p: any) => {
-      const v = p.variants && p.variants.length ? (p.variants.find((x: any) => x.isDefault) || p.variants[0]) : null;
+  type ApiVariant = { isDefault?: boolean; basePrice?: number; priceAfterDiscount?: number; discountPercent?: number; stockQuantity?: number; imageUrl?: string; imgHover?: string };
+  type ApiProduct = { productId?: string | number; id?: string | number; name?: string; label?: string; variants?: ApiVariant[]; image?: string; imageHover?: string; averageRating?: number };
+
+  const mapProducts = useCallback((items: ApiProduct[]): Product[] =>
+    items.map((p) => {
+      const v: ApiVariant | null = p.variants && p.variants.length ? (p.variants.find((x) => x.isDefault) || p.variants[0]) : null;
 
       return {
-        id: p.productId ?? p.productId?.toString() ?? p.id ?? Math.random().toString(),
+        id: (p.productId ?? p.id ?? Math.random().toString())?.toString(),
         label: p.name ?? p.label ?? "",
         priceOld: v ? String(v.basePrice ?? "") : "",
         priceNew: v ? String(v.priceAfterDiscount ?? v.basePrice ?? "0") : "0",
@@ -43,7 +46,7 @@ export default function useProducts({
         imageHover: v?.imgHover ?? p.imageHover,
         rating: Math.round(p.averageRating ?? 0),
       };
-    });
+    }), []);
 
   const fetchPage = useCallback(async (pageNumber: number) => {
     setLoading(true);
@@ -61,10 +64,10 @@ export default function useProducts({
       if (usedSort) params.sort = usedSort;
       if (usedSection) params.section = usedSection;
       if (pageNumber !== undefined) params.page = pageNumber;
-      if (pageSize !== undefined) (params as any).pageSize = pageSize;
-      if (usedMinPrice !== undefined) (params as any).minPrice = usedMinPrice;
-      if (usedMaxPrice !== undefined) (params as any).maxPrice = usedMaxPrice;
-      if (usedRating !== undefined && usedRating !== null) (params as any).rating = usedRating;
+      if (pageSize !== undefined) params.pageSize = pageSize;
+      if (usedMinPrice !== undefined) params.minPrice = usedMinPrice;
+      if (usedMaxPrice !== undefined) params.maxPrice = usedMaxPrice;
+      if (usedRating !== undefined && usedRating !== null) params.rating = usedRating;
 
       console.log('[useProducts] requesting', params, 'currentFilter', filterRef.current);
       const data = await getProducts(params);
@@ -93,13 +96,13 @@ export default function useProducts({
         setProducts(mapProducts(items));
         setTotalPages(data.totalPages ?? data.TotalPages ?? 1);
       }
-    } catch (err: any) {
-      setError(err?.message ?? "Failed to load products");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to load products");
       setProducts([]);
     } finally {
       setLoading(false);
     }
-  }, [categoryId, limit, sort, section, pageSize, minPrice, maxPrice, rating]);
+  }, [categoryId, limit, sort, section, pageSize, minPrice, maxPrice, rating, mapProducts]);
 
   // track current filters and avoid duplicate fetches when filters change
   const prevFiltersRef = useRef<{ section?: string; categoryId?: string | undefined; minPrice?: number; maxPrice?: number; sort?: string; rating?: number | null }>({ section, categoryId, minPrice, maxPrice, sort, rating });

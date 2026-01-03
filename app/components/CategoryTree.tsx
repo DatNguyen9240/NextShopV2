@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { Category } from '../services/categoryService';
 
 interface CategoryTreeProps {
@@ -58,11 +59,9 @@ export default function CategoryTree({
             {/* Category Icon/Image */}
             <div className="mr-3 w-6 h-6 flex items-center justify-center">
               {category.imageUrl ? (
-                <img
-                  src={category.imageUrl}
-                  alt={category.name}
-                  className="w-6 h-6 object-cover rounded"
-                />
+                <div className="w-6 h-6 relative rounded overflow-hidden">
+                  <Image src={category.imageUrl} alt={category.name} fill sizes="24px" className="object-cover" />
+                </div>
               ) : category.icon ? (
                 <span className="text-lg">{category.icon}</span>
               ) : (

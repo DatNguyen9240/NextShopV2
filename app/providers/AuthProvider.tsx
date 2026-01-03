@@ -56,10 +56,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, initialUse
       const userData = await authService.me();
       setUser(userData);
       return userData as User | null;
-    } catch (error: any) {
+    } catch (err: unknown) {
       // If /me returned NotFound or Unauthorized, clear auth cookies to avoid repeated failing calls
-      const status = error?.response?.status;
-      console.warn('[AuthProvider.refreshUser] /me failed', { status, message: error?.message, response: error?.response?.data });
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      const message = (err as { message?: string })?.message;
+      const response = (err as { response?: { data?: unknown } })?.response?.data;
+      console.warn('[AuthProvider.refreshUser] /me failed', { status, message, response });
       if (status === 401 || status === 404 || status === 400) {
         console.warn('[AuthProvider.refreshUser] clearing cookies due to failed /me');
         eraseCookie('accessToken');

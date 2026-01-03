@@ -5,7 +5,7 @@ import { useAuth } from "@/app/providers/AuthProvider";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, user } = useAuth();
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -20,8 +20,9 @@ export default function LoginPage() {
       setMessage("Đăng nhập thành công!");
       const isAdmin = updatedUser?.role?.toLowerCase() === 'admin';
       setTimeout(() => router.push(isAdmin ? '/admin' : '/'), 500);
-    } catch (err: any) {
-      setMessage(err?.response?.data?.message || err?.message || "Đăng nhập thất bại");
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } } )?.response?.data?.message || (err instanceof Error ? err.message : undefined) || "Đăng nhập thất bại";
+      setMessage(msg);
     } finally {
       setLoading(false);
     }

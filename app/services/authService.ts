@@ -14,6 +14,20 @@ export const login = async (credentials: LoginRequest) => {
   if (typeof window !== 'undefined' && data) {
     if (data.accessToken) setCookie('accessToken', data.accessToken, 1);
     if (data.refreshToken) setCookie('refreshToken', data.refreshToken, 7);
+    // Attempt to extract and persist userId from accessToken for refresh endpoint compatibility
+    try {
+      const parts = (data.accessToken || '').split('.');
+      if (parts.length >= 2) {
+        const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+        const uid = payload?.userId ?? payload?.nameid ?? payload?.sub;
+        if (uid) {
+          setCookie('userId', String(uid), 7);
+        }
+      }
+    } catch {
+      // ignore decode failures
+    }
+
     console.debug('[authService.login] login response and cookies set. document.cookie=', document.cookie);
   }
   return data;
@@ -25,7 +39,7 @@ export const logout = async () => {
     const accessToken = typeof window !== 'undefined' ? getCookie('accessToken') : null;
     const refreshToken = typeof window !== 'undefined' ? getCookie('refreshToken') : null;
     await axiosClient.post('/api/auth/logout', { accessToken, refreshToken });
-  } catch (err) {
+  } catch {
     // ignore
   } finally {
     if (typeof window !== 'undefined') {

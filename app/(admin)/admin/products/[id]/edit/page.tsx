@@ -9,8 +9,7 @@ import axiosClient from '@/app/lib/axiosClient';
 export default function EditProductPage() {
   const { id } = useParams();
   const router = useRouter();
-  const [product, setProduct] = useState(null);
-  const [categories, setCategories] = useState([] as { categoryId: string; name: string }[]);
+  const [categories, setCategories] = useState<{ categoryId: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
@@ -31,9 +30,9 @@ export default function EditProductPage() {
           getCategories(),
           axiosClient.get(`/api/ProductCategory/product/${id}/categories`)
         ]);
-        setProduct(productRes);
         setCategories(categoriesRes);
-        const currentCategoryIds = productCategoriesRes.data?.map((pc: any) => pc.categoryId) || [];
+        type ProductCategory = { categoryId: string };
+        const currentCategoryIds = (productCategoriesRes.data as ProductCategory[] ?? []).map(pc => pc.categoryId) || [];
         setFormData({
           name: productRes.name || '',
           description: productRes.description || '',

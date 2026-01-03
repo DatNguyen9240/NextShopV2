@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { getProducts } from '../../../services/productService';
 
 interface Product {
@@ -61,7 +62,15 @@ export default function AdminProducts() {
             {products.map((product) => (
               <tr key={product.productId}>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <img src={product.variants[0]?.imageUrl || '/placeholder.png'} alt={product.name} className="h-12 w-12 object-cover rounded" />
+                  <div className="h-12 w-12 relative rounded overflow-hidden">
+                    <Image
+                      src={product.variants[0]?.imageUrl || '/placeholder.png'}
+                      alt={product.name}
+                      fill
+                      sizes="48px"
+                      className="object-cover"
+                    />
+                  </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{product.name}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{product.description}</td>

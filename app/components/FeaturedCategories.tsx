@@ -8,7 +8,7 @@ const FeaturedCategories: React.FC = () => {
   const { categories, loading } = useCategories();
 
   if (loading) return null;
-  const roots = (categories || []).filter((c: any) => !c.parentId).slice(0, 6);
+  const roots = (categories || []).filter((c) => !c.parentId).slice(0, 6);
   if (!roots.length) return null;
 
   return (

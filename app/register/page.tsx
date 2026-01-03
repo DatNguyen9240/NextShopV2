@@ -30,8 +30,8 @@ export default function RegisterPage() {
         // redirect to login after short delay
         setTimeout(() => router.push("/login"), 1000);
       }
-    } catch (err: any) {
-      setMessage(err?.message || "Network error");
+    } catch (err: unknown) {
+      setMessage(err instanceof Error ? err.message : "Network error");
     } finally {
       setLoading(false);
     }

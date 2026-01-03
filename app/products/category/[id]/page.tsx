@@ -10,8 +10,7 @@ import { useEffect } from 'react';
 import { useFilter } from '@/app/context/FilterContext';
 import CategoryBreadcrumb from '@/app/components/CategoryBreadcrumb';
 
-// We'll fetch products for the category id from the route
-const newProducts: any[] = [];
+
 
 const CategoryPage = () => {
   const { cols, setCols, modes } = useGridMode();

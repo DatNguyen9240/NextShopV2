@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { advertisementService, Advertisement, CreateAdvertisementDto, UpdateAdvertisementDto } from '../../../services/advertisementService';
+import { advertisementService, Advertisement, CreateAdvertisementDto } from '../../../services/advertisementService';
+import Image from 'next/image';
+import React, { useState as useStateLocal } from 'react';
 import ImageUploader from '@/app/components/ImageUploader';
 
 export default function BannersAdminPage() {
@@ -85,6 +87,20 @@ export default function BannersAdminPage() {
     setShowModal(true);
   };
 
+  function BannerImage({ src, alt }: { src: string; alt?: string }) {
+    const [imgSrc, setImgSrc] = useStateLocal(src);
+    return (
+      <Image
+        src={imgSrc}
+        alt={alt || ''}
+        width={64}
+        height={64}
+        className="object-cover rounded"
+        onError={() => setImgSrc('/images/placeholder.png')}
+      />
+    );
+  }
+
   if (loading) return <div>Loading...</div>;
 
   return (
@@ -116,12 +132,7 @@ export default function BannersAdminPage() {
                 <td className="px-4 py-2 border">{banner.title}</td>
                 <td className="px-4 py-2 border">
                   {banner.imageUrl ? (
-                    <img
-                      src={banner.imageUrl}
-                      alt={banner.title}
-                      className="w-16 h-16 object-cover"
-                      onError={(e) => { e.currentTarget.src = '/images/placeholder.png'; }}
-                    />
+                    <BannerImage src={banner.imageUrl} alt={banner.title} />
                   ) : (
                     <div className="w-16 h-16 bg-gray-100 flex items-center justify-center text-xs text-gray-400">
                       No image

@@ -24,7 +24,7 @@ async function fetchCategoryOnce(id: string) {
       const c = await getCategoryById(id);
       fetchedCategoryCache.set(id, c ?? null);
       return c ?? null;
-    } catch (e) {
+    } catch {
       fetchedCategoryCache.set(id, null);
       return null;
     }
@@ -47,7 +47,7 @@ async function fetchChildrenOnce(parentId: string): Promise<Category[] | null> {
       const list: Category[] = payload?.data ?? [];
       fetchedChildrenCache.set(parentId, list);
       return list;
-    } catch (e) {
+    } catch {
       fetchedChildrenCache.set(parentId, null);
       return null;
     }

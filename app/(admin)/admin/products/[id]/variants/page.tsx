@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
+import Image from 'next/image';
 import { getVariantsByProductId, updateVariant, createVariant } from '../../../../../services/variantService';
 import ImageUploader from '@/app/components/ImageUploader';
 import { PRESET_COLORS, PRESET_SIZES } from '@/app/config/colors';
@@ -29,7 +30,8 @@ export default function ProductVariants() {
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editData, setEditData] = useState<Partial<Variant>>({});
-  const [uploading, setUploading] = useState(false);
+  // uploading state reserved for future file uploads
+  // const [uploading, setUploading] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newVariant, setNewVariant] = useState({
     sku: '',
@@ -65,12 +67,13 @@ export default function ProductVariants() {
     }
   };
 
-  const handleChange = (field: keyof Variant, value: any) => {
+  type VariantFieldValue = string | number | boolean | undefined;
+  const handleChange = (field: keyof Variant, value: VariantFieldValue) => {
     setEditData(prev => ({ ...prev, [field]: value }));
   };
 
 
-  const handleNewVariantChange = (field: string, value: any) => {
+  const handleNewVariantChange = (field: keyof typeof newVariant, value: VariantFieldValue) => {
     setNewVariant(prev => ({ ...prev, [field]: value }));
   };
 
@@ -372,7 +375,11 @@ export default function ProductVariants() {
                       />
                     </div>
                   ) : (
-                    variant.imageUrl && <img src={variant.imageUrl} alt="Variant" className="h-12 w-12 object-cover rounded" />
+                    variant.imageUrl && (
+                      <div className="h-12 w-12 relative rounded overflow-hidden">
+                        <Image src={variant.imageUrl} alt="Variant" fill sizes="48px" className="object-cover" />
+                      </div>
+                    )
                   )}
                 </td>
                 <td className="px-4 py-2 whitespace-nowrap">
@@ -386,7 +393,11 @@ export default function ProductVariants() {
                       />
                     </div>
                   ) : (
-                    variant.imgHover && <img src={variant.imgHover} alt="Hover" className="h-12 w-12 object-cover rounded" />
+                    variant.imgHover && (
+                      <div className="h-12 w-12 relative rounded overflow-hidden">
+                        <Image src={variant.imgHover} alt="Hover" fill sizes="48px" className="object-cover" />
+                      </div>
+                    )
                   )}
                 </td>
                 <td className="px-4 py-2 whitespace-nowrap text-sm font-medium">

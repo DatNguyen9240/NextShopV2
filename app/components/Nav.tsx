@@ -1,11 +1,14 @@
 "use client";
-import React, { useEffect } from "react";
+import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { Category } from '@/app/services/categoryService';
 
 interface NavProps {
-  categories: any[];
+  categories: Category[];
 }
+
+type MenuItem = { label: string; href: string; icon?: string; subMenu?: Array<{ label: string; href: string; icon?: string }> }
 
 const Nav = React.memo(function Nav({ categories }: NavProps) {
   const pathname = usePathname();
@@ -20,14 +23,12 @@ const Nav = React.memo(function Nav({ categories }: NavProps) {
       label: cat.name,
       href: `/products/category/${cat.categoryId}`,
       icon: cat.icon,
-      subMenu: cat.children?.length
-        ? (cat.children as any[]).map((sub) => ({
-            label: sub.name,
-            href: `/products/category/${sub.categoryId}`,
-            icon: sub.icon,
-          }))
-        : undefined,
-    })),
+      subMenu: cat.children && cat.children.length > 0 ? cat.children.map((sub) => ({
+        label: sub.name,
+        href: `/products/category/${sub.categoryId}`,
+        icon: sub.icon,
+      })) : undefined,
+    } as MenuItem)),
   ];
 
   // NOTE: we intentionally do NOT auto-open submenus based on route. Dropdown visibility is purely on hover.
@@ -35,7 +36,7 @@ const Nav = React.memo(function Nav({ categories }: NavProps) {
   return (
     <nav className="w-full bg-white border-b border-gray-200 flex justify-center hidden lg:flex">
       <div className="flex items-center gap-12 py-4 z-99">
-        {menu.map((item, idx) => (
+        {menu.map((item) => (
           <div
             key={item.label}
             className="relative group"
@@ -43,7 +44,7 @@ const Nav = React.memo(function Nav({ categories }: NavProps) {
             <Link
               href={item.href}
               className={`flex items-center min-w-[80px] px-2 ${
-                pathname === item.href || (item.subMenu && item.subMenu.some((s: any) => pathname.startsWith(s.href)))
+                pathname === item.href || (item.subMenu && item.subMenu.some((s) => pathname.startsWith(s.href)))
                   ? "text-green-600"
                   : "text-gray-700"
               }`}
@@ -53,7 +54,7 @@ const Nav = React.memo(function Nav({ categories }: NavProps) {
                 {item.icon}
               </span>
               <span className={`text-sm font-bold tracking-wide uppercase transition-colors duration-200 ease-in-out ${
-                pathname === item.href || (item.subMenu && item.subMenu.some((s: any) => pathname.startsWith(s.href)))
+                pathname === item.href || (item.subMenu && item.subMenu.some((s) => pathname.startsWith(s.href)))
                   ? "text-green-600"
                   : "text-gray-700 group-hover:text-green-600"
               }`}>

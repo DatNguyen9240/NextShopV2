@@ -186,7 +186,7 @@ export default function CreateProductPage() {
                 Categories
               </h2>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {categories.map((category: any) => (
+                {categories.map((category: Category) => (
                   <label key={category.categoryId} className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
                     <input
                       type="checkbox"

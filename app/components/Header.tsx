@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
+import Image from 'next/image';
 import { createPortal } from "react-dom";
 import Logo from "./Logo";
 import SearchBar from "./SearchBar";
@@ -92,11 +93,9 @@ const Header = () => {
                   aria-label="Tài khoản"
                 >
                   {user?.avatar ? (
-                    <img 
-                      src={user.avatar} 
-                      alt={user.fullName || user.email}
-                      className="w-8 h-8 rounded-full object-cover"
-                    />
+                    <div className="w-8 h-8 relative rounded-full overflow-hidden">
+                      <Image src={String(user.avatar)} alt={user.fullName || user.email} fill sizes="32px" className="object-cover" />
+                    </div>
                   ) : (
                     <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
                       <User size={18} className="text-gray-600" />
@@ -188,11 +187,9 @@ const Header = () => {
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg">
                     {user?.avatar ? (
-                      <img 
-                        src={user.avatar} 
-                        alt={user.fullName || user.email}
-                        className="w-8 h-8 rounded-full object-cover"
-                      />
+                      <div className="w-8 h-8 relative rounded-full overflow-hidden">
+                        <Image src={String(user.avatar)} alt={user.fullName || user.email} fill sizes="32px" className="object-cover" />
+                      </div>
                     ) : (
                       <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
                         <User size={18} className="text-gray-600" />

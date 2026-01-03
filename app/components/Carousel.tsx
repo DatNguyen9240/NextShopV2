@@ -47,15 +47,15 @@ const Carousel: React.FC<CarouselProps> = React.memo(function Carousel({
 
   const slides = images ?? [];
 
-  if (slides.length === 0) return null;
-
   useEffect(() => {
-    if (!timeout) return;
+    if (!timeout || slides.length === 0) return;
     const timer = setTimeout(() => {
       setActiveIndex((prev) => (prev + 1) % slides.length);
     }, timeout);
     return () => clearTimeout(timer);
-  }, [activeIndex, timeout]);
+  }, [activeIndex, timeout, slides.length]);
+
+  if (slides.length === 0) return null;
 
   const prevSlide = () =>
     setActiveIndex((prev) => (prev - 1 + slides.length) % slides.length);

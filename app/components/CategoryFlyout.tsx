@@ -11,7 +11,6 @@ export default function CategoryFlyout({ parentId }: { parentId: string }) {
   const [children, setChildren] = useState<Category[]>([]);
   const [hoverId, setHoverId] = useState<string | null>(null);
   const hoverTimeoutRef = useRef<number | null>(null);
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -33,7 +32,7 @@ export default function CategoryFlyout({ parentId }: { parentId: string }) {
         const list = await getChildCategories(pid);
         childrenCache.set(pid, list ?? []);
         return list ?? [];
-      } catch (e) {
+      } catch {
         childrenCache.set(pid, null);
         return null;
       }
@@ -44,11 +43,9 @@ export default function CategoryFlyout({ parentId }: { parentId: string }) {
 
   useEffect(() => {
     let mounted = true;
-    setLoading(true);
     void (async () => {
       const list = await fetchOnce(parentId);
       if (mounted) setChildren(list ?? []);
-      if (mounted) setLoading(false);
     })();
     return () => { mounted = false; };
   }, [parentId]);

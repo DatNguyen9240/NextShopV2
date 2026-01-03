@@ -81,16 +81,17 @@ export default function ProductModal({ id, isModal = true }: { id: string; isMod
         if (p) {
           setProduct(p as ProductDto);
 
-          const variants = p?.variants || [];
-          const defaultVariant = variants.find((v: any) => v.isDefault);
+          const variants: Variant[] = p?.variants ?? [];
+          const defaultVariant = variants.find((v: Variant) => v.isDefault);
           const initial = defaultVariant ?? (variants.length > 0 ? variants[0] : null);
 
           setSelectedVariant(initial ?? null);
           setSelectedSize(initial?.size ?? null);
           setSelectedColor(initial?.color ?? null);
-          // Set main image to initial variant's image if available
+          // compute images local to avoid referencing outer uniqueImages (which depends on product)
+          const localImages = Array.from(new Set(variants.map((v: Variant) => v.imageUrl).filter((u): u is string => typeof u === 'string' && !!u)));
           const initImage = (initial as Variant | null)?.imageUrl;
-          const initIdx = initImage ? uniqueImages.findIndex((u) => u === initImage) : -1;
+          const initIdx = initImage ? localImages.findIndex((u) => u === initImage) : -1;
           setSelectedImageIndex(initIdx >= 0 ? initIdx : 0);
         } else {
           console.error("Product load failed: no data returned");
@@ -150,7 +151,7 @@ export default function ProductModal({ id, isModal = true }: { id: string; isMod
       setSelectedImageIndex(idx >= 0 ? idx : 0);
       console.debug('[ProductModal] Resolved variant:', newVariant);
     }
-  }, [selectedColor, selectedSize, product]);
+  }, [selectedColor, selectedSize, product, uniqueImages, selectedVariant]);
 
   return (
     <>

@@ -12,8 +12,8 @@ export async function getUserFromCookie() {
     const res = await axiosClient.get('/api/auth/me', { headers: { Authorization: `Bearer ${accessToken}` } });
     console.debug('[getUserFromCookie] /me success');
     return res.data;
-  } catch (err: any) {
-    console.warn('[getUserFromCookie] /me failed', err?.response?.status || err?.message);
+  } catch (err: unknown) {
+    console.warn('[getUserFromCookie] /me failed', err);
     return null;
   }
 }

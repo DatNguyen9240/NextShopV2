@@ -4,14 +4,14 @@ import { useCallback, useEffect, useState } from 'react';
 import * as authService from '../services/authService';
 
 export function useAuth() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchMe = useCallback(async () => {
     try {
       const data = await authService.me();
       setUser(data);
-    } catch (err) {
+    } catch {
       setUser(null);
     } finally {
       setLoading(false);

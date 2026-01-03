@@ -3,11 +3,18 @@ import { useState } from "react";
 import ImageLightbox from "@/app/components/ImageLightbox";
 
 
-export default function ProductImages({ images, badgePercent, selectedIndex = 0, onSelect }: { images?: string[], badgePercent?: string, selectedIndex?: number, onSelect?: (idx: number) => void }) {
-  const isLoading = typeof images === "undefined";
-  const thumbs = !isLoading && images && images.length > 0 ? images : [];
-  const main = !isLoading && thumbs.length > 0 && Math.max(0, Math.min(selectedIndex, thumbs.length - 1)) >= 0 ? thumbs[selectedIndex] : null;
+type ProductImagesProps = { images?: string[]; badgePercent?: string; selectedIndex?: number; onSelect?: (idx: number) => void };
 
+export default function ProductImages(props: ProductImagesProps) {
+  const { images, selectedIndex = 0, onSelect } = props;
+  const isLoading = typeof images === "undefined";
+
+  // Hooks must be called unconditionally at the top level of the component
+  const [showLightbox, setShowLightbox] = useState(false);
+  const [initialLightboxIndex, setInitialLightboxIndex] = useState<number>(0);
+
+  const thumbs = !isLoading && images && images.length > 0 ? images : [];
+  const main = thumbs.length > 0 && Math.max(0, Math.min(selectedIndex, thumbs.length - 1)) >= 0 ? thumbs[selectedIndex] : null;
 
   // Loading skeleton
   if (isLoading) {
@@ -64,9 +71,6 @@ export default function ProductImages({ images, badgePercent, selectedIndex = 0,
     );
   };
 
-  const [showLightbox, setShowLightbox] = useState(false);
-  const [initialLightboxIndex, setInitialLightboxIndex] = useState(0);
-
   const openLightbox = (idx = 0) => {
     setInitialLightboxIndex(idx);
     setShowLightbox(true);
@@ -86,7 +90,7 @@ export default function ProductImages({ images, badgePercent, selectedIndex = 0,
       <div className="flex gap-2 flex-wrap ml-2">
         {thumbs.length > 0 ? (
           thumbs.map((src, idx) => (
-            <button key={idx} onClick={() => { onSelect && onSelect(idx); }} className={`border rounded-lg p-0 ${idx === selectedIndex ? 'ring-2 ring-pink-500' : ''}`}>
+            <button key={idx} onClick={() => { if (onSelect) onSelect(idx); }} className={`border rounded-lg p-0 ${idx === selectedIndex ? 'ring-2 ring-pink-500' : ''}`}>
               <Image
                 src={src}
                 alt={`Thumb ${idx}`}

@@ -166,6 +166,7 @@ export default function ImageLightbox({
         onTouchEnd={onTouchEnd}
         onClick={(e) => e.stopPropagation()} // prevent closing when interacting
       >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={images[index]}
           alt={`Image ${index + 1}`}

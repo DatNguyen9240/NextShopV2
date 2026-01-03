@@ -16,15 +16,15 @@ const CategoryFilter: React.FC = () => {
   const { filters, setFilters } = useFilter();
 
   // Keep the local selected radio in sync with global filters (e.g., when navigating via nav)
-  React.useEffect(() => {
+  useEffect(() => {
     setSelected(filters?.categoryId ?? null);
   }, [filters?.categoryId]);
 
 
 
-  const renderCategory = (cat: any, level = 0) => {
-    const id = cat.categoryId ?? cat.categoryId ?? cat.CategoryId ?? String(cat.name);
-    const name = cat.name ?? cat.Name ?? "Unnamed";
+  const renderCategory = (cat: Category, level = 0) => {
+    const id = cat.categoryId ?? String(cat.name);
+    const name = cat.name ?? "Unnamed";
     return (
       <li key={id} className={`text-sm text-gray-900 ${level > 0 ? "pl-3" : ""}`}>
         <label className="flex items-center w-full cursor-pointer">
@@ -61,12 +61,12 @@ const CategoryFilter: React.FC = () => {
                 <span className="truncate">Tất cả</span>
               </label>
             </li>
-            {categories.map((c: any) => (
-              <div key={c.categoryId ?? c.CategoryId ?? c.name}>
+            {categories.map((c: Category) => (
+              <div key={c.categoryId ?? c.name}>
                 {renderCategory(c, 0)}
                 {c.children && c.children.length > 0 && (
                   <ul className="ml-4 mt-1 space-y-1">
-                    {c.children.map((ch: any) => renderCategory(ch, 1))}
+                    {c.children.map((ch: Category) => renderCategory(ch, 1))}
                   </ul>
                 )}
               </div>

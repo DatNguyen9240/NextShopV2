@@ -15,12 +15,12 @@ export async function getVariantById(id: string) {
   return res.data?.data;
 }
 
-export async function createVariant(payload: any) {
+export async function createVariant(payload: Record<string, unknown>) {
   const res = await axiosClient.post('/api/ProductVariant', payload);
   return res.data?.data;
 }
 
-export async function updateVariant(id: string, payload: any) {
+export async function updateVariant(id: string, payload: Record<string, unknown>) {
   const res = await axiosClient.put(`/api/ProductVariant/${id}`, payload);
   return res.data?.data;
 }

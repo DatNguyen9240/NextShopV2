@@ -15,7 +15,7 @@ export async function getCategories(): Promise<Category[]> {
   try {
     const res = await axiosClient.get('/api/Category');
     return res.data?.data || [];
-  } catch (err) {
+  } catch {
     throw new Error('Failed to fetch categories');
   }
 }
@@ -24,7 +24,7 @@ export async function getCategoryTree(): Promise<Category[]> {
   try {
     const res = await axiosClient.get('/api/Category/tree');
     return res.data?.data || [];
-  } catch (err) {
+  } catch {
     throw new Error('Failed to fetch category tree');
   }
 }
@@ -33,7 +33,7 @@ export async function getRootCategories(): Promise<Category[]> {
   try {
     const res = await axiosClient.get('/api/Category/root');
     return res.data?.data || [];
-  } catch (err) {
+  } catch {
     throw new Error('Failed to fetch root categories');
   }
 }
@@ -42,7 +42,7 @@ export async function getCategoryById(id: string): Promise<Category> {
   try {
     const res = await axiosClient.get(`/api/Category/${id}`);
     return res.data?.data;
-  } catch (err) {
+  } catch {
     throw new Error('Failed to fetch category');
   }
 }
@@ -51,7 +51,7 @@ export async function getChildCategories(parentId: string): Promise<Category[]> 
   try {
     const res = await axiosClient.get(`/api/Category/${parentId}/children`);
     return res.data?.data || [];
-  } catch (err) {
+  } catch {
     throw new Error('Failed to fetch child categories');
   }
 }
@@ -65,7 +65,7 @@ export async function createCategory(data: {
   try {
     const res = await axiosClient.post('/api/Category', data);
     return res.data?.data;
-  } catch (err) {
+  } catch {
     throw new Error('Failed to create category');
   }
 }
@@ -79,7 +79,7 @@ export async function updateCategory(id: string, data: {
   try {
     const res = await axiosClient.put(`/api/Category/${id}`, data);
     return res.data?.data;
-  } catch (err) {
+  } catch {
     throw new Error('Failed to update category');
   }
 }
@@ -87,7 +87,7 @@ export async function updateCategory(id: string, data: {
 export async function deleteCategory(id: string): Promise<void> {
   try {
     await axiosClient.delete(`/api/Category/${id}`);
-  } catch (err) {
+  } catch {
     throw new Error('Failed to delete category');
   }
 }
