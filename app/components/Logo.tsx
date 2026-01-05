@@ -11,6 +11,7 @@ const Logo = React.memo(function Logo() {
         width={120}
         height={80}
         priority
+        style={{ height: 'auto', width: 'auto', maxWidth: 120 }}
       />
     </Link>
   );

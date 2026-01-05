@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import ProductModal from "@/app/@modal/product/pop-up/[id]/Client";
+import ProductModal, { ProductDto } from "@/app/@modal/product/pop-up/[id]/Client";
 import ProductCarousel from "@/app/components/ProductCarousel";
 import ProductInforTab from "@/app/components/ProductInforTab";
 import ProductsTitle from "@/app/components/ProductsTitle";
@@ -9,24 +9,22 @@ import { getProductById } from "@/app/services/productService";
 
 export default function ProductPage({ params }: { params: { id: string } }) {
   // Unwrap params which may be a Promise using React.use (future-proof for Next.js)
-  const resolved = (React as any).use ? (React as any).use(params) : params;
-  const id = resolved?.id ?? (params as any)?.id;
+  type MaybeReactUse = { use?: <T>(v: T) => T };
+  const r = React as unknown as MaybeReactUse;
+  const resolved = r.use ? r.use(params) : params;
+  const id = (resolved as { id?: string })?.id ?? (params as { id?: string })?.id ?? "";
 
-  const [product, setProduct] = useState<any | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [product, setProduct] = useState<ProductDto | null>(null);
 
   useEffect(() => {
     let mounted = true;
     async function load() {
       try {
-        setLoading(true);
         const p = await getProductById(id);
         if (!mounted) return;
-        setProduct(p);
+        setProduct(p as ProductDto | null);
       } catch (e) {
         console.error(e);
-      } finally {
-        if (mounted) setLoading(false);
       }
     }
     void load();

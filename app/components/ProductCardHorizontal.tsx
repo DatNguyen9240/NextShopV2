@@ -35,7 +35,7 @@ const ProductCardHorizontal: React.FC<{
           alt={product.label}
           fill
           className="object-cover rounded-lg"
-          sizes="100vw"
+          sizes="(min-width:768px) 180px, (min-width:640px) 140px, 100px"
           priority
         />
 

@@ -138,11 +138,19 @@ instance.interceptors.response.use(
           if (typeof window !== 'undefined') {
             // always update access token
             setCookie('accessToken', accessToken, 1); // short lived
-            // only set refresh cookie when we actually received a value (avoid writing 'null')
+            // If server returned a new refresh token, replace it. If not, keep the existing one and extend its expiry to avoid accidental deletion.
             if (newRefresh) {
               setCookie('refreshToken', newRefresh, 7);
             } else {
-              eraseCookie('refreshToken');
+              const existingRefresh = getCookie('refreshToken');
+              if (existingRefresh) {
+                // re-apply same token to extend expiry
+                setCookie('refreshToken', existingRefresh, 7);
+                console.debug('[axiosClient] refresh returned no new refresh token; extended existing refresh token expiry');
+              } else {
+                // no existing refresh token to keep
+                console.debug('[axiosClient] refresh returned no new refresh token and no existing refresh token present');
+              }
             }
             console.debug('[axiosClient] Cookies after refresh set. document.cookie=', document.cookie);
           }

@@ -8,6 +8,7 @@ import {
   deleteCategory,
   Category
 } from '../../../services/categoryService';
+import { toast } from 'react-hot-toast';
 import CategoryTree from '../../../components/CategoryTree';
 import CategoryModal from '../../../components/CategoryModal';
 
@@ -64,7 +65,7 @@ export default function AdminCategories() {
       await loadCategories(); // Reload to reflect changes
     } catch (error) {
       console.error('Error deleting category:', error);
-      alert('Failed to delete category. Please try again.');
+      toast.error('Failed to delete category. Please try again.');
     }
   };
 

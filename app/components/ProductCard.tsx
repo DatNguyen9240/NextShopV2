@@ -85,8 +85,7 @@ const ProductImage = ({
           group-hover:opacity-0
           absolute top-0 left-0 z-10
         "
-        sizes="100vw"
-        priority
+        sizes="(min-width:1280px) 490px, (min-width:1024px) 235px, (min-width:768px) 380px, 250px"
       />
       {/* Ảnh hover */}
       {hoverSrc && (
@@ -101,7 +100,8 @@ const ProductImage = ({
             group-hover:opacity-100 group-hover:scale-110
             absolute top-0 left-0 z-20
           "
-          sizes="100vw"
+          sizes="(min-width:1280px) 490px, (min-width:1024px) 235px, (min-width:768px) 380px, 250px"
+          loading="lazy"
         />
       )}
 

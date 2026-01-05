@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { getProductById, updateProduct } from '@/app/services/productService';
+import { toast } from 'react-hot-toast';
 import { getCategories } from '@/app/services/categoryService';
 import axiosClient from '@/app/lib/axiosClient';
 
@@ -59,7 +60,7 @@ export default function EditProductPage() {
     try {
       // validate additionalInfo length
       if (formData.additionalInfo && formData.additionalInfo.length > 1000) {
-        alert('Additional info must be 1000 characters or less');
+        toast.error('Additional info must be 1000 characters or less');
         setSaving(false);
         return;
       }

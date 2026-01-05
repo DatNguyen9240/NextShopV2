@@ -34,6 +34,7 @@ const AdvertisementCarousel: React.FC = () => {
               width={480}
               height={200}
               className="w-full h-full object-cover rounded-2xl"
+              style={{ width: 'auto', height: 'auto' }}
               priority={idx === active}
             />
           </div>

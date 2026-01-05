@@ -19,8 +19,9 @@ import {
 } from "@/app/components/Button";
 import ProductImages from "@/app/components/ProductImages";
 import { getProductById } from "@/app/services/productService";
+import { toast } from 'react-hot-toast';
 
-type Variant = {
+export type Variant = {
   productVariantId: string;
   basePrice: number;
   priceAfterDiscount: number;
@@ -33,12 +34,13 @@ type Variant = {
   stockQuantity?: number;
 };
 
-type ProductDto = {
+export type ProductDto = {
   productId: string;
   name: string;
   brand?: string | null;
   averageRating?: number;
   description?: string | null;
+  additionalInfo?: string | null;
   images?: string[];
   variants?: Variant[];
   totalStockQuantity?: number;
@@ -218,21 +220,11 @@ export default function ProductModal({ id, isModal = true, product: initialProdu
                 <AddToCartButton disabled={(product?.totalStockQuantity ?? 0) <= 0} onClick={async () => {
                   if (!selectedVariant) return;
                   try {
-                    const res = await fetch('/api/Cart/add', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ variantId: selectedVariant.productVariantId, quantity })
-                    });
-                    if (!res.ok) {
-                      const err = await res.json();
-                      console.error('AddToCart failed', err);
-                      alert(err?.message ?? 'Failed to add to cart');
-                    } else {
-                      alert('Added to cart');
-                    }
+                    await import('@/app/services/cartService').then(m => m.addToCart({ variantId: selectedVariant.productVariantId, quantity }));
+                    toast.success('Đã thêm vào giỏ hàng');
                   } catch (e) {
                     console.error(e);
-                    alert('Add to cart failed');
+                    toast.error('Thêm vào giỏ hàng thất bại');
                   }
                 }} />
               </div>

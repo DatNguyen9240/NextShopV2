@@ -10,9 +10,16 @@ export type Advertisement = {
 
 import axios from "../lib/axiosClient";
 
-export async function fetchAdvertisements(type?: string): Promise<Advertisement[]> {
-  const resp = await axios.get("/api/Advertisements", { params: type ? { type } : undefined });
+
+export async function fetchAdvertisementsByType(type: string): Promise<Advertisement[]> {
+  const resp = await axios.get(`/api/Advertisements/type/${encodeURIComponent(type)}`);
   return resp?.data?.data ?? [];
+}
+
+export async function fetchGroupedAdvertisements(): Promise<Record<string, Advertisement[]>> {
+  // Call main endpoint which returns grouped ads
+  const resp = await axios.get("/api/Advertisements");
+  return resp?.data?.data ?? {};
 }
 
 export interface CreateAdvertisementDto {
@@ -27,8 +34,11 @@ export interface UpdateAdvertisementDto extends CreateAdvertisementDto {
 }
 
 export const advertisementService = {
-  async getAll(type?: string) {
-    return await fetchAdvertisements(type);
+  async getGrouped() {
+    return await fetchGroupedAdvertisements();
+  },
+  async getByType(type: string) {
+    return await fetchAdvertisementsByType(type);
   },
   async getById(id: string) {
     const resp = await axios.get(`/api/Advertisements/${id}`);

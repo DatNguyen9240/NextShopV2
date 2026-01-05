@@ -24,8 +24,10 @@ export default function BannersAdminPage() {
 
   const loadBanners = async () => {
     try {
-      const data = await advertisementService.getAll();
-      setBanners(data);
+      const grouped = await advertisementService.getGrouped();
+      // flatten grouped object into a single array for admin listing
+      const flat = Object.values(grouped).flat();
+      setBanners(flat);
     } catch (error) {
       console.error('Failed to load banners:', error);
     } finally {
@@ -189,13 +191,18 @@ export default function BannersAdminPage() {
               </div>
               <div className="mb-4">
                 <label className="block text-sm font-medium mb-1">Type</label>
-                <input
-                  type="text"
+                <select
                   value={formData.type}
                   onChange={(e) => setFormData({ ...formData, type: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded"
                   required
-                />
+                >
+                  <option value="">Select type</option>
+                  <option value="home_sell_off">home_sell_off</option>
+                  <option value="featured">featured</option>
+                  <option value="popular">popular</option>
+                  <option value="home_bottom">home_bottom</option>
+                </select>
               </div>
               <div className="mb-4">
                 <label className="block text-sm font-medium mb-1">Sort Order</label>

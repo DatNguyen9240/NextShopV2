@@ -4,6 +4,7 @@ import "./globals.css";
 import ConditionalLayout from "./components/ConditionalLayout";
 import { AuthProvider } from "./providers/AuthProvider";
 import CategoryProvider from "./context/CategoryContext";
+import ToastProvider from "./components/ToastProvider";
 import { getUserFromCookie } from "./lib/getUserFromCookie";
 
 const roboto = Roboto({
@@ -34,6 +35,7 @@ export default async function RootLayout({
               {children}
             </ConditionalLayout>
             {modal}
+            <ToastProvider />
           </CategoryProvider>
         </AuthProvider>
       </body>

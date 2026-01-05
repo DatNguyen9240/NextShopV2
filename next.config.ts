@@ -12,6 +12,9 @@ const nextConfig: NextConfig = {
       "tse4.mm.bing.net",
       "5.imimg.com",
       "th.bing.com",
+      "img.freepik.com",
+      // Allow images served from Vecteezy previews used in admin uploads/previews
+      "static.vecteezy.com",
     ],
   },
 };

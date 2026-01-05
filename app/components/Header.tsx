@@ -11,6 +11,7 @@ import { SignUpButton, LoginButton } from "./Button";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { User, Settings, LogOut, ChevronDown } from "lucide-react";
+import { getCartCount } from '@/app/services/cartService';
 
 const Header = () => {
   const [openModal, setOpenModal] = useState(false);
@@ -18,9 +19,27 @@ const Header = () => {
   const [menuPosition, setMenuPosition] = useState({ top: 0, right: 0 });
   const buttonRef = useRef<HTMLButtonElement>(null);
   const notificationCount = 2;
-  const cartCount = 0;
+  const [cartCount, setCartCount] = useState(0);
   const router = useRouter();
   const { user, isAuthenticated, logout } = useAuth();
+
+  useEffect(() => {
+    let mounted = true;
+    async function load() {
+      try {
+        const c = await getCartCount();
+        if (!mounted) return;
+        setCartCount(c);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    void load();
+
+    const onUpdate = () => { void load(); };
+    window.addEventListener('cart:updated', onUpdate);
+    return () => { mounted = false; window.removeEventListener('cart:updated', onUpdate); };
+  }, []);
 
   useEffect(() => {
     if (showUserMenu && buttonRef.current) {

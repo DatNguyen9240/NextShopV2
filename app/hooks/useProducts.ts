@@ -108,7 +108,6 @@ export default function useProducts({
       if (usedMaxPrice !== undefined) params.maxPrice = usedMaxPrice;
       if (usedRating !== undefined && usedRating !== null) params.rating = usedRating;
 
-      console.log('[useProducts] requesting', params, 'currentFilter', filterRef.current);
       const data = await getProducts(params);
 
       // ensure this response still matches current filter to avoid stale overwrite
@@ -121,11 +120,10 @@ export default function useProducts({
         filterRef.current.rating !== usedRating
       ) {
         // discard stale response
-        console.log('[useProducts] discarding stale response for', params, 'currentFilter', filterRef.current);
         return;
       }
 
-      console.log('[useProducts] accepted response for', params, 'dataCount', Array.isArray(data) ? data.length : (data.items || []).length);
+
 
       // mark this key as the last completed request so we avoid immediate duplicate refetches
       lastCompletedKeyRef.current = key;
@@ -173,7 +171,6 @@ export default function useProducts({
     // If filters changed and we're not already on page 1, reset to page 1 and skip fetching the previous page.
     // The page update will trigger this effect again and then fetch page 1 once.
     if (filtersChanged && page !== 1) {
-      console.log('[useProducts] filters changed — resetting to page 1 and skipping fetch for old page', { page, section, categoryId, minPrice, maxPrice, sort, rating });
       setPage(1);
       return;
     }

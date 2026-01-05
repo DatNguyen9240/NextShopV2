@@ -14,7 +14,7 @@ const FeaturedProductAd: React.FC = () => (
       <ProductCarousel products={[]} slideStep={1} />
     </div>
     <div className="my-6">
-      <AdBanner />
+      <AdBanner type="featured" />
     </div>
   </div>
 );

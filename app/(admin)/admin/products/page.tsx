@@ -23,7 +23,9 @@ export default function AdminProducts() {
     const fetchProducts = async () => {
       try {
         const data = await getProducts({ page: 1, pageSize: 100 });
-        setProducts(data);
+        // API may return either a flat array or a paged object { items: [], totalPages, ... }
+        const items = Array.isArray(data) ? data : (data?.items || data?.Items || []);
+        setProducts(items);
       } catch (error) {
         console.error('Error fetching products:', error);
       } finally {
