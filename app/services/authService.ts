@@ -55,3 +55,18 @@ export const me = async () => {
   // API returns { success, message, data } — unwrap `data` when present
   return res.data?.data ?? res.data;
 };
+
+export const updateProfile = async (payload: { fullName?: string; phone?: string; gender?: string; avatarUrl?: string | null }) => {
+  const res = await axiosClient.put('/api/auth/me', payload);
+  return res.data;
+};
+
+export const upsertAddress = async (payload: { addressId?: string; fullAddress: string; latitude?: number | null; longitude?: number | null; isDefault?: boolean }) => {
+  const res = await axiosClient.put('/api/auth/me/address', payload);
+  return res.data?.data ?? res.data;
+};
+
+export const deleteAddress = async (addressId: string) => {
+  const res = await axiosClient.delete(`/api/auth/me/address/${addressId}`);
+  return res.data;
+};

@@ -5,12 +5,17 @@ import { getCookie, eraseCookie } from '@/app/lib/axiosClient';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 
+type Address = { addressId: string; fullAddress: string; latitude?: number | null; longitude?: number | null; isDefault?: boolean };
+
 interface User {
   id: string;
   email: string;
   fullName?: string;
   avatar?: string;
   role?: string;
+  phone?: string | null;
+  gender?: string | null;
+  addresses?: Address[];
 }
 
 interface AuthContextType {
@@ -20,6 +25,8 @@ interface AuthContextType {
   login: (credentials: { email: string; password: string }) => Promise<User | null>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<User | null>;
+  // convenience to get addresses directly from context
+  getAddresses: () => Address[];
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -99,6 +106,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, initialUse
     }
   }, []);
 
+  const getAddresses = () => {
+    return (user?.addresses ?? []) as Address[];
+  };
+
   const value: AuthContextType = {
     user,
     isLoading,
@@ -106,6 +117,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, initialUse
     login,
     logout,
     refreshUser,
+    getAddresses,
   };
 
   return (

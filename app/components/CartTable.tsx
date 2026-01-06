@@ -143,6 +143,7 @@ const CartTable: React.FC = () => {
   }
 
   function handleRemove(cartItemId: string) {
+    const container = typeof document !== 'undefined' ? document.body : (undefined as unknown as HTMLElement);
     toast.custom((t) => createPortal(
       <div className="fixed inset-0 z-[9999] flex items-center justify-center">
         {/* backdrop */}
@@ -166,7 +167,7 @@ const CartTable: React.FC = () => {
           </div>
         </div>
       </div>,
-      typeof document !== 'undefined' ? document.body : (t as any)
+      container
     ), { duration: 8000, id: `cart-delete-${cartItemId}` });
   }
 

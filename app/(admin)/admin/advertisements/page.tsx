@@ -5,6 +5,7 @@ import { advertisementService, Advertisement, CreateAdvertisementDto } from '../
 import Image from 'next/image';
 import React, { useState as useStateLocal } from 'react';
 import ImageUploader from '@/app/components/ImageUploader';
+import ConfirmModal from '@/app/components/ConfirmModal';
 
 export default function BannersAdminPage() {
   const [banners, setBanners] = useState<Advertisement[]>([]);
@@ -17,6 +18,10 @@ export default function BannersAdminPage() {
     type: '',
     sortOrder: 0,
   });
+
+  // confirmation modal state for deletes
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
     loadBanners();
@@ -63,15 +68,28 @@ export default function BannersAdminPage() {
     setShowModal(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this banner?')) {
-      try {
-        await advertisementService.delete(id);
-        loadBanners();
-      } catch (error) {
-        console.error('Failed to delete banner:', error);
-      }
+  const handleDelete = (id: string) => {
+    // open confirmation modal
+    setPendingDeleteId(id);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!pendingDeleteId) return;
+    try {
+      await advertisementService.delete(pendingDeleteId);
+      loadBanners();
+    } catch (error) {
+      console.error('Failed to delete banner:', error);
+    } finally {
+      setShowDeleteConfirm(false);
+      setPendingDeleteId(null);
     }
+  };
+
+  const cancelDelete = () => {
+    setShowDeleteConfirm(false);
+    setPendingDeleteId(null);
   };
 
   const resetForm = () => {
@@ -151,7 +169,7 @@ export default function BannersAdminPage() {
                     Edit
                   </button>
                   <button
-                    onClick={() => handleDelete(banner.id)}
+                    onClick={() => { setPendingDeleteId(banner.id); setShowDeleteConfirm(true); }}
                     className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
                   >
                     Delete
@@ -232,6 +250,17 @@ export default function BannersAdminPage() {
           </div>
         </div>
       )}
+
+      {/* delete confirmation modal */}
+      <ConfirmModal
+        show={showDeleteConfirm}
+        title="Xóa banner"
+        message="Bạn có chắc chắn muốn xóa banner này?"
+        confirmText="Xóa"
+        cancelText="Hủy"
+        onConfirm={confirmDelete}
+        onCancel={cancelDelete}
+      />
     </div>
   );
 }
