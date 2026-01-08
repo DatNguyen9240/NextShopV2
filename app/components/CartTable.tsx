@@ -6,7 +6,8 @@ import ProductsTitle from "./ProductsTitle";
 import { ButtonMinus, ButtonPlus, ButtonClose } from "./Button";
 import Image from "next/image";
 import MoneyVND from "./MoneyVND";
-import { getCart, updateCartItem, removeCartItem } from "@/app/services/cartService";
+import { updateCartItem, removeCartItem } from "@/app/services/cartService";
+import { useCart } from "@/app/context/CartContext";
 import { toast } from 'react-hot-toast';
 import type { CartDto, CartItemDto } from "@/app/types/cart";
 
@@ -98,32 +99,11 @@ const CartTableBody: React.FC<{ items: CartItemType[]; onChangeQty: (id: string,
 );
 
 const CartTable: React.FC = () => {
-  const [cart, setCart] = useState<CartDto | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let mounted = true;
-    async function load() {
-      try {
-        setLoading(true);
-        const c = await getCart();
-        if (!mounted) return;
-        setCart(c);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    }
-    void load();
-    return () => { mounted = false; };
-  }, []);
+  const { cart, loading, updateItem, removeItem } = useCart();
 
   async function handleChangeQty(cartItemId: string, qty: number) {
     try {
-      await updateCartItem(cartItemId, { quantity: qty });
-      const c = await getCart();
-      setCart(c);
+      await updateItem(cartItemId, { quantity: qty });
     } catch (e) {
       console.error(e);
       toast.error('Cập nhật số lượng thất bại');
@@ -132,9 +112,7 @@ const CartTable: React.FC = () => {
 
   async function performRemove(cartItemId: string) {
     try {
-      await removeCartItem(cartItemId);
-      const c = await getCart();
-      setCart(c);
+      await removeItem(cartItemId);
       toast.success('Đã xóa sản phẩm khỏi giỏ hàng');
     } catch (e) {
       console.error(e);

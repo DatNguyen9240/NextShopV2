@@ -10,7 +10,7 @@ import Hotline from "./Hotline";
 import { SignUpButton, LoginButton } from "./Button";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/providers/AuthProvider";
-import { User, Settings, LogOut, ChevronDown } from "lucide-react";
+import { User, Settings, LogOut, ChevronDown, History } from "lucide-react";
 import { getCartCount } from '@/app/services/cartService';
 
 const Header = () => {
@@ -146,6 +146,16 @@ const Header = () => {
                       >
                         <Settings size={16} />
                         <span>Cài đặt tài khoản</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowUserMenu(false);
+                          router.push('/account/orders');
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      >
+                        <History size={16} />
+                        <span>Lịch sử mua hàng</span>
                       </button>
                       <hr className="my-2 border-gray-200" />
                       <button

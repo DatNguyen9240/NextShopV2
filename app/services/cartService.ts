@@ -60,7 +60,24 @@ export async function clearCart() {
     if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('cart:updated'));
     return res.data;
   } catch (err: unknown) {
+    // If the endpoint is missing or user is unauthenticated, treat as no-op but still notify UI to refresh
+    if (isAxiosError(err)) {
+      const status = err.response?.status;
+      if (status === 404) {
+        console.debug('[clearCart] endpoint not found (404) — continuing and notifying UI');
+        if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('cart:updated'));
+        return null;
+      }
+      if (status === 401 || status === 403) {
+        console.debug('[clearCart] unauthenticated (401/403) — treating as empty cart and notifying UI');
+        if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('cart:updated'));
+        return null;
+      }
+    }
+
+    // For other errors, log and rethrow so callers can handle or surface the issue
     console.error('[clearCart] error', err);
+    if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('cart:updated'));
     throw err;
   }
 }

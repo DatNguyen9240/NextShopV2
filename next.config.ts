@@ -15,6 +15,7 @@ const nextConfig: NextConfig = {
       "img.freepik.com",
       // Allow images served from Vecteezy previews used in admin uploads/previews
       "static.vecteezy.com",
+      "api.qrserver.com",
     ],
   },
 };

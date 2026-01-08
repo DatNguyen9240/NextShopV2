@@ -1,39 +1,14 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
+import { useRouter } from "next/navigation";
 import Button from "./Button";
 import MoneyVND from "./MoneyVND";
-import { getCart } from "@/app/services/cartService";
-import type { CartDto } from "@/app/types/cart";
+import { useCart } from "@/app/context/CartContext";
 
 const CartTotals: React.FC = () => {
-  const [cart, setCart] = useState<CartDto | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let mounted = true;
-    async function load() {
-      try {
-        setLoading(true);
-        const c = await getCart();
-        if (!mounted) return;
-        setCart(c);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    }
-
-    // initial load
-    void load();
-
-    // refresh when cart is updated elsewhere (other tabs/components)
-    const onUpdate = () => { void load(); };
-    window.addEventListener('cart:updated', onUpdate);
-
-    return () => { mounted = false; window.removeEventListener('cart:updated', onUpdate); };
-  }, []);
+  const router = useRouter();
+  const { cart, loading } = useCart();
 
   const total = cart?.totalAmount ?? 0;
 
@@ -71,6 +46,7 @@ const CartTotals: React.FC = () => {
         size="md"
         className="bg-pink-600 hover:bg-pink-700 text-white w-full flex items-center justify-center font-semibold text-base py-2 mt-2"
         icon={<span className="text-xl mr-2">🛒</span>}
+        onClick={() => router.push('/checkout')}
       >
         Thanh toán
       </Button>
