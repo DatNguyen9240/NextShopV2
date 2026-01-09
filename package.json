@@ -19,7 +19,9 @@
     "react-dom": "19.1.0",
     "react-hot-toast": "^2.6.0",
     "react-swipeable": "^7.0.2",
-    "swiper": "^11.2.10"
+    "swiper": "^11.2.10",
+    "firebase": "^9.22.2",
+    "@microsoft/signalr": "^7.0.9"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

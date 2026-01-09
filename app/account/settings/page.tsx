@@ -28,7 +28,7 @@ export default function SettingsPage() {
   const [longitude, setLongitude] = useState<string | null>(null);
   const [addressId, setAddressId] = useState<string | undefined>(undefined);
   const [message, setMessage] = useState<string | null>(null);
-  const [editingAddressId, setEditingAddressId] = useState<string | undefined>(undefined);
+  const [, setEditingAddressId] = useState<string | undefined>(undefined);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [pendingDeleteAddressId, setPendingDeleteAddressId] = useState<string | null>(null);
   // avatar delete confirm
@@ -178,7 +178,7 @@ export default function SettingsPage() {
       setIsDefault(true);
       setEditingAddressId(undefined);
       setMessage("Đã xóa địa chỉ");
-    } catch (err: unknown) {
+    } catch {
       setMessage("Xóa thất bại");
     } finally {
       setSaving(false);

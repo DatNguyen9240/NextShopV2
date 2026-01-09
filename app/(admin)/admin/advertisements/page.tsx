@@ -68,12 +68,6 @@ export default function BannersAdminPage() {
     setShowModal(true);
   };
 
-  const handleDelete = (id: string) => {
-    // open confirmation modal
-    setPendingDeleteId(id);
-    setShowDeleteConfirm(true);
-  };
-
   const confirmDelete = async () => {
     if (!pendingDeleteId) return;
     try {

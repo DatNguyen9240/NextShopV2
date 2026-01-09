@@ -1,15 +1,14 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { createPortal } from 'react-dom';
 import ProductsTitle from "./ProductsTitle";
 import { ButtonMinus, ButtonPlus, ButtonClose } from "./Button";
 import Image from "next/image";
 import MoneyVND from "./MoneyVND";
-import { updateCartItem, removeCartItem } from "@/app/services/cartService";
 import { useCart } from "@/app/context/CartContext";
 import { toast } from 'react-hot-toast';
-import type { CartDto, CartItemDto } from "@/app/types/cart";
+import type { CartItemDto } from "@/app/types/cart";
 
 type CartItemType = CartItemDto;
  
@@ -50,6 +49,8 @@ const CartTableRow: React.FC<{ item: CartItemType; onChangeQty: (id: string, qty
         width={100}
         height={100}
         className="rounded"
+        style={{ width: 'auto', height: 'auto' }}
+        priority
       />
       <div>
         <div

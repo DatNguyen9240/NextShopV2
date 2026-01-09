@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import axios from 'axios';
 import axiosClient from "@/app/lib/axiosClient";
 import Button from "@/app/components/Button";
 import { useRouter } from "next/navigation";
@@ -15,16 +16,13 @@ const PaymentModal: React.FC<Props> = ({ show, orderId, onClose }) => {
   const router = useRouter();
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
-  const [orderCode, setOrderCode] = useState<string | null>(null); // PayOS orderCode used for polling
+  const [, setOrderCode] = useState<string | null>(null); // PayOS orderCode (no client polling)
   const [imgError, setImgError] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [polling, setPolling] = useState(false);
   const [remainingSeconds, setRemainingSeconds] = useState<number>(120);
   const [imgRetryCount, setImgRetryCount] = useState<number>(0);
   const MAX_IMG_RETRIES = 3;
   const IMG_RETRY_DELAY_MS = 2000;
-  const INITIAL_POLL_DELAY_MS = 2500; // initial delay to avoid webhook race
-  const POLL_INTERVAL_MS = 2000;
   const COUNTDOWN_TICK_MS = 1000;
   const isMountedRef = React.useRef(false);
 
@@ -45,7 +43,6 @@ const PaymentModal: React.FC<Props> = ({ show, orderId, onClose }) => {
         setCheckoutUrl(res.data?.checkoutUrl || res.data?.CheckoutUrl || res.data?.data?.checkoutUrl || null);
         setOrderCode(res.data?.orderCode || res.data?.OrderCode || res.data?.data?.orderCode || null);
         setRemainingSeconds(120); // start 2-minute countdown
-        setPolling(true);
         setImgError(false);
         setImgRetryCount(0);
       } catch (err) {
@@ -66,8 +63,11 @@ const PaymentModal: React.FC<Props> = ({ show, orderId, onClose }) => {
           router.push(`/payment/success?orderId=${orderId}`);
           return;
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         // ignore 404
+        if (!axios.isAxiosError(err)) {
+          console.warn('Unexpected error when checking status', err);
+        }
       }
 
       await createPayment();
@@ -79,39 +79,13 @@ const PaymentModal: React.FC<Props> = ({ show, orderId, onClose }) => {
 
 
   useEffect(() => {
-    if (!polling || !orderCode) return;
+    // Start countdown when a QR or checkout URL is available
+    if (!qrCode && !checkoutUrl) return;
 
-    let pollInterval: any = null;
-    let initialTimer: any = null;
-
-    const poll = async () => {
-      try {
-        const res = await axiosClient.get(`/api/Payments/status?orderCode=${encodeURIComponent(orderCode)}`, { headers: { "Cache-Control": "no-store" } });
-        console.debug('Payment status poll response:', res.data);
-        const status = res.data?.status ?? res.data?.Status ?? res.data?.data?.status ?? null;
-        if (status && (status === "Paid" || status.toLowerCase() === "paid")) {
-          console.info('Payment detected as paid via orderCode', orderCode, res.data);
-          setPolling(false);
-          onClose();
-          router.push(`/payment/success?orderId=${orderId}`);
-        }
-      } catch (err) {
-        console.error("Polling failed", err);
-      }
-    };
-
-    // Initial delay to avoid race with webhook updates
-    initialTimer = setTimeout(() => {
-      poll();
-      pollInterval = setInterval(poll, POLL_INTERVAL_MS);
-    }, INITIAL_POLL_DELAY_MS);
-
-    // Countdown timer
     const countdownInterval = setInterval(() => {
       setRemainingSeconds(prev => {
         if (prev <= 1) {
-          // Time's up: stop polling and close modal
-          try { setPolling(false); } catch {}
+          // Time's up: close modal
           try { onClose(); } catch {}
           return 0;
         }
@@ -120,11 +94,27 @@ const PaymentModal: React.FC<Props> = ({ show, orderId, onClose }) => {
     }, COUNTDOWN_TICK_MS);
 
     return () => {
-      if (initialTimer) clearTimeout(initialTimer);
-      if (pollInterval) clearInterval(pollInterval);
       clearInterval(countdownInterval);
     };
-  }, [polling, orderCode, onClose, router]);
+  }, [qrCode, checkoutUrl, onClose]);
+
+  // Listen for server-sent payment completion events and redirect this client if it matches the order
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handler = (e: Event) => {
+      const custom = e as CustomEvent<{ orderId: string }>;
+      const completedOrderId = custom?.detail?.orderId;
+      if (!completedOrderId) return;
+      if (completedOrderId === orderId) {
+        console.debug('[PaymentModal] payment:completed received for this order', completedOrderId);
+        try { onClose(); } catch {}
+        try { router.push(`/payment/success?orderId=${completedOrderId}`); } catch {}
+      }
+    };
+
+    window.addEventListener('payment:completed', handler as EventListener);
+    return () => window.removeEventListener('payment:completed', handler as EventListener);
+  }, [orderId, onClose, router]);
 
   const manualRetry = async () => {
     setImgError(false);
@@ -137,7 +127,6 @@ const PaymentModal: React.FC<Props> = ({ show, orderId, onClose }) => {
       setCheckoutUrl(res.data?.checkoutUrl || res.data?.CheckoutUrl || res.data?.data?.checkoutUrl || null);
       setOrderCode(res.data?.orderCode || res.data?.OrderCode || res.data?.data?.orderCode || null);
       setRemainingSeconds(120);
-      setPolling(true);
     } catch (err) {
       console.error('Manual retry create payment failed', err);
     } finally {
@@ -189,8 +178,7 @@ const PaymentModal: React.FC<Props> = ({ show, orderId, onClose }) => {
                             setCheckoutUrl(res.data?.checkoutUrl || res.data?.CheckoutUrl || res.data?.data?.checkoutUrl || null);
                             setOrderCode(res.data?.orderCode || res.data?.OrderCode || res.data?.data?.orderCode || null);
                             setRemainingSeconds(120);
-                            setPolling(true);
-                          } catch (err) {
+                          } catch (err: unknown) {
                             console.error('Retry create payment failed', err);
                             // if this was last attempt, fallback to opening checkoutUrl
                             if (next >= MAX_IMG_RETRIES && checkoutUrl) window.open(checkoutUrl, '_blank');
@@ -228,7 +216,7 @@ const PaymentModal: React.FC<Props> = ({ show, orderId, onClose }) => {
                 <div className="text-sm text-gray-600 mb-2">Quét mã để thanh toán</div>
                 <div className="text-sm text-blue-600">
                   {remainingSeconds > 0 ? (
-                    <>Đang kiểm tra trạng thái thanh toán — {Math.floor(remainingSeconds / 60).toString().padStart(2,'0')}:{(remainingSeconds % 60).toString().padStart(2,'0')}</>
+                    <>Thời gian chờ — {Math.floor(remainingSeconds / 60).toString().padStart(2,'0')}:{(remainingSeconds % 60).toString().padStart(2,'0')}</>
                   ) : (
                     <>Thời gian chờ kết thúc — đóng cửa sổ</>
                   )}

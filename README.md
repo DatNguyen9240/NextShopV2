@@ -34,3 +34,15 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+---
+
+## Firebase / Push notifications (quick)
+
+- Copy `.env.local.example` to `.env.local` and fill `NEXT_PUBLIC_FIREBASE_VAPID_KEY` and other `NEXT_PUBLIC_FIREBASE_*` values.
+- The client exposes a small component `app/components/PushSubscribeButton.tsx` that allows users to request permission and subscribe.
+- A service worker `public/firebase-messaging-sw.js` is included.
+- The client sends tokens to backend `POST ${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:7264"}/api/push/register-guest`.
+
+See `NextShopV2.Api/README.Firebase.md` for backend setup (service account, secrets).
+

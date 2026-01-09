@@ -42,7 +42,6 @@ export default function PaymentCancelPage() {
           </Button>
           <Button
             onClick={() => router.push("/")}
-            variant="outline"
             className="w-full"
           >
             Continue Shopping
