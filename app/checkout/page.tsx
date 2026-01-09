@@ -3,7 +3,9 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Button from "@/app/components/Button";
+import { toast } from 'react-hot-toast';
 import MoneyVND from "@/app/components/MoneyVND";
+import AddressAutocomplete from "@/app/components/AddressAutocomplete";
 import { getCart } from "@/app/services/cartService";
 import { createOrder } from "@/app/services/orderService";
 import { useAuth } from "@/app/providers/AuthProvider";
@@ -15,7 +17,9 @@ const CheckoutPage: React.FC = () => {
   const [cart, setCart] = useState<CartDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [shippingAddress, setShippingAddress] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("ONLINE");
+  const [latitude, setLatitude] = useState<string | null>(null);
+  const [longitude, setLongitude] = useState<string | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState("COD");
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -51,7 +55,7 @@ const CheckoutPage: React.FC = () => {
 
   const handlePlaceOrder = async () => {
     if (!cart || !shippingAddress) {
-      alert("Vui lòng nhập địa chỉ giao hàng");
+      toast.error("Vui lòng nhập địa chỉ giao hàng");
       return;
     }
 
@@ -62,7 +66,10 @@ const CheckoutPage: React.FC = () => {
           variantId: item.variantId,
           quantity: item.quantity
         })),
-       
+        paymentMethod: paymentMethod,
+        shippingAddress: shippingAddress && shippingAddress.trim().length > 0 ? shippingAddress.trim() : undefined,
+        buyerName: user?.fullName ?? undefined,
+        buyerPhone: user?.phone ?? undefined
       };
 
       const order = await createOrder(orderRequest);
@@ -74,13 +81,15 @@ const CheckoutPage: React.FC = () => {
         setModalOrderId(createdId);
         setShowPaymentModal(true);
       } else {
-        // COD - redirect to success or home
-        alert("Đặt hàng thành công! Thanh toán khi nhận hàng.");
+        // COD - backend clears the cart; notify UI to refresh header/cart and clear local cart state
+        if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('cart:updated'));
+        setCart(null);
+        toast.success("Đặt hàng thành công! Thanh toán khi nhận hàng.");
         router.push('/');
       }
     } catch (e) {
       console.error(e);
-      alert("Lỗi đặt hàng");
+      toast.error("Lỗi đặt hàng");
     }
   };
 
@@ -98,10 +107,10 @@ const CheckoutPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
+      <div className="max-w-6xl mx-auto px-8">
         <h1 className="text-3xl font-bold text-gray-800 mb-8">Thanh toán</h1>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
           {/* Order Summary */}
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-xl font-semibold mb-4">Tóm tắt đơn hàng</h2>
@@ -111,7 +120,7 @@ const CheckoutPage: React.FC = () => {
                   <div className="flex items-center gap-4">
                     {item.imageUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={item.imageUrl} alt={item.productName ?? 'Sản phẩm'} className="w-16 h-16 object-cover rounded" />
+                      <img src={item.imageUrl} alt={item.productName ?? 'Sản phẩm'} className="w-20 h-20 object-cover rounded" />
                     ) : (
                       <div className="w-16 h-16 bg-gray-100 rounded" />
                     )}
@@ -154,16 +163,21 @@ const CheckoutPage: React.FC = () => {
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Địa chỉ giao hàng
-                </label>
-                <textarea
+                <label className="block text-sm font-medium text-gray-700 mb-1">Địa chỉ giao hàng</label>
+
+                <AddressAutocomplete
                   value={shippingAddress}
-                  onChange={(e) => setShippingAddress(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
-                  rows={3}
-                  placeholder="Nhập địa chỉ giao hàng"
+                  onSelectAddress={(addr: string, placeId?: string, lat?: number | null, lng?: number | null) => {
+                    setShippingAddress(addr);
+                    setLatitude(lat != null ? String(lat) : null);
+                    setLongitude(lng != null ? String(lng) : null);
+                  }}
                 />
+
+                <div className="mt-2 text-xs text-gray-500">Chọn địa chỉ để tự động lấy tọa độ hoặc nhập tay trước khi lưu</div>
+                {/* preserve coords in hidden inputs */}
+                <input type="hidden" name="latitude" value={latitude ?? ""} />
+                <input type="hidden" name="longitude" value={longitude ?? ""} />
               </div>
 
               <div>

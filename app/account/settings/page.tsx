@@ -21,6 +21,7 @@ export default function SettingsPage() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [hasUnsavedAvatar, setHasUnsavedAvatar] = useState(false);
 
   const [address, setAddress] = useState("");
   const [latitude, setLatitude] = useState<string | null>(null);
@@ -51,6 +52,7 @@ export default function SettingsPage() {
         setGender(u.gender ?? undefined);
         setAvatarUrl(u.avatar ?? null);
         setAvatarPreview(u.avatar ?? null);
+        setHasUnsavedAvatar(false);
 
         // addresses from context helper
         const addrs = (getAddresses() || []) as Address[];
@@ -89,7 +91,8 @@ export default function SettingsPage() {
       // upload
       const url = await uploadImage(file);
       setAvatarUrl(url);
-      setMessage("Ảnh đã được tải lên");
+      setHasUnsavedAvatar(true);
+      setMessage("Ảnh đã được tải lên. Nhấn 'Lưu' để cập nhật.");
     } catch (err: unknown) {
       console.error(err);
       const e = err as { message?: string };
@@ -105,6 +108,7 @@ export default function SettingsPage() {
       await updateProfile({ avatarUrl: null });
       setAvatarUrl(null);
       setAvatarPreview(null);
+      setHasUnsavedAvatar(false);
       await refreshUser();
       setMessage("Đã xóa ảnh đại diện");
     } catch (err: unknown) {
@@ -127,6 +131,7 @@ export default function SettingsPage() {
     try {
       // update profile (including avatar and gender)
       await updateProfile({ fullName, phone, gender, avatarUrl });
+      setHasUnsavedAvatar(false);
       // update or create address if provided
       if (address && address.trim().length > 0) {
         const lat = latitude ? parseFloat(latitude) : null;
@@ -228,6 +233,8 @@ export default function SettingsPage() {
             {avatarPreview && <div className="mt-2">
               <button type="button" onClick={() => setShowDeleteAvatarConfirm(true)} disabled={saving} className={`text-xs ${saving ? 'text-gray-400' : 'text-red-600'}`}>Xóa ảnh</button>
             </div>}
+
+            {hasUnsavedAvatar && <div className="mt-2 text-xs text-yellow-600">Bạn cần nhấn <strong>Lưu</strong> để cập nhật ảnh đại diện</div>}
 
             <div className="mt-2 text-xs text-gray-500">Nhấn vào ảnh để chọn (hiển thị công khai)</div>
           </div>

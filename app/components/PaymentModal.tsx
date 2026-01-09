@@ -126,6 +126,25 @@ const PaymentModal: React.FC<Props> = ({ show, orderId, onClose }) => {
     };
   }, [polling, orderCode, onClose, router]);
 
+  const manualRetry = async () => {
+    setImgError(false);
+    setImgRetryCount(prev => prev + 1);
+    setLoading(true);
+    try {
+      const res = await axiosClient.post("/api/Payments/create-order-payment", { OrderId: orderId });
+      if (!isMountedRef.current) return;
+      setQrCode(res.data?.qrCodeUrl || null);
+      setCheckoutUrl(res.data?.checkoutUrl || res.data?.CheckoutUrl || res.data?.data?.checkoutUrl || null);
+      setOrderCode(res.data?.orderCode || res.data?.OrderCode || res.data?.data?.orderCode || null);
+      setRemainingSeconds(120);
+      setPolling(true);
+    } catch (err) {
+      console.error('Manual retry create payment failed', err);
+    } finally {
+      if (isMountedRef.current) setLoading(false);
+    }
+  };
+
   if (!show) return null;
 
   return (
@@ -191,37 +210,18 @@ const PaymentModal: React.FC<Props> = ({ show, orderId, onClose }) => {
                   }}
                 />
 
+
+
                 {imgError && (
-                  <div className="text-sm text-gray-600 mb-2">Không thể hiển thị QR.</div>
-                )}
-                {imgError && imgRetryCount < MAX_IMG_RETRIES && (
-                  <div className="text-sm text-gray-600 mb-2">Đang thử lại hiển thị mã QR ({imgRetryCount}/{MAX_IMG_RETRIES})...</div>
-                )}
-                {imgError && imgRetryCount >= MAX_IMG_RETRIES && (
-                  <div className="text-sm text-gray-600 mb-2">Không thể hiển thị QR. Bạn có thể mở trang thanh toán hoặc thử lại.</div>
-                )}
-                {imgError && (
-                  <div className="flex gap-2 justify-center mt-2">
-                    <Button onClick={async () => {
-                      // manual retry
-                      setImgError(false);
-                      setImgRetryCount(prev => prev + 1);
-                      setLoading(true);
-                      try {
-                        const res = await axiosClient.post("/api/Payments/create-order-payment", { OrderId: orderId });
-                        if (!isMountedRef.current) return;
-                        setQrCode(res.data?.qrCodeUrl || null);
-                        setCheckoutUrl(res.data?.checkoutUrl || res.data?.CheckoutUrl || res.data?.data?.checkoutUrl || null);
-                        setOrderCode(res.data?.orderCode || res.data?.OrderCode || res.data?.data?.orderCode || null);
-                        setRemainingSeconds(120);
-                        setPolling(true);
-                      } catch (err) {
-                        console.error('Manual retry create payment failed', err);
-                      } finally {
-                        if (isMountedRef.current) setLoading(false);
-                      }
-                    }} className="px-3 py-1">Thử lại</Button>
-                    {checkoutUrl && <Button onClick={() => window.open(checkoutUrl, '_blank')} className="px-3 py-1">Mở trang thanh toán</Button>}
+                  <div className="mt-4 p-4 border border-red-100 bg-red-50 rounded text-center">
+                    <div className="text-red-700 font-medium mb-2">Không thể hiển thị mã QR</div>
+                    <div className="text-sm text-gray-600 mb-3">
+                      {imgRetryCount < MAX_IMG_RETRIES ? `Đang thử lại hiển thị mã QR (${imgRetryCount}/${MAX_IMG_RETRIES})...` : 'Đã thử nhiều lần. Bạn có thể mở trang thanh toán hoặc thử lại.'}
+                    </div>
+                    <div className="flex gap-2 justify-center">
+                      <Button shape="rounded" onClick={manualRetry} className="px-4 py-2">Thử lại</Button>
+                      {checkoutUrl && <Button shape="rounded" onClick={() => window.open(checkoutUrl, '_blank')} className="px-4 py-2 border border-gray-300">Mở trang thanh toán</Button>}
+                    </div>
                   </div>
                 )}
 
@@ -235,6 +235,7 @@ const PaymentModal: React.FC<Props> = ({ show, orderId, onClose }) => {
                 </div>
                 <div className="mt-4">
                   <Button
+                    shape="rounded"
                     onClick={() => { if (checkoutUrl) window.open(checkoutUrl, '_blank'); }}
                     className="w-full"
                     disabled={!checkoutUrl}

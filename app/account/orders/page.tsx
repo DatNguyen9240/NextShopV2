@@ -28,15 +28,28 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // pagination state
+  const [page, setPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(10);
+  const [total, setTotal] = useState<number>(0);
+  const [statusFilter, setStatusFilter] = useState<string | null>(null);
+
   useEffect(() => {
     let mounted = true;
-    const load = async () => {
+    const load = async (p: number) => {
       setLoading(true);
       try {
-        const res = await axiosClient.get('/api/Order/my-orders');
+        const res = await axiosClient.get('/api/Order/my-orders', { params: { page: p, pageSize, status: statusFilter ?? undefined } });
         const payload = res.data?.data ?? res.data;
         if (!mounted) return;
-        setOrders(payload ?? []);
+        // payload shape: { items, total, page, pageSize }
+        if (payload?.items) {
+          setOrders(payload.items ?? []);
+          setTotal(payload.total ?? 0);
+        } else {
+          setOrders(payload ?? []);
+          setTotal((payload ?? []).length ?? 0);
+        }
       } catch (err: any) {
         if (err?.response?.status === 401) {
           setError('Vui lòng đăng nhập để xem lịch sử mua hàng');
@@ -48,16 +61,45 @@ export default function OrdersPage() {
         if (mounted) setLoading(false);
       }
     };
-    void load();
+    void load(page);
     return () => { mounted = false; };
-  }, []);
+  }, [page, pageSize, statusFilter]);
+
+  // Reset to first page when filter changes
+  useEffect(() => { setPage(1); }, [statusFilter]);
 
   if (loading) return <div className="max-w-screen-xl mx-auto mt-12 p-6 bg-white rounded shadow">Đang tải lịch sử đơn hàng...</div>;
   if (error) return <div className="max-w-screen-xl mx-auto mt-12 p-6 bg-white rounded shadow">{error}</div>;
 
   return (
     <main className="max-w-screen-xl mx-auto mt-12 px-4">
-      <h1 className="text-3xl font-bold mb-6">Lịch sử mua hàng</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-3xl font-bold">Lịch sử mua hàng</h1>
+
+        {/* Filter + Header pagination / summary */}
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <button onClick={() => setStatusFilter(null)} className={`px-3 py-1 rounded ${statusFilter === null ? 'bg-pink-50 border border-pink-200 text-pink-600' : 'border hover:bg-gray-100'}`}>Tất cả</button>
+            <button onClick={() => setStatusFilter('Paid')} className={`px-3 py-1 rounded ${statusFilter === 'Paid' ? 'bg-pink-50 border border-pink-200 text-pink-600' : 'border hover:bg-gray-100'}`}>Đã thanh toán</button>
+            <button onClick={() => setStatusFilter('Pending')} className={`px-3 py-1 rounded ${statusFilter === 'Pending' ? 'bg-pink-50 border border-pink-200 text-pink-600' : 'border hover:bg-gray-100'}`}>Chờ thanh toán</button>
+          </div>
+
+          <div className="text-sm text-gray-600">Hiển thị {Math.min((page - 1) * pageSize + 1, total)}–{Math.min(page * pageSize, total)} trên {total} đơn</div>
+          <button
+            className={`px-3 py-1 rounded border ${page === 1 ? 'opacity-50 pointer-events-none' : 'hover:bg-gray-100'}`}
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+          >
+            Trước
+          </button>
+          <div className="text-sm">Trang {page}</div>
+          <button
+            className={`px-3 py-1 rounded border ${page * pageSize >= total ? 'opacity-50 pointer-events-none' : 'hover:bg-gray-100'}`}
+            onClick={() => setPage(p => p + 1)}
+          >
+            Sau
+          </button>
+        </div>
+      </div>
 
       {orders && orders.length > 0 ? (
         <div className="space-y-6">
@@ -115,6 +157,8 @@ export default function OrdersPage() {
               </div>
             </div>
           ))}
+
+
         </div>
       ) : (
         <div className="bg-white p-10 rounded-xl shadow text-center text-gray-500">
