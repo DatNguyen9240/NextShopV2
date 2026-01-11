@@ -1,141 +1,121 @@
-import { HubConnection, HubConnectionBuilder, LogLevel } from '@microsoft/signalr';
-import axiosClient from '../lib/axiosClient';
+import { HubConnectionBuilder, HubConnection } from '@microsoft/signalr';
+import axiosClient, { getCookie } from '../lib/axiosClient';
 
-type Notification = {
+export type Notification = {
   id: string;
   title: string;
   body?: string;
   url?: string;
-  read?: boolean;
+  read: boolean;
   createdAt: string;
 };
 
 let connection: HubConnection | null = null;
-let connected = false;
+let isConnecting = false;
+let isConnected = false;
 
-function getAccessTokenFromCookie() {
-  if (typeof document === 'undefined') return null;
-  const match = document.cookie.match(/(?:^|; )accessToken=([^;]+)/);
-  return match ? decodeURIComponent(match[1]) : null;
+export async function connectToNotificationHub(): Promise<void> {
+  // Prevent multiple simultaneous connection attempts
+  if (isConnecting || isConnected) {
+    console.log('🔄 Connection already in progress or established');
+    return;
+  }
+
+  const token = getCookie('accessToken');
+  console.log('🔐 Connecting to Notification Hub with token:', token ? `present (${token.substring(0, 20)}...)` : 'missing');
+
+  if (!token) {
+    console.warn('⚠️ No accessToken found in cookies. User might not be logged in.');
+    return;
+  }
+
+  isConnecting = true;
+
+  try {
+    connection = new HubConnectionBuilder()
+      .withUrl(`${process.env.NEXT_PUBLIC_API_URL}/hubs/notifications`, {
+        accessTokenFactory: () => token,
+      })
+      .withAutomaticReconnect()
+      .build();
+
+    connection.on('ReceiveNotification', (notification: Notification) => {
+      console.log('📨 Received notification:', notification);
+      window.dispatchEvent(new CustomEvent('notification:received', { detail: notification }));
+    });
+
+    connection.onclose(() => {
+      console.log('🔌 Connection closed');
+      isConnected = false;
+      isConnecting = false;
+    });
+
+    connection.onreconnecting(() => {
+      console.log('🔄 Reconnecting...');
+    });
+
+    connection.onreconnected(() => {
+      console.log('✅ Reconnected');
+      isConnected = true;
+    });
+
+    await connection.start();
+    console.log('✅ Connected to Notification Hub');
+    isConnected = true;
+  } catch (err) {
+    console.error('❌ Error connecting to Notification Hub:', err);
+    isConnected = false;
+  } finally {
+    isConnecting = false;
+  }
+}
+
+export async function disconnectFromNotificationHub(): Promise<void> {
+  if (connection) {
+    await connection.stop();
+    connection = null;
+    isConnected = false;
+    isConnecting = false;
+    console.log('🔌 Disconnected from Notification Hub');
+  }
 }
 
 export async function getNotificationsFromServer(): Promise<Notification[]> {
+  const res = await axiosClient.get('/api/SocketNotification', { withCredentials: true });
+  return res.data.items as Notification[];
+}
+
+export async function getNotifications(): Promise<Notification[]> {
   try {
-    const res = await axiosClient.get('/api/notifications', { withCredentials: true });
-    return res.data.items as Notification[];
+    return await getNotificationsFromServer();
   } catch (e) {
     console.error('Error fetching notifications', e);
     return [];
   }
-} 
-
-export async function getNotifications(): Promise<Notification[]> {
-  if (typeof window === 'undefined') return [];
-  const token = getAccessTokenFromCookie();
-  if (token) {
-    return getNotificationsFromServer();
-  }
-  // Not authenticated: no local mock data, return empty list
-  return [];
-} 
+}
 
 export async function markNotificationAsRead(id: string): Promise<void> {
-  const token = getAccessTokenFromCookie();
-  if (token) {
-    await axiosClient.post(`/api/notifications/${id}/read`, null, { withCredentials: true });
+  try {
+    await axiosClient.post(`/api/SocketNotification/${id}/read`, null, { withCredentials: true });
     window.dispatchEvent(new Event('notifications:updated'));
-    return;
+  } catch {
+    console.debug('[notificationService] markNotificationAsRead skipped: not authenticated');
   }
-  console.debug('[notificationService] markNotificationAsRead skipped: not authenticated');
-  return;
-} 
+}
 
 export async function markAllNotificationsAsRead(): Promise<void> {
-  const token = getAccessTokenFromCookie();
-  if (token) {
-    await axiosClient.post(`/api/notifications/mark-all-read`, null, { withCredentials: true });
+  try {
+    await axiosClient.post('/api/SocketNotification/mark-all-read', null, { withCredentials: true });
     window.dispatchEvent(new Event('notifications:updated'));
-    return;
+  } catch {
+    console.debug('[notificationService] markAllNotificationsAsRead skipped: not authenticated');
   }
-  console.debug('[notificationService] markAllNotificationsAsRead skipped: not authenticated');
-  return;
 }
 
 export async function startNotificationConnection(): Promise<void> {
-  if (typeof window === 'undefined') return;
-  if (connected && connection) return;
-
-  const accessToken = getAccessTokenFromCookie();
-  const base = process.env.NEXT_PUBLIC_API_BASE || process.env.NEXT_PUBLIC_API_URL || axiosClient.defaults.baseURL || '';
-  const hubUrl = base ? `${base.replace(/\/$/, '')}/hubs/notifications` : '/hubs/notifications';
-
-  console.debug('[notificationService] resolved hub base', { base, hubUrl, hasAccessToken: !!accessToken });
-
-  // If no access token, don't start real-time connection (use local fallback)
-  if (!accessToken) {
-    console.debug('[notificationService] no access token, skipping SignalR connection');
-    return;
-  }
-
-  connection = new HubConnectionBuilder()
-    .withUrl(hubUrl, {
-      accessTokenFactory: () => accessToken,
-      transport: 1 // WebSockets preferred
-    })
-    .configureLogging(LogLevel.Information)
-    .build();
-
-  console.debug('[notificationService] HubConnection configured', { hubUrl });
-
-  connection.on('ReceiveNotification', async (payload: Notification) => {
-    try {
-      console.debug('[notificationService] ReceiveNotification payload:', payload);
-      // If the notification points to payment success, extract orderId and emit a payment event
-      if (payload?.url && typeof payload.url === 'string' && payload.url.includes('/payment/success')) {
-        try {
-          const u = new URL(payload.url, window.location.origin);
-          const orderId = u.searchParams.get('orderId');
-          console.debug('[notificationService] Extracted orderId from notification url:', orderId);
-          if (orderId) {
-            window.dispatchEvent(new CustomEvent('payment:completed', { detail: { orderId } }));
-          }
-        } catch (e) {
-          console.warn('[notificationService] malformed notification url', e);
-        }
-      }
-    } catch (e) {
-      console.warn('[notificationService] handler error', e);
-    }
-
-    // refresh list from server to keep state consistent
-    await getNotificationsFromServer();
-    window.dispatchEvent(new Event('notifications:updated'));
-  });
-
-  connection.onclose(err => {
-    console.warn('[notificationService] connection closed', err);
-    connected = false;
-  });
-
-  try {
-    await connection.start();
-    connected = true;
-    console.debug('[notificationService] SignalR connected');
-    // initial refresh
-    window.dispatchEvent(new Event('notifications:updated'));
-  } catch (e) {
-    console.error('[notificationService] failed to start SignalR', e);
-  }
+  await connectToNotificationHub();
 }
 
 export async function stopNotificationConnection(): Promise<void> {
-  if (!connection) return;
-  try {
-    await connection.stop();
-  } catch (e) {
-    console.warn('[notificationService] failed to stop connection', e);
-  }
-  connection = null;
-  connected = false;
+  await disconnectFromNotificationHub();
 }
-

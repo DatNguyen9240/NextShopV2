@@ -118,17 +118,17 @@ const CheckoutPage: React.FC = () => {
               {cart.items.map((item) => (
                 <div key={item.variantId} className="flex justify-between items-center">
                   <div className="flex items-center gap-4">
-                    {item.imageUrl ? (
+                    {item.variantInfo?.imageUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={item.imageUrl} alt={item.productName ?? 'Sản phẩm'} className="w-20 h-20 object-cover rounded" />
+                      <img src={item.variantInfo.imageUrl} alt={item.variantInfo.productName ?? 'Sản phẩm'} className="w-20 h-20 object-cover rounded" />
                     ) : (
                       <div className="w-16 h-16 bg-gray-100 rounded" />
                     )}
 
                     <div>
-                      <p className="font-medium">{item.productName}</p>
-                      <p className="text-sm text-gray-600">{item.color ?? ''}{item.color && item.size ? ` · ${item.size}` : item.size ? item.size : ''}</p>
-                      <p className="text-sm text-gray-500">SKU: {item.sku ?? '—'}</p>
+                      <p className="font-medium">{item.variantInfo?.productName ?? 'Unknown Product'}</p>
+                      <p className="text-sm text-gray-600">{item.variantInfo?.color ?? ''}{item.variantInfo?.color && item.variantInfo?.size ? ` · ${item.variantInfo.size}` : item.variantInfo?.size ? item.variantInfo.size : ''}</p>
+                      <p className="text-sm text-gray-500">SKU: {item.variantInfo?.sku ?? '—'}</p>
                       <p className="text-sm text-gray-600">Số lượng: {item.quantity}</p>
                     </div>
                   </div>

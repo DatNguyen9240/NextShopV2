@@ -71,16 +71,18 @@ const Header = () => {
     void load();
 
     // manage realtime connection depending on auth
-    if (isAuthenticated) {
+    if (isAuthenticated && user && user.id) {
+      console.log('🔗 Starting notification connection for user:', user.id);
       void startNotificationConnection();
     } else {
+      console.log('🔌 Stopping notification connection - not authenticated or no user');
       void stopNotificationConnection();
     }
 
     const onUpdate = () => { void load(); };
     window.addEventListener('notifications:updated', onUpdate);
     return () => { mounted = false; window.removeEventListener('notifications:updated', onUpdate); void stopNotificationConnection(); };
-  }, [isAuthenticated]);
+  }, [isAuthenticated, user]);
 
   useEffect(() => {
     if (showNotifications && notifButtonRef.current) {

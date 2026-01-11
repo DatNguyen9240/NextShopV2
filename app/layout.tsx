@@ -5,7 +5,6 @@ import ConditionalLayout from "./components/ConditionalLayout";
 import { AuthProvider } from "./providers/AuthProvider";
 import CategoryProvider from "./context/CategoryContext";
 import ToastProvider from "./components/ToastProvider";
-import PushInitClient from "./components/PushInitClient";
 import { getUserFromCookie } from "./lib/getUserFromCookie";
 
 const roboto = Roboto({
@@ -37,8 +36,6 @@ export default async function RootLayout({
             </ConditionalLayout>
             {modal}
             <ToastProvider />
-            {/* Push subscribe button (client) */}
-            <PushInitClient />
           </CategoryProvider>
         </AuthProvider>
       </body>
