@@ -55,8 +55,8 @@ export default function NotificationsAdmin() {
 
   const loadHistory = async () => {
     try {
-      const response = await axiosClient.get('/api/notification/history');
-      setHistory(response.data);
+      const { data } = await axiosClient.get('/api/notification/history');
+      setHistory(data);
     } catch (error) {
       console.error('Error loading history:', error);
       setHistory([]);
@@ -65,8 +65,8 @@ export default function NotificationsAdmin() {
 
   const loadTokens = async () => {
     try {
-      const response = await axiosClient.get('/api/notification/tokens');
-      setTokens(response.data);
+      const { data } = await axiosClient.get('/api/notification/tokens');
+      setTokens(data);
     } catch (error) {
       console.error('Error loading tokens:', error);
       setTokens([]);
@@ -100,9 +100,10 @@ export default function NotificationsAdmin() {
       if (activeTab === 'history') {
         loadHistory();
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error sending notification:', error);
-      setMessage(`❌ Lỗi: ${error.response?.data?.message || error.message}`);
+      const axiosError = error as { response?: { data?: { message?: string } }; message?: string };
+      setMessage(`❌ Lỗi: ${axiosError.response?.data?.message || axiosError.message || 'Unknown error'}`);
     } finally {
       setIsLoading(false);
     }
@@ -113,16 +114,17 @@ export default function NotificationsAdmin() {
     setMessage('');
 
     try {
-      const response = await axiosClient.post('/api/FirebaseNotification/test-firebase');
+      await axiosClient.post('/api/FirebaseNotification/test-firebase');
       setMessage('✅ Test Firebase thành công!');
       
       // Reload history
       if (activeTab === 'history') {
         loadHistory();
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error testing Firebase:', error);
-      setMessage(`❌ Lỗi test: ${error.response?.data?.message || error.message}`);
+      const axiosError = error as { response?: { data?: { message?: string } }; message?: string };
+      setMessage(`❌ Lỗi test: ${axiosError.response?.data?.message || axiosError.message || 'Unknown error'}`);
     } finally {
       setIsLoading(false);
     }
@@ -149,15 +151,16 @@ export default function NotificationsAdmin() {
     setMessage('');
 
     try {
-      const response = await axiosClient.delete('/api/notification/clear-tokens');
+      await axiosClient.delete('/api/notification/clear-tokens');
       setMessage('✅ Đã xóa tất cả tokens!');
       // Reload tokens
       if (activeTab === 'tokens') {
         loadTokens();
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error clearing tokens:', error);
-      setMessage(`❌ Lỗi: ${error.response?.data?.message || error.message}`);
+      const axiosError = error as { response?: { data?: { message?: string } }; message?: string };
+      setMessage(`❌ Lỗi: ${axiosError.response?.data?.message || axiosError.message || 'Unknown error'}`);
     } finally {
       setIsLoading(false);
     }
