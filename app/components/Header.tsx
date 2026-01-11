@@ -10,7 +10,8 @@ import Hotline from "./Hotline";
 import { SignUpButton, LoginButton } from "./Button";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/providers/AuthProvider";
-import { User, Settings, LogOut, ChevronDown, History } from "lucide-react";
+import { User, Settings, LogOut, ChevronDown, History, Bell } from "lucide-react";
+import { getNotifications, markNotificationAsRead, markAllNotificationsAsRead, startNotificationConnection, stopNotificationConnection } from '@/app/services/notificationService';
 import { getCartCount } from '@/app/services/cartService';
 
 const Header = () => {
@@ -18,7 +19,12 @@ const Header = () => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [menuPosition, setMenuPosition] = useState({ top: 0, right: 0 });
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const notificationCount = 2;
+
+  const [notifications, setNotifications] = useState<{ id: string; title: string; body?: string; url?: string; read?: boolean; createdAt: string; }[]>([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const notifButtonRef = useRef<HTMLButtonElement>(null);
+  const [notifPosition, setNotifPosition] = useState({ top: 0, right: 0 });
+
   const [cartCount, setCartCount] = useState(0);
   const router = useRouter();
   const { user, isAuthenticated, logout } = useAuth();
@@ -51,6 +57,43 @@ const Header = () => {
     }
   }, [showUserMenu]);
 
+  useEffect(() => {
+    let mounted = true;
+    async function load() {
+      try {
+        const list = await getNotifications();
+        if (!mounted) return;
+        setNotifications(list);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    void load();
+
+    // manage realtime connection depending on auth
+    if (isAuthenticated && user && user.id) {
+      console.log('🔗 Starting notification connection for user:', user.id);
+      void startNotificationConnection();
+    } else {
+      console.log('🔌 Stopping notification connection - not authenticated or no user');
+      void stopNotificationConnection();
+    }
+
+    const onUpdate = () => { void load(); };
+    window.addEventListener('notifications:updated', onUpdate);
+    return () => { mounted = false; window.removeEventListener('notifications:updated', onUpdate); void stopNotificationConnection(); };
+  }, [isAuthenticated, user]);
+
+  useEffect(() => {
+    if (showNotifications && notifButtonRef.current) {
+      const rect = notifButtonRef.current.getBoundingClientRect();
+      setNotifPosition({
+        top: rect.bottom + window.scrollY + 8,
+        right: window.innerWidth - rect.right,
+      });
+    }
+  }, [showNotifications]);
+
   return (
     <header className="bg-white border-b border-gray-200 py-3 relative z-50">
       <div className="max-w-screen-xl mx-auto px-4 flex items-center justify-between">
@@ -75,18 +118,68 @@ const Header = () => {
 
         <div className="flex items-center gap-4">
           <div className="relative mr-2">
-            <svg
-              width="22"
-              height="22"
-              fill="none"
-              stroke="#222"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
+            <button
+              ref={notifButtonRef}
+              onClick={() => setShowNotifications(!showNotifications)}
+              className="relative p-1 rounded-full hover:bg-gray-100"
+              aria-label="Thông báo"
             >
-              <path d="M18 16v-5a6 6 0 10-12 0v5a2 2 0 002 2h8a2 2 0 002-2z" />
-              <path d="M13.73 21a2 2 0 01-3.46 0" />
-            </svg>
-            <Badge count={notificationCount} />
+              <Bell size={22} />
+              <Badge count={notifications.filter(n => !n.read).length} />
+            </button>
+
+            {showNotifications && typeof window !== 'undefined' && createPortal(
+              <>
+                <div 
+                  className="fixed inset-0 z-[9998]" 
+                  onClick={() => setShowNotifications(false)}
+                />
+                <div 
+                  className="fixed w-80 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-[9999]"
+                  style={{
+                    top: `${notifPosition.top}px`,
+                    right: `${notifPosition.right}px`,
+                  }}
+                >
+                  <div className="flex items-center justify-between px-4 py-2 border-b border-gray-100">
+                    <span className="font-medium">Thông báo</span>
+                    <button
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        await markAllNotificationsAsRead();
+                        const list = await getNotifications();
+                        setNotifications(list);
+                      }}
+                      className="text-sm text-blue-600"
+                    >
+                      Đánh dấu đã đọc
+                    </button>
+                  </div>
+                  <div className="max-h-64 overflow-y-auto">
+                    {notifications.length === 0 ? (
+                      <div className="p-4 text-sm text-gray-500">Không có thông báo</div>
+                    ) : (
+                      notifications.map(n => (
+                        <button
+                          key={n.id}
+                          onClick={async () => {
+                            if (!n.read) await markNotificationAsRead(n.id);
+                            setShowNotifications(false);
+                            router.push(n.url || '/');
+                          }}
+                          className={`w-full text-left px-4 py-3 border-b border-gray-100 ${n.read ? 'bg-white' : 'bg-gray-50'}`}
+                        >
+                          <div className="text-sm font-medium">{n.title}</div>
+                          {n.body && <div className="text-xs text-gray-500">{n.body}</div>}
+                          <div className="text-xs text-gray-400 mt-1">{new Date(n.createdAt).toLocaleString()}</div>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </>,
+              document.body
+            )}
           </div>
 
           <div

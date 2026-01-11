@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import axiosClient from '@/app/lib/axiosClient';
+import { fetchMyOrders, PagedOrders } from '../../services/orderService';
 import Button from '@/app/components/Button';
 import MoneyVND from '@/app/components/MoneyVND';
 import { useRouter } from 'next/navigation';
@@ -22,6 +22,9 @@ interface OrderDto {
   items: OrderItem[];
 }
 
+// Lightweight type for errors that contain an HTTP response
+type ErrorWithResponse = { response?: { status?: number } };
+
 export default function OrdersPage() {
   const router = useRouter();
   const [orders, setOrders] = useState<OrderDto[] | null>(null);
@@ -30,7 +33,7 @@ export default function OrdersPage() {
 
   // pagination state
   const [page, setPage] = useState<number>(1);
-  const [pageSize, setPageSize] = useState<number>(10);
+  const [pageSize] = useState<number>(10);
   const [total, setTotal] = useState<number>(0);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
 
@@ -39,19 +42,12 @@ export default function OrdersPage() {
     const load = async (p: number) => {
       setLoading(true);
       try {
-        const res = await axiosClient.get('/api/Order/my-orders', { params: { page: p, pageSize, status: statusFilter ?? undefined } });
-        const payload = res.data?.data ?? res.data;
+        const payload: PagedOrders = await fetchMyOrders(p, pageSize, statusFilter ?? undefined);
         if (!mounted) return;
-        // payload shape: { items, total, page, pageSize }
-        if (payload?.items) {
-          setOrders(payload.items ?? []);
-          setTotal(payload.total ?? 0);
-        } else {
-          setOrders(payload ?? []);
-          setTotal((payload ?? []).length ?? 0);
-        }
-      } catch (err: any) {
-        if (err?.response?.status === 401) {
+        setOrders(payload.items ?? []);
+        setTotal(payload.total ?? 0);
+      } catch (err: unknown) {
+        if ((err as ErrorWithResponse).response?.status === 401) {
           setError('Vui lòng đăng nhập để xem lịch sử mua hàng');
         } else {
           console.error('Failed to load orders', err);

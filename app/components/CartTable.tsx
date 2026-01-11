@@ -1,15 +1,14 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { createPortal } from 'react-dom';
 import ProductsTitle from "./ProductsTitle";
 import { ButtonMinus, ButtonPlus, ButtonClose } from "./Button";
 import Image from "next/image";
 import MoneyVND from "./MoneyVND";
-import { updateCartItem, removeCartItem } from "@/app/services/cartService";
 import { useCart } from "@/app/context/CartContext";
 import { toast } from 'react-hot-toast';
-import type { CartDto, CartItemDto } from "@/app/types/cart";
+import type { CartItemDto } from "@/app/types/cart";
 
 type CartItemType = CartItemDto;
  
@@ -45,11 +44,13 @@ const CartTableRow: React.FC<{ item: CartItemType; onChangeQty: (id: string, qty
   <tr className="border-b">
     <td className="py-2 flex items-center gap-6 min-w-[300px]">
       <Image
-        src={item.imageUrl || '/sell_off/01.jpg'}
-        alt={item.productName}
+        src={item.variantInfo?.imageUrl || '/sell_off/01.jpg'}
+        alt={item.variantInfo?.productName || 'Product'}
         width={100}
         height={100}
         className="rounded"
+        style={{ width: 'auto', height: 'auto' }}
+        priority
       />
       <div>
         <div
@@ -63,11 +64,11 @@ const CartTableRow: React.FC<{ item: CartItemType; onChangeQty: (id: string, qty
             whiteSpace: "normal",
           }}
         >
-          {item.productName}
+          {item.variantInfo?.productName || 'Unknown Product'}
         </div>
         {/* Rating not available from cart items; keep space for future */}
         <div className="flex mt-1">
-          <span className="text-sm text-gray-500">{item.color ? `${item.color}${item.size ? ' • ' + item.size : ''}` : item.size ?? ''}</span>
+          <span className="text-sm text-gray-500">{item.variantInfo?.color ? `${item.variantInfo.color}${item.variantInfo.size ? ' • ' + item.variantInfo.size : ''}` : item.variantInfo?.size ?? ''}</span>
         </div>
       </div>
     </td>

@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Button from "@/app/components/Button";
 import MoneyVND from "@/app/components/MoneyVND";
 import axiosClient from "@/app/lib/axiosClient";
+import axios from 'axios';
 
 interface PaymentStatus {
   status: string;
@@ -77,6 +78,7 @@ export default function PaymentSuccessPage() {
           buyerName: payload.buyerName ?? payload.BuyerName ?? null,
           buyerPhone: payload.buyerPhone ?? payload.BuyerPhone ?? null,
           shippingAddress: payload.shippingAddress ?? payload.ShippingAddress ?? null,
+          /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
           items: (payload.items ?? payload.Items ?? []).map((it: any) => ({
             orderItemId: it.orderItemId ?? it.OrderItemId,
             variantId: it.variantId ?? it.VariantId,
@@ -92,8 +94,8 @@ export default function PaymentSuccessPage() {
           }))
         });
       }
-    } catch (err: any) {
-      if (err?.response?.status === 401) {
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err) && err.response?.status === 401) {
         setAuthRequired(true);
       } else {
         console.error("Failed to fetch order details:", err);
@@ -116,9 +118,10 @@ export default function PaymentSuccessPage() {
       }));
       // Navigate user to cart page where they can review and checkout
       router.push('/cart');
-    } catch (err: any) {
+    } catch (err: unknown) {
       // If unauthenticated, send user to login
-      if (err?.response?.status === 401) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if ((err as any)?.response?.status === 401) {
         router.push('/login');
       } else {
         console.error('Failed to add items to cart for reorder', err);
@@ -187,13 +190,12 @@ export default function PaymentSuccessPage() {
     if (!confettiPlayed) {
       try {
         triggerConfetti();
-      } catch (e) {
+      } catch {
         // non-fatal
       }
       setConfettiPlayed(true);
     }
 
-    let mounted = true;
     const clearAndNotify = async () => {
       try {
         const { clearCart } = await import('@/app/services/cartService');
@@ -204,7 +206,7 @@ export default function PaymentSuccessPage() {
       }
     };
     void clearAndNotify();
-    return () => { mounted = false; };
+    return undefined; 
   }, [isPaid, confettiPlayed]);
 
   useEffect(() => {
@@ -213,18 +215,6 @@ export default function PaymentSuccessPage() {
       setOrderId(id);
       fetchPaymentStatus(id);
       fetchOrderDetails(id);
-
-      // Poll status every 2s until Paid or timeout
-      let elapsed = 0;
-      const interval = setInterval(async () => {
-        elapsed += 2000;
-        const status = await fetchPaymentStatus(id);
-        if ((status ?? '') === 'paid' || elapsed >= 120000) {
-          clearInterval(interval);
-        }
-      }, 2000);
-
-      return () => clearInterval(interval);
     } else {
       setLoading(false);
       setOrderLoading(false);

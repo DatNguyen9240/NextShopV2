@@ -1,6 +1,7 @@
 "use client";
 
 import { useSearchParams, useRouter } from 'next/navigation';
+import axios from 'axios';
 import axiosClient from '../lib/axiosClient';
 import { useEffect, useState } from 'react';
 
@@ -8,7 +9,6 @@ const PaymentPage: React.FC = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const orderId = searchParams.get('orderId');
-  const [qrCode, setQrCode] = useState<string | null>(null);
   const [qrSrc, setQrSrc] = useState<string | null>(null);
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
   const [imgError, setImgError] = useState(false);
@@ -16,7 +16,6 @@ const PaymentPage: React.FC = () => {
   const MAX_QR_RETRIES = 3;
   const QR_RETRY_DELAY_MS = 2000; // 2s
   const [loading, setLoading] = useState(true);
-  const [polling, setPolling] = useState(false);
 
   useEffect(() => {
     console.log('orderId from URL:', orderId);
@@ -31,9 +30,9 @@ const PaymentPage: React.FC = () => {
           router.push(`/payment/success?orderId=${orderId}`);
           return;
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         // If 404 (no payment yet) or other, continue to create payment
-        if (err?.response?.status && err.response.status !== 404) {
+        if (axios.isAxiosError(err) && err.response?.status && err.response.status !== 404) {
           console.error('Failed to check payment status', err);
         }
       }
@@ -43,13 +42,11 @@ const PaymentPage: React.FC = () => {
         const res = await axiosClient.post('/api/Payments/create-order-payment', { OrderId: orderId });
         const gotQr = res.data?.qrCodeUrl ?? null;
         const gotCheckout = res.data?.checkoutUrl ?? res.data?.CheckoutUrl ?? null;
-        setQrCode(gotQr);
         setCheckoutUrl(gotCheckout);
         const src = gotQr ?? (gotCheckout ? `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(gotCheckout)}` : null);
         setQrSrc(src);
         setRetryCount(0);
         setImgError(false);
-        setPolling(true); // Start polling after QR is shown
       } catch (err) {
         console.error('Failed to create payment', err);
       } finally {
@@ -61,26 +58,19 @@ const PaymentPage: React.FC = () => {
   }, [orderId, router]);
 
   useEffect(() => {
-    if (!polling || !orderId) return;
+    if (!orderId) return;
 
-    const pollPaymentStatus = async () => {
-      try {
-        const res = await axiosClient.get(`/api/Payments/status/${orderId}`);
-        console.log('Poll response:', res.data);
-        const status = (res.data?.status ?? res.data?.Status ?? res.data?.data?.status ?? '').toString().toLowerCase();
-        if (status === 'paid') {
-          console.log('Payment detected as PAID, redirecting...');
-          setPolling(false);
-          router.push(`/payment/success?orderId=${orderId}`);
-        }
-      } catch (err) {
-        console.error('Failed to check payment status', err);
+    const handler = (e: Event) => {
+      const custom = e as CustomEvent<{ orderId: string }>;
+      if (custom?.detail?.orderId === orderId) {
+        console.log('Received payment:completed for this order via socket, redirecting...');
+        router.push(`/payment/success?orderId=${orderId}`);
       }
     };
 
-    const interval = setInterval(pollPaymentStatus, 1000); // Poll every 3 seconds
-    return () => clearInterval(interval);
-  }, [polling, orderId, router]);
+    window.addEventListener('payment:completed', handler as EventListener);
+    return () => window.removeEventListener('payment:completed', handler as EventListener);
+  }, [orderId, router]);
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">Đang tạo mã QR...</div>;
@@ -133,7 +123,7 @@ const PaymentPage: React.FC = () => {
           <div className="mt-2 text-sm text-gray-600">Đang thử tải lại mã QR ({retryCount}/{MAX_QR_RETRIES})...</div>
         )}
         <p className="text-sm text-gray-600">Đơn hàng: {orderId}</p>
-        {polling && <p className="text-sm text-blue-600 mt-4">Đang kiểm tra trạng thái thanh toán...</p>}
+
       </div>
     </div>
   );
