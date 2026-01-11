@@ -83,7 +83,7 @@ export default function NotificationsAdmin() {
     setMessage('');
 
     try {
-      const response = await axiosClient.post('/api/notification/send-all', {
+      await axiosClient.post('/api/notification/send-all', {
         title: title.trim(),
         body: body.trim(),
         imageUrl: imageUrl.trim() || undefined,
