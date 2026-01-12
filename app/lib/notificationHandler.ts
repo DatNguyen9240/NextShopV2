@@ -42,7 +42,7 @@ export async function requestNotificationPermission(userId?: string): Promise<st
 // Gửi token lên server C#
 async function saveTokenToServer(token: string, userId?: string): Promise<void> {
   try {
-    const response = await axiosClient.post('/api/notification/save-token', {
+    const response = await axiosClient.post('/api/firebase-notifications/save-token', {
       token: token,
       userId: userId
     });

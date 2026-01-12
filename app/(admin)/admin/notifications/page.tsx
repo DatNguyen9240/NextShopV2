@@ -55,7 +55,7 @@ export default function NotificationsAdmin() {
 
   const loadHistory = async () => {
     try {
-      const { data } = await axiosClient.get('/api/notification/history');
+      const { data } = await axiosClient.get('/api/firebase-notifications/history');
       setHistory(data);
     } catch (error) {
       console.error('Error loading history:', error);
@@ -65,7 +65,7 @@ export default function NotificationsAdmin() {
 
   const loadTokens = async () => {
     try {
-      const { data } = await axiosClient.get('/api/notification/tokens');
+      const { data } = await axiosClient.get('/api/firebase-notifications/tokens');
       setTokens(data);
     } catch (error) {
       console.error('Error loading tokens:', error);
@@ -83,7 +83,7 @@ export default function NotificationsAdmin() {
     setMessage('');
 
     try {
-      await axiosClient.post('/api/notification/send-all', {
+      await axiosClient.post('/api/firebase-notifications/send-all', {
         title: title.trim(),
         body: body.trim(),
         imageUrl: imageUrl.trim() || undefined,
@@ -114,7 +114,7 @@ export default function NotificationsAdmin() {
     setMessage('');
 
     try {
-      await axiosClient.post('/api/FirebaseNotification/test-firebase');
+      await axiosClient.post('/api/firebase-notifications/test-firebase');
       setMessage('✅ Test Firebase thành công!');
       
       // Reload history
@@ -151,7 +151,7 @@ export default function NotificationsAdmin() {
     setMessage('');
 
     try {
-      await axiosClient.delete('/api/notification/clear-tokens');
+      await axiosClient.delete('/api/firebase-notifications/clear-tokens');
       setMessage('✅ Đã xóa tất cả tokens!');
       // Reload tokens
       if (activeTab === 'tokens') {
