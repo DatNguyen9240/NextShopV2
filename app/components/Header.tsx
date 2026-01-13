@@ -345,6 +345,16 @@ const Header = () => {
                     <span>Cài đặt tài khoản</span>
                   </button>
                   <button
+                    onClick={() => {
+                      setOpenModal(false);
+                      router.push('/account/orders');
+                    }}
+                    className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                  >
+                    <History size={16} />
+                    <span>Lịch sử mua hàng</span>
+                  </button>
+                  <button
                     onClick={async () => {
                       setOpenModal(false);
                       await logout();

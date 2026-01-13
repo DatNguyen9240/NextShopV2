@@ -46,6 +46,8 @@ export const logout = async () => {
     if (typeof window !== 'undefined') {
       eraseCookie('accessToken');
       eraseCookie('refreshToken');
+      // Also clear userId cookie on logout
+      eraseCookie('userId');
     }
   }
 };

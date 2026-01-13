@@ -69,31 +69,35 @@ export default function OrdersPage() {
 
   return (
     <main className="max-w-screen-xl mx-auto mt-12 px-4">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6">
         <h1 className="text-3xl font-bold">Lịch sử mua hàng</h1>
 
-        {/* Filter + Header pagination / summary */}
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
+        {/* Filter + Header pagination / summary (responsive) */}
+        <div className="flex items-center gap-4 flex-wrap sm:flex-nowrap w-full sm:w-auto mt-3 sm:mt-0">
+          <div className="flex flex-wrap gap-2 mb-3 sm:mb-0">
             <button onClick={() => setStatusFilter(null)} className={`px-3 py-1 rounded ${statusFilter === null ? 'bg-pink-50 border border-pink-200 text-pink-600' : 'border hover:bg-gray-100'}`}>Tất cả</button>
             <button onClick={() => setStatusFilter('Paid')} className={`px-3 py-1 rounded ${statusFilter === 'Paid' ? 'bg-pink-50 border border-pink-200 text-pink-600' : 'border hover:bg-gray-100'}`}>Đã thanh toán</button>
             <button onClick={() => setStatusFilter('Pending')} className={`px-3 py-1 rounded ${statusFilter === 'Pending' ? 'bg-pink-50 border border-pink-200 text-pink-600' : 'border hover:bg-gray-100'}`}>Chờ thanh toán</button>
           </div>
 
-          <div className="text-sm text-gray-600">Hiển thị {Math.min((page - 1) * pageSize + 1, total)}–{Math.min(page * pageSize, total)} trên {total} đơn</div>
-          <button
-            className={`px-3 py-1 rounded border ${page === 1 ? 'opacity-50 pointer-events-none' : 'hover:bg-gray-100'}`}
-            onClick={() => setPage(p => Math.max(1, p - 1))}
-          >
-            Trước
-          </button>
-          <div className="text-sm">Trang {page}</div>
-          <button
-            className={`px-3 py-1 rounded border ${page * pageSize >= total ? 'opacity-50 pointer-events-none' : 'hover:bg-gray-100'}`}
-            onClick={() => setPage(p => p + 1)}
-          >
-            Sau
-          </button>
+          <div className="hidden sm:block text-sm text-gray-600">Hiển thị {Math.min((page - 1) * pageSize + 1, total)}–{Math.min(page * pageSize, total)} trên {total} đơn</div>
+          <div className="sm:hidden text-sm text-gray-600 w-full mb-2">Hiển thị {Math.min((page - 1) * pageSize + 1, total)}–{Math.min(page * pageSize, total)} trên {total} đơn</div>
+
+          <div className="flex items-center gap-2">
+            <button
+              className={`px-3 py-1 rounded border ${page === 1 ? 'opacity-50 pointer-events-none' : 'hover:bg-gray-100'}`}
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+            >
+              Trước
+            </button>
+            <div className="text-sm">Trang {page}</div>
+            <button
+              className={`px-3 py-1 rounded border ${page * pageSize >= total ? 'opacity-50 pointer-events-none' : 'hover:bg-gray-100'}`}
+              onClick={() => setPage(p => p + 1)}
+            >
+              Sau
+            </button>
+          </div>
         </div>
       </div>
 
@@ -136,7 +140,7 @@ export default function OrdersPage() {
               <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-8 sm:ml-6 w-full sm:w-auto">
 
                 {/* MONEY */}
-                <div className="text-left sm:text-right min-w-[140px]">
+                <div className="text-left sm:text-right min-w-[120px] sm:min-w-[140px]">
                   <div className="text-xs text-gray-500">Tổng tiền</div>
                   <div className="text-2xl font-extrabold text-pink-600 leading-tight">
                     <MoneyVND value={o.totalAmount} />

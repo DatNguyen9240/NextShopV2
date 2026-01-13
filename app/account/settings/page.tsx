@@ -386,6 +386,14 @@ export default function SettingsPage() {
             onCancel={cancelDeleteAvatar}
           />
 
+
+
+          <div className="flex justify-end">
+            <button type="submit" disabled={saving} className="bg-blue-600 text-white py-2 px-6 rounded">
+              {saving ? "Đang lưu..." : "Lưu"}
+            </button>
+          </div>
+
           {/* Passkey management */}
           <div className="mt-6 border-t pt-4">
             <div className="flex items-center justify-between mb-2">
@@ -398,15 +406,49 @@ export default function SettingsPage() {
                     // Preserve original base64 challenge for server verification (preformatMakeCredReq mutates it to ArrayBuffer)
                     const serverChallenge = options.challenge;
                     const publicKey = preformatMakeCredReq(options);
-                    const cred: any = await navigator.credentials.create({ publicKey });
+
+                    // Ensure a reasonable timeout (ms) to avoid immediate NotAllowedError on some devices
+                    publicKey.timeout = publicKey.timeout ?? 60000;
+
+                    // Debug: log the publicKey options so we can inspect what's being sent to the authenticator
+                    console.debug('[Settings] publicKey options before navigator.credentials.create:', publicKey);
+
+                    let cred: any;
+                    try {
+                      cred = await navigator.credentials.create({ publicKey });
+                      console.debug('[Settings] credential created', cred);
+                    } catch (err: any) {
+                      // User cancelled or operation not allowed — handle gracefully without rethrowing
+                      console.warn('[Settings] navigator.credentials.create failed', err?.name, err?.message);
+                      if (err?.name === 'NotAllowedError') {
+                        setMessage('Đã hủy hoặc hết thời gian');
+                      } else {
+                        console.error('[Settings] navigator.credentials.create unexpected error', err);
+                        setMessage('Lỗi đăng ký');
+                      }
+                      // Stop further processing when create fails
+                      return;
+                    }
+
                     const payload = publicKeyCredentialToJSON(cred);
+
+                    // Try to attach transports (may be available on the credential object in some browsers)
+                    try {
+                      const anyCred: any = cred;
+                      if (anyCred.transports) payload.transports = anyCred.transports;
+                      else if (anyCred.response && typeof anyCred.response.getTransports === 'function') {
+                        const tr = anyCred.response.getTransports();
+                        if (tr) payload.transports = tr;
+                      }
+                    } catch (e) { console.debug('[Settings] transports read failed', e); }
+
                     const verify = await verifyRegister({ userId: user?.id, credential: payload, challenge: serverChallenge });
                     if (verify && verify.success) {
-                      setMessage('Passkey registered');
+                      setMessage('Đã thêm passkey');
                       const pk = await getPasskeys();
                       setPasskeys(pk);
                     } else {
-                      setMessage('Đăng ký passkey thất bại');
+                      setMessage('Đăng ký thất bại');
                     }
                   } catch (err) {
                     console.error(err);
@@ -448,12 +490,6 @@ export default function SettingsPage() {
                 )
               )}
             </div>
-          </div>
-
-          <div className="flex justify-end">
-            <button type="submit" disabled={saving} className="bg-blue-600 text-white py-2 px-6 rounded">
-              {saving ? "Đang lưu..." : "Lưu"}
-            </button>
           </div>
         </div>
       </form>

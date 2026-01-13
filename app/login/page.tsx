@@ -122,6 +122,15 @@ export default function LoginPage() {
         const refresh = data.refreshToken || data.refresh_token;
         if (access) {
           setCookie('accessToken', access, 1);
+          // also persist userId for compatibility with refresh flow (same as password login)
+          try {
+            const parts = (access || '').split('.');
+            if (parts.length >= 2) {
+              const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+              const uid = payload?.userId ?? payload?.nameid ?? payload?.sub;
+              if (uid) setCookie('userId', String(uid), 7);
+            }
+          } catch (e) { console.debug('[loginWithPasskey] decode access token failed', e); }
         }
         if (refresh && refresh !== 'null') {
           setCookie('refreshToken', refresh, 7);

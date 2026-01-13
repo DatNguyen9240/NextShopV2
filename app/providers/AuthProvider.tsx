@@ -73,6 +73,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, initialUse
         console.warn('[AuthProvider.refreshUser] clearing cookies due to failed /me');
         eraseCookie('accessToken');
         eraseCookie('refreshToken');
+        eraseCookie('userId');
       }
       setUser(null);
       return null;

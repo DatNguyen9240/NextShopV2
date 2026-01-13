@@ -89,6 +89,7 @@ instance.interceptors.response.use(
       if (originalRequest.url?.includes('/api/auth/refresh') || originalRequest.url?.includes('/api/auth/login')) {
         eraseCookie('accessToken');
         eraseCookie('refreshToken');
+        eraseCookie('userId');
         return Promise.reject(error);
       }
 
@@ -117,6 +118,7 @@ instance.interceptors.response.use(
               console.warn('[axiosClient] No valid refresh token present before refresh attempt. document.cookie=', document.cookie);
               eraseCookie('accessToken');
               eraseCookie('refreshToken');
+              eraseCookie('userId');
             }
             isRefreshing = false;
             return reject(error);
@@ -162,6 +164,7 @@ instance.interceptors.response.use(
           if (typeof window !== 'undefined') {
             eraseCookie('accessToken');
             eraseCookie('refreshToken');
+            eraseCookie('userId');
           }
           reject(err);
         } finally {
