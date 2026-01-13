@@ -19,22 +19,25 @@ export function base64UrlToBuffer(base64url: string): ArrayBuffer {
   return buffer;
 }
 
-export function preformatMakeCredReq(makeCredReq: any): any {
-  if (!makeCredReq || !makeCredReq.challenge || !makeCredReq.user || !makeCredReq.user.id) {
+export function preformatMakeCredReq(makeCredReq: Record<string, unknown>): Record<string, unknown> {
+  if (!makeCredReq || !makeCredReq.challenge || !makeCredReq.user || !((makeCredReq.user as Record<string, unknown>).id)) {
     throw new Error('Invalid registration options received from server');
   }
-  makeCredReq.challenge = base64UrlToBuffer(makeCredReq.challenge);
-  makeCredReq.user.id = base64UrlToBuffer(makeCredReq.user.id);
-  if (makeCredReq.excludeCredentials) {
-    makeCredReq.excludeCredentials = makeCredReq.excludeCredentials.map((c: any) => ({
+
+  // convert challenge and user.id to ArrayBuffer
+  (makeCredReq as Record<string, unknown>).challenge = base64UrlToBuffer(String(makeCredReq.challenge));
+  (makeCredReq.user as Record<string, unknown>).id = base64UrlToBuffer(String((makeCredReq.user as Record<string, unknown>).id));
+
+  if (Array.isArray((makeCredReq as Record<string, unknown>).excludeCredentials)) {
+    (makeCredReq as Record<string, unknown>).excludeCredentials = ((makeCredReq as Record<string, unknown>).excludeCredentials as Array<Record<string, unknown>>).map((c) => ({
       ...c,
-      id: base64UrlToBuffer(c.id)
+      id: base64UrlToBuffer(String(c.id))
     }));
   }
   return makeCredReq;
 }
 
-export function preformatGetAssertReq(getAssertReq: any): any {
+export function preformatGetAssertReq(getAssertReq: Record<string, unknown>): Record<string, unknown> {
   if (!getAssertReq || !getAssertReq.challenge) {
     throw new Error('Invalid assertion options received from server: missing challenge. Response: ' + JSON.stringify(getAssertReq));
   }
@@ -44,7 +47,7 @@ export function preformatGetAssertReq(getAssertReq: any): any {
   getAssertReq.challenge = base64UrlToBuffer(challengeStr);
 
   if (getAssertReq.allowCredentials && Array.isArray(getAssertReq.allowCredentials)) {
-    getAssertReq.allowCredentials = getAssertReq.allowCredentials.map((c: any) => ({
+    getAssertReq.allowCredentials = (getAssertReq.allowCredentials as Array<Record<string, unknown>>).map((c) => ({
       ...c,
       id: c && c.id ? base64UrlToBuffer(String(c.id)) : c.id
     }));
@@ -56,13 +59,13 @@ export function preformatGetAssertReq(getAssertReq: any): any {
   return getAssertReq;
 }
 
-export function publicKeyCredentialToJSON(pubKeyCred: any): any {
-  if (pubKeyCred instanceof Array) return pubKeyCred.map(publicKeyCredentialToJSON);
-  if (pubKeyCred instanceof ArrayBuffer) return bufferToBase64Url(pubKeyCred);
+export function publicKeyCredentialToJSON(pubKeyCred: unknown): unknown {
+  if (pubKeyCred instanceof Array) return (pubKeyCred as unknown[]).map(publicKeyCredentialToJSON);
+  if (pubKeyCred instanceof ArrayBuffer) return bufferToBase64Url(pubKeyCred as ArrayBuffer);
   if (pubKeyCred && typeof pubKeyCred === 'object') {
-    const obj: any = {};
-    for (const key in pubKeyCred) {
-      obj[key] = publicKeyCredentialToJSON(pubKeyCred[key]);
+    const obj: Record<string, unknown> = {};
+    for (const key in pubKeyCred as object) {
+      obj[key] = publicKeyCredentialToJSON((pubKeyCred as Record<string, unknown>)[key]);
     }
     return obj;
   }

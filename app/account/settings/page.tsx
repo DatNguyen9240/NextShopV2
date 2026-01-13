@@ -405,7 +405,7 @@ export default function SettingsPage() {
                     const options = await startRegister();
                     // Preserve original base64 challenge for server verification (preformatMakeCredReq mutates it to ArrayBuffer)
                     const serverChallenge = options.challenge;
-                    const publicKey = preformatMakeCredReq(options);
+                    const publicKey = preformatMakeCredReq(options) as unknown as PublicKeyCredentialCreationOptions;
 
                     // Ensure a reasonable timeout (ms) to avoid immediate NotAllowedError on some devices
                     publicKey.timeout = publicKey.timeout ?? 60000;
@@ -413,14 +413,15 @@ export default function SettingsPage() {
                     // Debug: log the publicKey options so we can inspect what's being sent to the authenticator
                     console.debug('[Settings] publicKey options before navigator.credentials.create:', publicKey);
 
-                    let cred: any;
+                    let cred: PublicKeyCredential | null = null;
                     try {
-                      cred = await navigator.credentials.create({ publicKey });
+                      cred = await navigator.credentials.create({ publicKey }) as PublicKeyCredential | null;
                       console.debug('[Settings] credential created', cred);
-                    } catch (err: any) {
+                    } catch (err: unknown) {
                       // User cancelled or operation not allowed — handle gracefully without rethrowing
-                      console.warn('[Settings] navigator.credentials.create failed', err?.name, err?.message);
-                      if (err?.name === 'NotAllowedError') {
+                      const errObj = err as { name?: string; message?: string };
+                      console.warn('[Settings] navigator.credentials.create failed', errObj?.name, errObj?.message);
+                      if (errObj?.name === 'NotAllowedError') {
                         setMessage('Đã hủy hoặc hết thời gian');
                       } else {
                         console.error('[Settings] navigator.credentials.create unexpected error', err);
@@ -430,17 +431,17 @@ export default function SettingsPage() {
                       return;
                     }
 
-                    const payload = publicKeyCredentialToJSON(cred);
+                    const payload = publicKeyCredentialToJSON(cred) as Record<string, unknown>;
 
                     // Try to attach transports (may be available on the credential object in some browsers)
                     try {
-                      const anyCred: any = cred;
-                      if (anyCred.transports) payload.transports = anyCred.transports;
-                      else if (anyCred.response && typeof anyCred.response.getTransports === 'function') {
-                        const tr = anyCred.response.getTransports();
-                        if (tr) payload.transports = tr;
+                      const credObj = cred as unknown as { transports?: unknown; response?: { getTransports?: () => unknown } } | null;
+                      if (credObj?.transports) (payload as Record<string, unknown>)['transports'] = credObj.transports as unknown as string;
+                      else if (credObj?.response && typeof credObj.response.getTransports === 'function') {
+                        const tr = credObj.response.getTransports();
+                        if (tr) (payload as Record<string, unknown>)['transports'] = tr;
                       }
-                    } catch (e) { console.debug('[Settings] transports read failed', e); }
+                    } catch (e: unknown) { console.debug('[Settings] transports read failed', e); }
 
                     const verify = await verifyRegister({ userId: user?.id, credential: payload, challenge: serverChallenge });
                     if (verify && verify.success) {
@@ -477,8 +478,9 @@ export default function SettingsPage() {
                               setMessage('Đã xóa passkey');
                               const pk = await getPasskeys();
                               setPasskeys(pk);
-                            } catch (e: any) {
-                              console.warn('[Settings] revokePasskey failed', e);
+                            } catch (err: unknown) {
+                              const e = err as { response?: { status?: number } };
+                              console.warn('[Settings] revokePasskey failed', err);
                               const msg = e?.response?.status === 404 ? 'Passkey không tồn tại hoặc không thuộc user' : 'Xóa thất bại';
                               setMessage(msg);
                             }

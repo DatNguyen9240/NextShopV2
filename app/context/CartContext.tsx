@@ -35,7 +35,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const { isAuthenticated } = useAuth();
 
-  const loadCart = async () => {
+  const loadCart = React.useCallback(async () => {
     setLoading(true);
     try {
       // Do not call API when not authenticated to avoid unnecessary 401s
@@ -46,12 +46,12 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
 
       const c = await getCart();
       setCart(c);
-    } catch (e) {
+    } catch (e: unknown) {
       console.error('Failed to load cart', e);
     } finally {
       setLoading(false);
     }
-  };
+  }, [isAuthenticated]);
 
   const updateItem = async (cartItemId: string, data: UpdateCartItemDto) => {
     await updateCartItem(cartItemId, data);
@@ -81,7 +81,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   useEffect(() => {
     // Reload cart when authentication changes (login/logout)
     void loadCart();
-  }, [isAuthenticated]);
+  }, [loadCart]);
 
   return (
     <CartContext.Provider value={{

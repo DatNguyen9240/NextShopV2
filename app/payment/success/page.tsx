@@ -78,18 +78,17 @@ export default function PaymentSuccessPage() {
           buyerName: payload.buyerName ?? payload.BuyerName ?? null,
           buyerPhone: payload.buyerPhone ?? payload.BuyerPhone ?? null,
           shippingAddress: payload.shippingAddress ?? payload.ShippingAddress ?? null,
-          /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-          items: (payload.items ?? payload.Items ?? []).map((it: any) => ({
-            orderItemId: it.orderItemId ?? it.OrderItemId,
-            variantId: it.variantId ?? it.VariantId,
-            quantity: it.quantity ?? it.Quantity,
-            unitPrice: it.unitPrice ?? it.UnitPrice,
-            totalPrice: (it.quantity ?? it.Quantity) * (it.unitPrice ?? it.UnitPrice),
-            productName: it.productName ?? it.ProductName ?? it.variant?.product?.name ?? null,
+          items: (payload.items ?? payload.Items ?? []).map((it: Record<string, unknown>) => ({
+            orderItemId: (it.orderItemId ?? it.OrderItemId) as string,
+            variantId: (it.variantId ?? it.VariantId) as string,
+            quantity: (it.quantity ?? it.Quantity) as number,
+            unitPrice: (it.unitPrice ?? it.UnitPrice) as number,
+            totalPrice: ((it.quantity ?? it.Quantity) as number) * ((it.unitPrice ?? it.UnitPrice) as number),
+            productName: (it.productName ?? it.ProductName ?? (((it.variant as Record<string, unknown>)?.product as Record<string, unknown>)?.name) ?? null) as string | null,
             variant: {
-              color: it.variant?.color ?? it.Variant?.Color ?? null,
-              size: it.variant?.size ?? it.Variant?.Size ?? null,
-              imageUrl: it.variant?.imageUrl ?? it.Variant?.ImageUrl ?? null,
+              color: ((it.variant as Record<string, unknown>)?.color ?? (it.Variant as Record<string, unknown>)?.Color ?? null) as string | null,
+              size: ((it.variant as Record<string, unknown>)?.size ?? (it.Variant as Record<string, unknown>)?.Size ?? null) as string | null,
+              imageUrl: ((it.variant as Record<string, unknown>)?.imageUrl ?? (it.Variant as Record<string, unknown>)?.ImageUrl ?? null) as string | null,
             }
           }))
         });
@@ -120,8 +119,7 @@ export default function PaymentSuccessPage() {
       router.push('/cart');
     } catch (err: unknown) {
       // If unauthenticated, send user to login
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if ((err as any)?.response?.status === 401) {
+      if (axios.isAxiosError(err) && err.response?.status === 401) {
         router.push('/login');
       } else {
         console.error('Failed to add items to cart for reorder', err);

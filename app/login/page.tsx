@@ -51,7 +51,9 @@ export default function LoginPage() {
         try {
           const body = await res.json();
           errText = body?.message || body?.reason || JSON.stringify(body);
-        } catch (_) { /* ignore parse errors */ }
+        } catch {
+          /* ignore parse errors */
+        }
         console.error('loginWithPasskey: failed to fetch options', res.status, res.statusText);
         setMessage(errText);
         return;
@@ -60,29 +62,29 @@ export default function LoginPage() {
 
       // 2. Preserve server challenge, then preformat and call WebAuthn
       const serverChallenge = options.challenge; // preserve base64url-string
-      const publicKey = preformatGetAssertReq(options);
+      const publicKey = preformatGetAssertReq(options) as unknown as PublicKeyCredentialRequestOptions;
       const assertion = await navigator.credentials.get({ publicKey }) as unknown as PublicKeyCredential | null;
-      let payload = publicKeyCredentialToJSON(assertion);
+      const payload = publicKeyCredentialToJSON(assertion) as Record<string, unknown>;
       // Ensure id is present for server parsing (fallback to rawId which some browsers provide)
-      if (!payload.id && payload.rawId) payload.id = payload.rawId;
+      if (!payload['id'] && payload['rawId']) payload['id'] = payload['rawId'];
 
       // 3. Send assertion to backend to verify (sanitize if needed)
-      const bodyToSend: any = { assertion: payload, challenge: serverChallenge };
+      const bodyToSend: Record<string, unknown> = { assertion: payload, challenge: serverChallenge };
 
       // Debug: log payload shape (safely)
       try { console.debug('[loginWithPasskey] payload', JSON.parse(JSON.stringify(payload))); } catch { console.debug('[loginWithPasskey] payload (non-serializable)', payload); }
 
       try {
         JSON.stringify(bodyToSend);
-      } catch (e) {
-        console.warn('[loginWithPasskey] assertion not serializable, sanitizing', e);
-        const deepSanitize = (obj: any): any => {
+      } catch (err: unknown) {
+        console.warn('[loginWithPasskey] assertion not serializable, sanitizing', err);
+        const deepSanitize = (obj: unknown): unknown => {
           if (obj == null) return obj;
           if (typeof obj !== 'object') return obj;
-          if (Array.isArray(obj)) return obj.map(deepSanitize);
-          const res: any = {};
-          for (const k of Object.keys(obj)) {
-            const v = obj[k];
+          if (Array.isArray(obj)) return (obj as unknown[]).map(deepSanitize);
+          const res: Record<string, unknown> = {};
+          for (const k of Object.keys(obj as object)) {
+            const v = (obj as Record<string, unknown>)[k];
             if (typeof v === 'function' || typeof v === 'symbol') continue;
             try {
               res[k] = deepSanitize(v);
@@ -92,7 +94,7 @@ export default function LoginPage() {
           }
           return res;
         };
-        bodyToSend.assertion = deepSanitize(payload);
+        (bodyToSend as Record<string, unknown>).assertion = deepSanitize(payload);
       }
 
       try { console.debug('[loginWithPasskey] bodyToSend', JSON.parse(JSON.stringify(bodyToSend))); } catch { console.debug('[loginWithPasskey] bodyToSend (non-serializable)', bodyToSend); }
@@ -108,7 +110,7 @@ export default function LoginPage() {
           const errBody = await verifyRes.json();
           console.warn('[loginWithPasskey] verify failed', verifyRes.status, errBody);
           setMessage('Đăng nhập bằng passkey thất bại: ' + (errBody?.reason || errBody?.message || verifyRes.statusText));
-        } catch (e) {
+        } catch {
           console.warn('[loginWithPasskey] verify failed and response is not json', verifyRes.status, verifyRes.statusText);
           setMessage('Đăng nhập bằng passkey thất bại');
         }
