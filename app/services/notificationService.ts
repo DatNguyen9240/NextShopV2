@@ -1,5 +1,5 @@
 import { HubConnectionBuilder, HubConnection } from '@microsoft/signalr';
-import axiosClient, { getCookie } from '../lib/axiosClient';
+import axiosClient, { getCookie, setCookie } from '../lib/axiosClient';
 
 export type Notification = {
   id: string;
@@ -31,37 +31,100 @@ export async function connectToNotificationHub(): Promise<void> {
 
   isConnecting = true;
 
-  try {
-    connection = new HubConnectionBuilder()
+  // helper to create a fresh connection with handlers
+  const createConnection = () => {
+    const conn = new HubConnectionBuilder()
       .withUrl(`${process.env.NEXT_PUBLIC_API_URL}/hubs/notifications`, {
-        accessTokenFactory: () => token,
+        accessTokenFactory: () => getCookie('accessToken') || "",
       })
       .withAutomaticReconnect()
       .build();
 
-    connection.on('ReceiveNotification', (notification: Notification) => {
+    conn.on('ReceiveNotification', (notification: Notification) => {
       console.log('📨 Received notification:', notification);
       window.dispatchEvent(new CustomEvent('notification:received', { detail: notification }));
     });
 
-    connection.onclose(() => {
+    conn.onclose(() => {
       console.log('🔌 Connection closed');
       isConnected = false;
       isConnecting = false;
     });
 
-    connection.onreconnecting(() => {
+    conn.onreconnecting(() => {
       console.log('🔄 Reconnecting...');
     });
 
-    connection.onreconnected(() => {
+    conn.onreconnected(() => {
       console.log('✅ Reconnected');
       isConnected = true;
     });
 
-    await connection.start();
-    console.log('✅ Connected to Notification Hub');
-    isConnected = true;
+    return conn;
+  };
+
+  try {
+    connection = createConnection();
+
+    const tryStart = async () => {
+      try {
+        await connection!.start();
+        console.log('✅ Connected to Notification Hub');
+        isConnected = true;
+        return true;
+      } catch (startErr) {
+        console.error('❌ Error starting connection (first attempt):', startErr);
+        return false;
+      }
+    };
+
+    let started = await tryStart();
+
+    if (!started) {
+      // Attempt to refresh token using refresh endpoint (if available) then retry once
+      try {
+        const refreshToken = getCookie('refreshToken');
+        const userId = getCookie('userId');
+        if (refreshToken) {
+          console.log('🔁 Attempting token refresh before retrying negotiate');
+          const payload: Record<string, unknown> = { refreshToken };
+          if (userId) payload.userId = userId;
+          try {
+            const resp = await axiosClient.post('/api/auth/refresh', payload);
+            const data = resp.data || {};
+            const newAccess = data.accessToken || data.token || data.access_token;
+            const newRefresh = data.refreshToken || data.refresh_token;
+            if (newAccess) setCookie('accessToken', newAccess, 1);
+            if (newRefresh) setCookie('refreshToken', newRefresh, 7);
+            console.log('🔁 Token refresh successful; cookies updated');
+          } catch (refreshErr) {
+            console.warn('⚠️ Token refresh failed:', refreshErr);
+          }
+        }
+
+        // Recreate connection in case it was nulled out by other flows and retry
+        if (!connection) connection = createConnection();
+
+        // delay a bit to give cookies time to be written
+        await new Promise((r) => setTimeout(r, 800));
+        console.log('🔁 Retrying connection start...');
+
+        // Use a local reference to avoid race where `connection` may be changed externally
+        const conn = connection || (connection = createConnection());
+        if (!conn) throw new Error('Connection could not be created for retry');
+
+        try {
+          await conn.start();
+          console.log('✅ Connected to Notification Hub after retry');
+          isConnected = true;
+        } catch (retryErr) {
+          console.error('❌ Retry failed:', retryErr);
+          throw retryErr;
+        }
+      } catch (e) {
+        throw e;
+      }
+    }
   } catch (err) {
     console.error('❌ Error connecting to Notification Hub:', err);
     isConnected = false;

@@ -15,6 +15,8 @@ interface User {
   role?: string;
   phone?: string | null;
   gender?: string | null;
+  mfaEnabled?: boolean;
+  mfaType?: string | null;
   addresses?: Address[];
 }
 

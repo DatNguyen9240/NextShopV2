@@ -88,7 +88,8 @@ const Header = () => {
     // manage realtime connection depending on auth
     if (isAuthenticated && user && user.id) {
       console.log('🔗 Starting notification connection for user:', user.id);
-      void startNotificationConnection();
+      // Delay slightly after login to allow cookies/auth to stabilize and avoid negotiate race
+      setTimeout(() => { void startNotificationConnection(); }, 500);
     } else {
       console.log('🔌 Stopping notification connection - not authenticated or no user');
       void stopNotificationConnection();

@@ -2,6 +2,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { updateProfile, upsertAddress, deleteAddress } from "../../services/authService";
 import { getPasskeys, startRegister, verifyRegister, revokePasskey } from '../../services/webauthnService';
+import MfaEmailSection from './MfaEmailSection';
 import { preformatMakeCredReq, publicKeyCredentialToJSON } from '@/utils/webauthn';
 import { uploadImage } from "../../services/uploadService";
 import { useAuth } from "@/app/providers/AuthProvider";
@@ -492,6 +493,16 @@ export default function SettingsPage() {
                 )
               )}
             </div>
+
+            {/* Email MFA management */}
+            <div className="mt-6 border-t pt-4">
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-sm font-medium">Xác thực 2 lớp (Email OTP)</div>
+              </div>
+
+              <MfaEmailSection user={user} refreshUser={refreshUser} setMessage={setMessage} />
+            </div>
+
           </div>
         </div>
       </form>

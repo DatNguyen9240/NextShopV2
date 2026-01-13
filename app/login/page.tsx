@@ -12,21 +12,90 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [mfaRequestId, setMfaRequestId] = useState<string | null>(null);
+  const [mfaCode, setMfaCode] = useState("");
+  const [mfaLoading, setMfaLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setMessage(null);
     try {
-      const updatedUser = await login({ email, password });
-      setMessage("Đăng nhập thành công!");
-      const isAdmin = updatedUser?.role?.toLowerCase() === 'admin';
-      setTimeout(() => router.push(isAdmin ? '/admin' : '/'), 500);
+      // Call service directly so we can handle MFA response shape
+      const res = await (await import('@/app/services/authService')).login({ email, password } as any);
+
+      // Case: API returned ApiResponse(shape) indicating MFA required
+      if (res && res.success && res.data?.mfaRequired) {
+        setMfaRequestId(res.data.requestId || null);
+        setMessage('Mã OTP đã được gửi tới email của bạn. Vui lòng nhập mã.');
+        return;
+      }
+
+      // Case: tokens returned directly
+      // If backend returned tokens (AuthResponse style), persist them & refresh user context
+      const access = res?.accessToken || res?.token || res?.access_token;
+      const refresh = res?.refreshToken || res?.refresh_token;
+      if (access) {
+        setCookie('accessToken', access, 1);
+        if (refresh && refresh !== 'null') setCookie('refreshToken', refresh, 7);
+        try { await refreshUser?.(); } catch { /* ignore */ }
+        setMessage('Đăng nhập thành công!');
+        // Redirect based on refreshed user role if available
+        const user = await refreshUser?.();
+        const isAdmin = user?.role?.toLowerCase() === 'admin';
+        setTimeout(() => router.push(isAdmin ? '/admin' : '/'), 500);
+        return;
+      }
+
+      // Fallback: unknown response
+      setMessage('Đăng nhập thất bại');
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } } )?.response?.data?.message || (err instanceof Error ? err.message : undefined) || "Đăng nhập thất bại";
       setMessage(msg);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const verifyMfa = async () => {
+    if (!mfaRequestId || mfaCode.trim().length === 0) {
+      setMessage('Vui lòng nhập mã OTP');
+      return;
+    }
+    setMfaLoading(true);
+    setMessage(null);
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/auth/login/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ requestId: mfaRequestId, code: mfaCode })
+      });
+      if (!res.ok) {
+        const body = await res.json();
+        setMessage(body?.message || 'Xác thực thất bại');
+        return;
+      }
+      const data = await res.json();
+      const access = data.token || data.accessToken || data.access_token;
+      const refresh = data.refreshToken || data.refresh_token;
+      if (access) {
+        setCookie('accessToken', access, 1);
+        try {
+          const parts = (access || '').split('.');
+          if (parts.length >= 2) {
+            const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+            const uid = payload?.userId ?? payload?.nameid ?? payload?.sub;
+            if (uid) setCookie('userId', String(uid), 7);
+          }
+        } catch (e) { console.debug('decode access token failed', e); }
+      }
+      if (refresh && refresh !== 'null') setCookie('refreshToken', refresh, 7);
+      try { await refreshUser?.(); } catch {}
+      router.push('/');
+    } catch (err: unknown) {
+      setMessage((err as Error)?.message || 'Xác thực thất bại');
+    } finally {
+      setMfaLoading(false);
     }
   };
 
@@ -204,6 +273,22 @@ export default function LoginPage() {
           </button>
         </div>
       </form>
+
+      {mfaRequestId && (
+        <div className="mt-4 p-4 bg-gray-50 border rounded">
+          <h3 className="font-medium mb-2">Xác thực 2 bước</h3>
+          {message && <div className="mb-2 text-sm text-red-600">{message}</div>}
+          <div className="mb-2">
+            <label className="block text-sm mb-1">Mã OTP</label>
+            <input value={mfaCode} onChange={(e) => setMfaCode(e.target.value)} className="w-full border px-3 py-2 rounded" />
+          </div>
+          <div className="flex gap-2">
+            <button onClick={verifyMfa} disabled={mfaLoading} className="bg-green-600 text-white px-3 py-2 rounded">{mfaLoading ? 'Đang xác thực...' : 'Xác thực'}</button>
+            <button onClick={() => { setMfaRequestId(null); setMessage(null); }} className="bg-white border px-3 py-2 rounded">Hủy</button>
+          </div>
+        </div>
+      )}
+
     </main>
   );
 }

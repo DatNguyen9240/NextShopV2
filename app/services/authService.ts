@@ -9,28 +9,39 @@ export const register = async (payload: RegisterRequest) => {
 };
 
 export const login = async (credentials: LoginRequest) => {
-  const res = await axiosClient.post('/api/auth/login', credentials);
+  // Use login/start which returns either tokens (AuthResponse) or an ApiResponse { success, data: { mfaRequired, requestId } }
+  const res = await axiosClient.post('/api/auth/login/start', credentials);
   const data = res.data;
-  if (typeof window !== 'undefined' && data) {
-    if (data.accessToken) setCookie('accessToken', data.accessToken, 1);
-    // only persist refresh token if it's a real non-null string
-    if (data.refreshToken && data.refreshToken !== 'null') setCookie('refreshToken', data.refreshToken, 7);
-    // Attempt to extract and persist userId from accessToken for refresh endpoint compatibility
-    try {
-      const parts = (data.accessToken || '').split('.');
-      if (parts.length >= 2) {
-        const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
-        const uid = payload?.userId ?? payload?.nameid ?? payload?.sub;
-        if (uid) {
-          setCookie('userId', String(uid), 7);
+
+  // Case: tokens returned directly (AuthResponse shape)
+  if (data && data.accessToken) {
+    if (typeof window !== 'undefined') {
+      setCookie('accessToken', data.accessToken, 1);
+      if (data.refreshToken && data.refreshToken !== 'null') setCookie('refreshToken', data.refreshToken, 7);
+      try {
+        const parts = (data.accessToken || '').split('.');
+        if (parts.length >= 2) {
+          const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+          const uid = payload?.userId ?? payload?.nameid ?? payload?.sub;
+          if (uid) {
+            setCookie('userId', String(uid), 7);
+          }
         }
+      } catch {
+        // ignore decode failures
       }
-    } catch {
-      // ignore decode failures
     }
 
-    console.debug('[authService.login] login response and cookies set. document.cookie=', document.cookie);
+    console.debug('[authService.login] login response and cookies set. document.cookie=', typeof document !== 'undefined' ? document.cookie : '');
+    return data; // contains accessToken/refreshToken
   }
+
+  // Case: API returned ApiResponse shape (e.g., mfa required)
+  if (data && data.success && data.data) {
+    return data; // client will handle mfaRequired/data.requestId
+  }
+
+  // fallback
   return data;
 };
 
@@ -70,5 +81,20 @@ export const upsertAddress = async (payload: { addressId?: string; fullAddress: 
 
 export const deleteAddress = async (addressId: string) => {
   const res = await axiosClient.delete(`/api/auth/me/address/${addressId}`);
+  return res.data;
+};
+
+export const startEnableEmailMfa = async () => {
+  const res = await axiosClient.post('/api/auth/mfa/enable/start');
+  return res.data;
+};
+
+export const verifyEnableEmailMfa = async (request: { requestId: string; code: string }) => {
+  const res = await axiosClient.post('/api/auth/mfa/enable/verify', request);
+  return res.data;
+};
+
+export const disableEmailMfa = async () => {
+  const res = await axiosClient.post('/api/auth/mfa/disable');
   return res.data;
 };
