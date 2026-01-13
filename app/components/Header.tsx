@@ -33,6 +33,13 @@ const Header = () => {
     let mounted = true;
     async function load() {
       try {
+        // Only fetch cart count when authenticated; otherwise reset to 0 and avoid unnecessary API calls
+        if (!isAuthenticated || !user || !user.id) {
+          if (!mounted) return;
+          setCartCount(0);
+          return;
+        }
+
         const c = await getCartCount();
         if (!mounted) return;
         setCartCount(c);
@@ -40,12 +47,13 @@ const Header = () => {
         console.error(e);
       }
     }
+    // initial load (only fetch when authenticated)
     void load();
 
-    const onUpdate = () => { void load(); };
+    const onUpdate = () => { if (!isAuthenticated || !user || !user.id) return; void load(); };
     window.addEventListener('cart:updated', onUpdate);
     return () => { mounted = false; window.removeEventListener('cart:updated', onUpdate); };
-  }, []);
+  }, [isAuthenticated, user]);
 
   useEffect(() => {
     if (showUserMenu && buttonRef.current) {
@@ -60,12 +68,19 @@ const Header = () => {
   useEffect(() => {
     let mounted = true;
     async function load() {
+      if (!isAuthenticated || !user || !user.id) {
+        // don't request notifications when not authenticated
+        setNotifications([]);
+        return;
+      }
+
       try {
         const list = await getNotifications();
         if (!mounted) return;
         setNotifications(list);
       } catch (e) {
-        console.error(e);
+        console.error('[Header] Failed to load notifications', e);
+        setNotifications([]);
       }
     }
     void load();

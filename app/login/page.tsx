@@ -2,10 +2,12 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/providers/AuthProvider";
+import { setCookie } from "@/app/lib/axiosClient";
+import { preformatGetAssertReq, publicKeyCredentialToJSON } from "@/utils/webauthn";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, refreshUser } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -27,6 +29,124 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
+
+  const loginWithPasskey = async () => {
+    try {
+      setLoading(true);
+      setMessage(null);
+
+      // 1. Ensure email provided and request options from server
+      if (!email || email.trim().length === 0) {
+        setMessage('Vui lòng nhập email để đăng nhập bằng Passkey');
+        return;
+      }
+
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/webauthn/login/options`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      if (!res.ok) {
+        let errText = 'Không lấy được options';
+        try {
+          const body = await res.json();
+          errText = body?.message || body?.reason || JSON.stringify(body);
+        } catch (_) { /* ignore parse errors */ }
+        console.error('loginWithPasskey: failed to fetch options', res.status, res.statusText);
+        setMessage(errText);
+        return;
+      }
+      const options = await res.json();
+
+      // 2. Preserve server challenge, then preformat and call WebAuthn
+      const serverChallenge = options.challenge; // preserve base64url-string
+      const publicKey = preformatGetAssertReq(options);
+      const assertion = await navigator.credentials.get({ publicKey }) as unknown as PublicKeyCredential | null;
+      let payload = publicKeyCredentialToJSON(assertion);
+      // Ensure id is present for server parsing (fallback to rawId which some browsers provide)
+      if (!payload.id && payload.rawId) payload.id = payload.rawId;
+
+      // 3. Send assertion to backend to verify (sanitize if needed)
+      const bodyToSend: any = { assertion: payload, challenge: serverChallenge };
+
+      // Debug: log payload shape (safely)
+      try { console.debug('[loginWithPasskey] payload', JSON.parse(JSON.stringify(payload))); } catch { console.debug('[loginWithPasskey] payload (non-serializable)', payload); }
+
+      try {
+        JSON.stringify(bodyToSend);
+      } catch (e) {
+        console.warn('[loginWithPasskey] assertion not serializable, sanitizing', e);
+        const deepSanitize = (obj: any): any => {
+          if (obj == null) return obj;
+          if (typeof obj !== 'object') return obj;
+          if (Array.isArray(obj)) return obj.map(deepSanitize);
+          const res: any = {};
+          for (const k of Object.keys(obj)) {
+            const v = obj[k];
+            if (typeof v === 'function' || typeof v === 'symbol') continue;
+            try {
+              res[k] = deepSanitize(v);
+            } catch {
+              res[k] = String(v);
+            }
+          }
+          return res;
+        };
+        bodyToSend.assertion = deepSanitize(payload);
+      }
+
+      try { console.debug('[loginWithPasskey] bodyToSend', JSON.parse(JSON.stringify(bodyToSend))); } catch { console.debug('[loginWithPasskey] bodyToSend (non-serializable)', bodyToSend); }
+
+      const verifyRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/webauthn/login/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(bodyToSend)
+      });
+
+      if (!verifyRes.ok) {
+        try {
+          const errBody = await verifyRes.json();
+          console.warn('[loginWithPasskey] verify failed', verifyRes.status, errBody);
+          setMessage('Đăng nhập bằng passkey thất bại: ' + (errBody?.reason || errBody?.message || verifyRes.statusText));
+        } catch (e) {
+          console.warn('[loginWithPasskey] verify failed and response is not json', verifyRes.status, verifyRes.statusText);
+          setMessage('Đăng nhập bằng passkey thất bại');
+        }
+        return;
+      }
+
+      const data = await verifyRes.json();
+      if (verifyRes.ok && data.success) {
+        // save token and refresh token as cookies so axiosClient and auth flows pick them up
+        const access = data.token || data.accessToken || data.access_token;
+        const refresh = data.refreshToken || data.refresh_token;
+        if (access) {
+          setCookie('accessToken', access, 1);
+        }
+        if (refresh && refresh !== 'null') {
+          setCookie('refreshToken', refresh, 7);
+        }
+        // optional: refresh auth context so UI updates without a full page reload
+        try { await refreshUser?.();
+          // trigger header refresh of cart/notifications immediately
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new Event('cart:updated'));
+            window.dispatchEvent(new Event('notifications:updated'));
+          }
+        } catch { /* ignore */ }
+        router.push('/');
+      } else {
+        setMessage('Đăng nhập bằng passkey thất bại');
+      }
+    } catch (err: unknown) {
+      console.error(err);
+      const errMsg = (err as Error)?.message || String(err);
+      setMessage('Lỗi đăng nhập bằng passkey: ' + (errMsg || 'Unknown error'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   return (
     <main className="max-w-md mx-auto mt-12 p-6 bg-white rounded-md shadow">
@@ -60,6 +180,16 @@ export default function LoginPage() {
             className="w-full bg-blue-600 text-white py-2 rounded"
           >
             {loading ? "Đang xử lý..." : "Đăng nhập"}
+          </button>
+        </div>
+        <div>
+          <button
+            type="button"
+            onClick={loginWithPasskey}
+            disabled={loading}
+            className="w-full mt-3 bg-gray-800 text-white py-2 rounded"
+          >
+            {loading ? 'Đang xử lý...' : 'Đăng nhập bằng Passkey'}
           </button>
         </div>
       </form>

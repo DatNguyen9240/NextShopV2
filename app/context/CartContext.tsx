@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { getCart, updateCartItem, removeCartItem, clearCart, addToCart, getCartCount } from '@/app/services/cartService';
+import { useAuth } from '@/app/providers/AuthProvider';
 import type { CartDto, AddCartItemDto, UpdateCartItemDto } from '@/app/types/cart';
 
 interface CartContextType {
@@ -32,10 +33,17 @@ interface CartProviderProps {
 export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   const [cart, setCart] = useState<CartDto | null>(null);
   const [loading, setLoading] = useState(true);
+  const { isAuthenticated } = useAuth();
 
   const loadCart = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
+      // Do not call API when not authenticated to avoid unnecessary 401s
+      if (!isAuthenticated) {
+        setCart(null);
+        return;
+      }
+
       const c = await getCart();
       setCart(c);
     } catch (e) {
@@ -66,12 +74,14 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   };
 
   const getCount = async () => {
+    if (!isAuthenticated) return 0;
     return await getCartCount();
   };
 
   useEffect(() => {
-    loadCart();
-  }, []);
+    // Reload cart when authentication changes (login/logout)
+    void loadCart();
+  }, [isAuthenticated]);
 
   return (
     <CartContext.Provider value={{

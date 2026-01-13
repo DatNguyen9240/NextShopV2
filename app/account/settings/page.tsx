@@ -1,6 +1,8 @@
 "use client";
 import React, { useEffect, useState, useRef } from "react";
 import { updateProfile, upsertAddress, deleteAddress } from "../../services/authService";
+import { getPasskeys, startRegister, verifyRegister, revokePasskey } from '../../services/webauthnService';
+import { preformatMakeCredReq, publicKeyCredentialToJSON } from '@/utils/webauthn';
 import { uploadImage } from "../../services/uploadService";
 import { useAuth } from "@/app/providers/AuthProvider";
 import AddressAutocomplete from "../../components/AddressAutocomplete";
@@ -34,17 +36,26 @@ export default function SettingsPage() {
   // avatar delete confirm
   const [showDeleteAvatarConfirm, setShowDeleteAvatarConfirm] = useState(false);
 
-  useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-      try {
-        // If we don't have a user in context, try to refresh
-        if (!user) {
-          await refreshUser();
-        }
+  // Passkeys
+  const [passkeys, setPasskeys] = useState<Array<{ id: string; credentialId: string; createdAt: string; lastUsedAt?: string | null }>>([]);
+  const [loadingPasskeys, setLoadingPasskeys] = useState(false);
 
-        // populate fields from context user (if present)
-        const u = user ?? (await (async () => { await refreshUser(); return user; })());
+  const didLoad = React.useRef(false);
+
+  useEffect(() => {
+    // Prevent duplicate loads in quick succession (e.g., refreshUser updates `user` causing effect to re-run)
+    if (didLoad.current) return;
+
+    const load = async () => {
+      didLoad.current = true;
+      setLoading(true);
+      setLoadingPasskeys(true);
+      try {
+        // Ensure we have a user (attempt to refresh once if missing)
+        let u = user;
+        if (!u) {
+          u = await refreshUser();
+        }
         if (!u) return;
 
         setFullName(u.fullName ?? "");
@@ -67,14 +78,47 @@ export default function SettingsPage() {
           setAddressId(addr.addressId);
           setIsDefault(!!addr.isDefault);
         }
+
+        // load passkeys once
+        try {
+          const pk = await getPasskeys();
+          setPasskeys(pk);
+        } catch (e) {
+          console.warn('Could not load passkeys', e);
+        }
       } catch (err: unknown) {
         console.error(err);
       } finally {
         setLoading(false);
+        setLoadingPasskeys(false);
       }
     };
-    load();
-  }, [user, refreshUser, getAddresses]);
+    void load();
+  }, [refreshUser, getAddresses, user]);
+
+  // Keep form fields (including avatar) synced to user when user context updates
+  useEffect(() => {
+    if (!user) return;
+    setFullName(user.fullName ?? "");
+    setPhone(user.phone ?? "");
+    setGender(user.gender ?? undefined);
+    setAvatarUrl(user.avatar ?? null);
+    setAvatarPreview(user.avatar ?? null);
+    setHasUnsavedAvatar(false);
+
+    const addrs = (getAddresses() || []) as Address[];
+    addrs.sort((a, b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0));
+    setAddresses(addrs);
+
+    const addr = addrs.find((a) => a.isDefault) || addrs[0];
+    if (addr) {
+      setAddress(addr.fullAddress || "");
+      setLatitude(addr.latitude != null ? String(addr.latitude) : null);
+      setLongitude(addr.longitude != null ? String(addr.longitude) : null);
+      setAddressId(addr.addressId);
+      setIsDefault(!!addr.isDefault);
+    }
+  }, [user, getAddresses]);
 
   const handleFileChange = async (file?: File) => {
     if (!file) return;
@@ -341,6 +385,70 @@ export default function SettingsPage() {
             onConfirm={handleConfirmDeleteAvatar}
             onCancel={cancelDeleteAvatar}
           />
+
+          {/* Passkey management */}
+          <div className="mt-6 border-t pt-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-sm font-medium">Passkeys</div>
+              <div>
+                <button type="button" onClick={async () => {
+                  try {
+                    setLoadingPasskeys(true);
+                    const options = await startRegister();
+                    // Preserve original base64 challenge for server verification (preformatMakeCredReq mutates it to ArrayBuffer)
+                    const serverChallenge = options.challenge;
+                    const publicKey = preformatMakeCredReq(options);
+                    const cred: any = await navigator.credentials.create({ publicKey });
+                    const payload = publicKeyCredentialToJSON(cred);
+                    const verify = await verifyRegister({ userId: user?.id, credential: payload, challenge: serverChallenge });
+                    if (verify && verify.success) {
+                      setMessage('Passkey registered');
+                      const pk = await getPasskeys();
+                      setPasskeys(pk);
+                    } else {
+                      setMessage('Đăng ký passkey thất bại');
+                    }
+                  } catch (err) {
+                    console.error(err);
+                    setMessage('Lỗi đăng ký passkey');
+                  } finally { setLoadingPasskeys(false); }
+                }} className="bg-green-600 text-white text-xs py-1 px-3 rounded">Thêm Passkey</button>
+              </div>
+            </div>
+
+            <div>
+              {loadingPasskeys ? <div className="text-xs text-gray-500">Đang tải...</div> : (
+                passkeys.length === 0 ? <div className="text-xs text-gray-500">Chưa có Passkey nào</div> : (
+                  <ul className="space-y-2">
+                    {passkeys.map(p => (
+                      <li key={p.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                        <div>
+                          <div className="text-sm">Credential: {p.credentialId}</div>
+                          <div className="text-xs text-gray-500">Đăng ký: {new Date(p.createdAt).toLocaleString()}</div>
+                          <div className="text-xs text-gray-500">Lần dùng cuối: {p.lastUsedAt ? new Date(p.lastUsedAt).toLocaleString() : 'Chưa từng'}</div>
+                        </div>
+                        <div>
+                          <button className="text-xs text-red-600" onClick={async () => {
+                            try {
+                              // Use credentialId (base64url) which the server expects for deletions
+                              await revokePasskey(p.credentialId);
+                              setMessage('Đã xóa passkey');
+                              const pk = await getPasskeys();
+                              setPasskeys(pk);
+                            } catch (e: any) {
+                              console.warn('[Settings] revokePasskey failed', e);
+                              const msg = e?.response?.status === 404 ? 'Passkey không tồn tại hoặc không thuộc user' : 'Xóa thất bại';
+                              setMessage(msg);
+                            }
+                          }}>Xóa</button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )
+              )}
+            </div>
+          </div>
 
           <div className="flex justify-end">
             <button type="submit" disabled={saving} className="bg-blue-600 text-white py-2 px-6 rounded">
