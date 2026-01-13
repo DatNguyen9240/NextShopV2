@@ -7,7 +7,7 @@ import { preformatGetAssertReq, publicKeyCredentialToJSON } from "@/utils/webaut
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, refreshUser } = useAuth();
+  const { refreshUser } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -22,7 +22,7 @@ export default function LoginPage() {
     setMessage(null);
     try {
       // Call service directly so we can handle MFA response shape
-      const res = await (await import('@/app/services/authService')).login({ email, password } as any);
+      const res = await (await import('@/app/services/authService')).login({ email, password } as { email: string; password: string });
 
       // Case: API returned ApiResponse(shape) indicating MFA required
       if (res && res.success && res.data?.mfaRequired) {

@@ -78,7 +78,7 @@ export async function connectToNotificationHub(): Promise<void> {
       }
     };
 
-    let started = await tryStart();
+    const started = await tryStart();
 
     if (!started) {
       // Attempt to refresh token using refresh endpoint (if available) then retry once

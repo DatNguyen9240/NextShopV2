@@ -2,7 +2,9 @@
 import React, { useState } from 'react';
 import { startEnableEmailMfa, verifyEnableEmailMfa, disableEmailMfa } from '../../services/authService';
 
-export default function MfaEmailSection({ user, refreshUser, setMessage }: { user: any; refreshUser: () => Promise<any>; setMessage: (m: string | null) => void }) {
+type MinimalUser = { mfaEnabled?: boolean } | null;
+
+export default function MfaEmailSection({ user, refreshUser, setMessage }: { user: MinimalUser; refreshUser: () => Promise<unknown>; setMessage: (m: string | null) => void }) {
   const [requestId, setRequestId] = useState<string | null>(null);
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
@@ -20,6 +22,7 @@ export default function MfaEmailSection({ user, refreshUser, setMessage }: { use
         setMessage(res?.message || 'Không thể gửi email xác nhận');
       }
     } catch (err: unknown) {
+      console.error(err);
       setMessage('Lỗi gửi email xác nhận');
     } finally { setLoading(false); }
   };
@@ -38,7 +41,7 @@ export default function MfaEmailSection({ user, refreshUser, setMessage }: { use
       } else {
         setMessage(res?.message || 'Xác thực thất bại');
       }
-    } catch (err) { setMessage('Xác thực thất bại'); }
+    } catch (err: unknown) { console.error(err); setMessage('Xác thực thất bại'); }
     finally { setVerifying(false); }
   };
 
