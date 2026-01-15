@@ -4,7 +4,6 @@ export type GetProductsParams = {
   categoryId?: string;
   limit?: number;
   sort?: string;
-  section?: string;
   page?: number;
   pageSize?: number;
   minPrice?: number;
@@ -42,6 +41,39 @@ export async function getProducts(params?: GetProductsParams) {
 
   pendingGetProducts.set(key, p);
   return p;
+}
+
+// Admin-specific fetches (use admin endpoints to include inactive items)
+export async function getProductsAdmin(params?: GetProductsParams) {
+  const key = `admin:${JSON.stringify(params ?? {})}`;
+  const existing = pendingGetProducts.get(key);
+  if (existing) return existing;
+
+  const p = (async () => {
+    try {
+      console.debug('[getProductsAdmin] network fetch start for', key, params);
+      const res = await axiosClient.get('/api/Product/admin', { params });
+      return res.data?.data ?? res.data ?? [];
+    } catch (err: unknown) {
+      console.error('[getProductsAdmin] error fetching', key, err);
+      throw new Error('Failed to fetch admin products');
+    } finally {
+      pendingGetProducts.delete(key);
+    }
+  })();
+
+  pendingGetProducts.set(key, p);
+  return p;
+}
+
+export async function getProductByIdAdmin(id: string) {
+  try {
+    const res = await axiosClient.get(`/api/Product/admin/${id}`);
+    return res.data?.data ?? null;
+  } catch (err: unknown) {
+    console.error('[getProductByIdAdmin] error:', err);
+    throw new Error('Failed to fetch product');
+  }
 }
 
 const pendingGetProduct = new Map<string, Promise<unknown>>();
@@ -105,5 +137,17 @@ export async function createProduct(data: Record<string, unknown>) {
   } catch (err: unknown) {
     console.error('[createProduct] error:', err);
     throw new Error('Failed to create product');
+  }
+}
+
+export async function deleteProduct(id: string) {
+  try {
+    const res = await axiosClient.delete(`/api/Product/${id}`);
+    // remove cache if present
+    productCache.delete(id);
+    return res.data;
+  } catch (err: unknown) {
+    console.error('[deleteProduct] error:', err);
+    throw new Error('Failed to delete product');
   }
 }

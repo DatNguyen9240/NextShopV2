@@ -23,7 +23,7 @@ const PopularProductsSection: React.FC = () => {
     console.debug('[PopularProductsSection] handleCategoryChange', id);
     setCategoryId(id);
   }, [categoryId]);
-  const { products, loading, error, refresh } = useProducts({ section: '', pageSize: 20, categoryId });
+  const { products, loading, error, refresh } = useProducts({ pageSize: 20, categoryId });
   const breakpoint = useBreakpoint();
   const carouselSize = breakpoint === 'base' ? 'sm' : 'md';
   return (

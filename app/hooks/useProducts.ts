@@ -9,7 +9,6 @@ type UseProductsOptions = GetProductsParams & {
 };
 
 export default function useProducts({
-  section,
   categoryId,
   limit,
   sort,
@@ -26,7 +25,7 @@ export default function useProducts({
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   // keep current filter ref to avoid race conditions where older fetches overwrite newer filtered results
-  const filterRef = useRef<{ section?: string; categoryId?: string | undefined; minPrice?: number; maxPrice?: number; sort?: string; rating?: number | null }>({ section, categoryId, minPrice, maxPrice, sort, rating });
+  const filterRef = useRef<{ categoryId?: string | undefined; minPrice?: number; maxPrice?: number; sort?: string; rating?: number | null }>({ categoryId, minPrice, maxPrice, sort, rating });
 
   type ApiVariant = { isDefault?: boolean; basePrice?: number; priceAfterDiscount?: number; discountPercent?: number; stockQuantity?: number; imageUrl?: string; imgHover?: string };
   type ApiProduct = { productId?: string | number; id?: string | number; name?: string; label?: string; variants?: ApiVariant[]; image?: string; imageHover?: string; averageRating?: number };
@@ -71,7 +70,6 @@ export default function useProducts({
 
   const fetchPage = useCallback(async (pageNumber: number) => {
     const usedCategory = categoryId;
-    const usedSection = section;
     const usedMinPrice = minPrice;
     const usedMaxPrice = maxPrice;
     const usedSort = sort;
@@ -101,7 +99,6 @@ export default function useProducts({
       if (usedCategory) params.categoryId = usedCategory;
       if (limit) params.limit = limit;
       if (usedSort) params.sort = usedSort;
-      if (usedSection) params.section = usedSection;
       if (pageNumber !== undefined) params.page = pageNumber;
       if (pageSize !== undefined) params.pageSize = pageSize;
       if (usedMinPrice !== undefined) params.minPrice = usedMinPrice;
@@ -112,7 +109,6 @@ export default function useProducts({
 
       // ensure this response still matches current filter to avoid stale overwrite
       if (
-        filterRef.current.section !== usedSection ||
         filterRef.current.categoryId !== usedCategory ||
         filterRef.current.minPrice !== usedMinPrice ||
         filterRef.current.maxPrice !== usedMaxPrice ||
@@ -148,14 +144,13 @@ export default function useProducts({
       if (lastCompletedTimerRef.current) clearTimeout(lastCompletedTimerRef.current);
       lastCompletedTimerRef.current = window.setTimeout(() => { lastCompletedKeyRef.current = null; lastCompletedTimerRef.current = null; }, 250);
     }
-  }, [categoryId, limit, sort, section, pageSize, minPrice, maxPrice, rating, mapProducts]);
+  }, [categoryId, limit, sort, pageSize, minPrice, maxPrice, rating, mapProducts]);
 
   // track current filters and avoid duplicate fetches when filters change
-  const prevFiltersRef = useRef<{ section?: string; categoryId?: string | undefined; minPrice?: number; maxPrice?: number; sort?: string; rating?: number | null }>({ section, categoryId, minPrice, maxPrice, sort, rating });
+  const prevFiltersRef = useRef<{ categoryId?: string | undefined; minPrice?: number; maxPrice?: number; sort?: string; rating?: number | null }>({ categoryId, minPrice, maxPrice, sort, rating });
 
   useEffect(() => {
     const filtersChanged =
-      prevFiltersRef.current.section !== section ||
       prevFiltersRef.current.categoryId !== categoryId ||
       prevFiltersRef.current.minPrice !== minPrice ||
       prevFiltersRef.current.maxPrice !== maxPrice ||
@@ -163,8 +158,8 @@ export default function useProducts({
       prevFiltersRef.current.rating !== rating;
 
     // update previous snapshot and current filter ref
-    prevFiltersRef.current = { section, categoryId, minPrice, maxPrice, sort, rating };
-    filterRef.current = { section, categoryId, minPrice, maxPrice, sort, rating };
+    prevFiltersRef.current = { categoryId, minPrice, maxPrice, sort, rating };
+    filterRef.current = { categoryId, minPrice, maxPrice, sort, rating };
 
     if (!autoFetch) return;
 
@@ -184,7 +179,7 @@ export default function useProducts({
       fetchPage(page);
       fetchTimerRef.current = null;
     }, 80);
-  }, [page, fetchPage, autoFetch, section, categoryId, minPrice, maxPrice, sort, rating]);
+  }, [page, fetchPage, autoFetch, categoryId, minPrice, maxPrice, sort, rating]);
 
   const refresh = useCallback(() => fetchPage(page), [fetchPage, page]);
 

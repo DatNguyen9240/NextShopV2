@@ -16,6 +16,8 @@ export default function CreateProductPage() {
     brand: '',
     isActive: true,
     tags: '',
+    // New: additional info field to capture extra product details
+    additionalInfo: '',
     categoryIds: [] as string[]
   });
 
@@ -43,6 +45,7 @@ export default function CreateProductPage() {
         brand: formData.brand,
         isActive: formData.isActive,
         tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
+        additionalInfo: formData.additionalInfo,
         categoryIds: formData.categoryIds
       };
       await createProduct(data);
@@ -131,6 +134,18 @@ export default function CreateProductPage() {
                     placeholder="Enter product description"
                   />
                 </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Additional Info</label>
+                  <textarea
+                    name="additionalInfo"
+                    value={formData.additionalInfo}
+                    onChange={handleChange}
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    placeholder="Enter additional product information (e.g., material, care instructions, etc.)"
+                  />
+                </div> 
               </div>
             </div>
 

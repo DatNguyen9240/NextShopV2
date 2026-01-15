@@ -4,7 +4,7 @@
 
 ### 🔧 Backend API (endpoints)
 - Products
-  - GET  /api/Product?section=&categoryId=&page=&pageSize= — list or paged products
+  - GET  /api/Product?categoryId=&page=&pageSize= — list or paged products
   - GET  /api/Product/{id} — get product details
   - POST /api/Product — create product
   - PUT  /api/Product/{id} — update product
@@ -80,7 +80,7 @@ export async function deleteVariant(id: string) {
 ```
 
 ### 🧭 Suggested Admin UI features
-- Product list page: filters (category/section), pagination (page, pageSize), sort options.
+- Product list page: filters (category), pagination (page, pageSize), sort options.
 - Product edit page: core details + **Variants** section.
 - Variants section (table): columns — SKU, Color, Size, BasePrice, DiscountPercent, DiscountAmount, PriceAfterDiscount, Stock, IsDefault (toggle), DisplayOrder (draggable or editable number), Image (preview), Actions (Edit/Delete).
 - Create/Edit variant modal: validate locally similar to backend rules (e.g., base price > 0; discount percent 0–100); show server validation messages if returned.

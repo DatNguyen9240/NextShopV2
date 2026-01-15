@@ -10,7 +10,19 @@ const PAGE_SIZE = 12;
 
 const PAGE_SIZE_CONST = PAGE_SIZE;
 
-const NewProductsSection: React.FC = () => {
+interface NewProductsSectionProps {
+  categoryId?: string;
+  title?: string;
+  description?: string;
+  pageSize?: number;
+}
+
+const NewProductsSection: React.FC<NewProductsSectionProps> = ({
+  categoryId,
+  title = "Sản phẩm mới nhất",
+  description = "Sản phẩm được cập nhật mỗi ngày.",
+  pageSize = PAGE_SIZE_CONST,
+}) => {
   const breakpoint = useBreakpoint();
   const cols =
     breakpoint === "base" || breakpoint === "sm"
@@ -19,14 +31,14 @@ const NewProductsSection: React.FC = () => {
       ? 3
       : 4;
 
-  const { products, loading, error, page, setPage, totalPages } = useProducts({ section: '', initialPage: 1, pageSize: PAGE_SIZE_CONST });
+  const { products, loading, error, page, setPage, totalPages } = useProducts({ categoryId, initialPage: 1, pageSize });
 
   return (
     <section className="w-full mt-10 px-2 sm:px-4">
       <div className="mb-4">
         <ProductsTitle
-          title="Sản phẩm mới nhất"
-          description="Sản phẩm được cập nhật mỗi ngày."
+          title={title}
+          description={description}
         />
       </div>
       {loading ? (

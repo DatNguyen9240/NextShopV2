@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Image from 'next/image';
-import { getVariantsByProductId, updateVariant, createVariant } from '../../../../../services/variantService';
+import { getVariantsByProductIdAdmin, updateVariant, createVariant } from '../../../../../services/variantService';
 import ImageUploader from '@/app/components/ImageUploader';
 import { PRESET_COLORS, PRESET_SIZES } from '@/app/config/colors';
 import { formatVND } from '@/app/utils/priceUtils';
@@ -15,6 +15,7 @@ interface Variant {
   size?: string;
   stockQuantity: number;
   isDefault: boolean;
+  isActive?: boolean;
   displayOrder: number;
   basePrice: number;
   discountPercent: number;
@@ -37,10 +38,12 @@ export default function ProductVariants() {
     sku: '',
     color: '',
     size: '',
-    stockQuantity: 0,
-    basePrice: 0,
-    discountPercent: 0,
+    // use '' for empty input state so we don't store NaN when user clears the field
+    stockQuantity: '' as number | '',
+    basePrice: '' as number | '',
+    discountPercent: '' as number | '',
     isDefault: false,
+    isActive: true,
     imageUrl: '',
     imgHover: ''
   });
@@ -80,22 +83,29 @@ export default function ProductVariants() {
 
   const addNewVariant = async () => {
     try {
+      const safeNum = (v: number | string | undefined) => {
+        const n = typeof v === 'number' ? v : (v === '' || v === undefined) ? NaN : Number(v);
+        return Number.isFinite(n) ? n : 0;
+      };
+
       const payload = {
         productId: id,
         sku: newVariant.sku,
         color: newVariant.color,
         size: newVariant.size,
-        stockQuantity: newVariant.stockQuantity,
-        basePrice: newVariant.basePrice,
-        discountPercent: newVariant.discountPercent,
+        stockQuantity: safeNum(newVariant.stockQuantity),
+        basePrice: safeNum(newVariant.basePrice),
+        discountPercent: safeNum(newVariant.discountPercent),
         isDefault: newVariant.isDefault,
+        isActive: newVariant.isActive,
         imageUrl: newVariant.imageUrl,
         imgHover: newVariant.imgHover
       };
       await createVariant(payload);
       // Refresh variants
-      const data = await getVariantsByProductId(id as string);
-      setVariants(data);
+      const data = await getVariantsByProductIdAdmin(id as string);
+      // normalize isActive when refreshing
+      setVariants(data.map((v: Partial<Variant>) => ({ ...v, isActive: typeof v.isActive === 'undefined' ? true : v.isActive }) as Variant));
       setNewVariant({
         sku: '',
         color: '',
@@ -104,6 +114,7 @@ export default function ProductVariants() {
         basePrice: 0,
         discountPercent: 0,
         isDefault: false,
+        isActive: true,
         imageUrl: '',
         imgHover: ''
       });
@@ -116,8 +127,10 @@ export default function ProductVariants() {
   useEffect(() => {
     const fetchVariants = async () => {
       try {
-        const data = await getVariantsByProductId(id as string);
-        setVariants(data);
+        const data = await getVariantsByProductIdAdmin(id as string);
+        // ensure isActive defaults to true if missing from API
+        const normalized = data.map((v: Partial<Variant>) => ({ ...v, isActive: typeof v.isActive === 'undefined' ? true : v.isActive } as Variant));
+        setVariants(normalized);
       } catch (error) {
         console.error('Error fetching variants:', error);
       } finally {
@@ -187,7 +200,7 @@ export default function ProductVariants() {
                 type="number"
                 placeholder="Stock"
                 value={newVariant.stockQuantity}
-                onChange={(e) => handleNewVariantChange('stockQuantity', parseInt(e.target.value))}
+                onChange={(e) => handleNewVariantChange('stockQuantity', e.target.value === '' ? '' : parseInt(e.target.value))}
                 className="border border-gray-300 rounded px-3 py-2"
               />
             </div>
@@ -198,7 +211,7 @@ export default function ProductVariants() {
                 step="0.01"
                 placeholder="Base Price"
                 value={newVariant.basePrice}
-                onChange={(e) => handleNewVariantChange('basePrice', parseFloat(e.target.value))}
+                onChange={(e) => handleNewVariantChange('basePrice', e.target.value === '' ? '' : parseFloat(e.target.value))}
                 className="border border-gray-300 rounded px-3 py-2"
               />
             </div>
@@ -209,7 +222,7 @@ export default function ProductVariants() {
                 step="0.01"
                 placeholder="Discount %"
                 value={newVariant.discountPercent}
-                onChange={(e) => handleNewVariantChange('discountPercent', parseFloat(e.target.value))}
+                onChange={(e) => handleNewVariantChange('discountPercent', e.target.value === '' ? '' : parseFloat(e.target.value))}
                 className="border border-gray-300 rounded px-3 py-2"
               />
             </div>
@@ -231,14 +244,25 @@ export default function ProductVariants() {
                 />
               </div>
             </div>
-            <div className="col-span-full flex items-center">
-              <input
-                type="checkbox"
-                checked={newVariant.isDefault}
-                onChange={(e) => handleNewVariantChange('isDefault', e.target.checked)}
-                className="mr-2"
-              />
-              <label>Is Default</label>
+            <div className="col-span-full flex items-center space-x-6">
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={newVariant.isDefault}
+                  onChange={(e) => handleNewVariantChange('isDefault', e.target.checked)}
+                  className="mr-2"
+                />
+                <label>Is Default</label>
+              </div>
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={newVariant.isActive}
+                  onChange={(e) => handleNewVariantChange('isActive', e.target.checked)}
+                  className="mr-2"
+                />
+                <label>Active</label>
+              </div>
             </div>
           </div>
           <button
@@ -262,6 +286,7 @@ export default function ProductVariants() {
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Discount %</th>
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Final Price</th>
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Default</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Active</th>
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hover Image</th>
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -319,7 +344,7 @@ export default function ProductVariants() {
                     <input
                       type="number"
                       value={editData.stockQuantity || 0}
-                      onChange={(e) => handleChange('stockQuantity', parseInt(e.target.value))}
+                      onChange={(e) => handleChange('stockQuantity', e.target.value === '' ? undefined : parseInt(e.target.value))}
                       className="w-full border border-gray-300 rounded px-2 py-1"
                     />
                   ) : (
@@ -332,7 +357,7 @@ export default function ProductVariants() {
                       type="number"
                       step="0.01"
                       value={editData.basePrice || 0}
-                      onChange={(e) => handleChange('basePrice', parseFloat(e.target.value))}
+                      onChange={(e) => handleChange('basePrice', e.target.value === '' ? undefined : parseFloat(e.target.value))}
                       className="w-full border border-gray-300 rounded px-2 py-1"
                     />
                   ) : (
@@ -345,7 +370,7 @@ export default function ProductVariants() {
                       type="number"
                       step="0.01"
                       value={editData.discountPercent || 0}
-                      onChange={(e) => handleChange('discountPercent', parseFloat(e.target.value))}
+                      onChange={(e) => handleChange('discountPercent', e.target.value === '' ? undefined : parseFloat(e.target.value))}
                       className="w-full border border-gray-300 rounded px-2 py-1"
                     />
                   ) : (
@@ -362,6 +387,21 @@ export default function ProductVariants() {
                     />
                   ) : (
                     variant.isDefault ? 'Yes' : 'No'
+                  )}
+                </td>
+                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
+                  {editingId === variant.productVariantId ? (
+                    <input
+                      type="checkbox"
+                      checked={typeof editData.isActive === 'undefined' ? (variant.isActive ?? true) : (editData.isActive as boolean)}
+                      onChange={(e) => handleChange('isActive', e.target.checked)}
+                    />
+                  ) : (
+                    variant.isActive ? (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">Active</span>
+                    ) : (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">Inactive</span>
+                    )
                   )}
                 </td>
                 <td className="px-4 py-2 whitespace-nowrap">

@@ -16,6 +16,7 @@ const nextConfig: NextConfig = {
       // Allow images served from Vecteezy previews used in admin uploads/previews
       "static.vecteezy.com",
       "api.qrserver.com",
+      "nonson.vn",
     ],
   },
 };

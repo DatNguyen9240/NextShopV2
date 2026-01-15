@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { getProductById, updateProduct } from '@/app/services/productService';
+import { getProductByIdAdmin, updateProduct } from '@/app/services/productService';
 import { toast } from 'react-hot-toast';
 import { getCategories } from '@/app/services/categoryService';
 import axiosClient from '@/app/lib/axiosClient';
@@ -28,7 +28,7 @@ export default function EditProductPage() {
     const fetchData = async () => {
       try {
         const [productRes, categoriesRes, productCategoriesRes] = await Promise.all([
-          getProductById(id as string),
+          getProductByIdAdmin(id as string),
           getCategories(),
           axiosClient.get(`/api/ProductCategory/product/${id}/categories`)
         ]);
