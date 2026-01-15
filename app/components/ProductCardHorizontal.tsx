@@ -9,7 +9,8 @@ import {
   ProductPrice,
 } from "./ProductCard";
 import { Product } from "./ProductCard";
-import { Expand, Heart } from "lucide-react";
+import { Expand } from "lucide-react";
+import { WishlistButton } from "./Button";
 import { useRouter } from "next/navigation";
 
 const ProductCardHorizontal: React.FC<{
@@ -42,7 +43,7 @@ const ProductCardHorizontal: React.FC<{
         {/* overlay actions (appear on hover) */}
         <div className="absolute right-2 top-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-40">
           <button
-            className="bg-white rounded-full shadow flex items-center justify-center w-8 h-8"
+            className="flex items-center justify-center hover:bg-gray-100 transition-colors duration-200 bg-white rounded-full shadow flex items-center justify-center w-8 h-8"
             onClick={(e) => {
               e.stopPropagation();
               if (product.id) router.push(`/product/pop-up/${product.id}`);
@@ -51,16 +52,9 @@ const ProductCardHorizontal: React.FC<{
           >
             <Expand size={18} strokeWidth={1} color="#222" />
           </button>
-          <button
-            className="bg-white rounded-full shadow flex items-center justify-center w-8 h-8"
-            onClick={(e) => {
-              e.stopPropagation();
-              /* TODO: add wishlist action */
-            }}
-            title="Yêu thích"
-          >
-            <Heart size={18} strokeWidth={1} color="#222" />
-          </button>
+          <div className="bg-white rounded-full shadow flex items-center justify-center w-8 h-8">
+            <WishlistButton productId={product.id} className="w-8 h-8 p-0" showText={false} />
+          </div>
         </div>
 
         <ProductBadge percent={product.percent} />

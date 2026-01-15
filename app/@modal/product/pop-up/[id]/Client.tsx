@@ -229,7 +229,7 @@ export default function ProductModal({ id, isModal = true, product: initialProdu
                 }} />
               </div>
               <div className="flex gap-3">
-                <WishlistButton />
+                <WishlistButton productId={product?.productId ?? null} />
                 <CompareButton />
               </div>
             </>

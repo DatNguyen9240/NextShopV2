@@ -10,9 +10,10 @@ import {
   Shuffle,
   X,
 } from "lucide-react";
+import { useLikes } from '@/app/hooks/useLikes';
 
 type ButtonProps = {
-  onClick?: () => void;
+  onClick?: React.MouseEventHandler<HTMLButtonElement>;
   size?: "sm" | "md" | "lg" | number;
   shape?: "circle" | "rounded" | "square" | "roundedSquare";
   icon?: React.ReactNode;
@@ -123,19 +124,45 @@ export const ButtonSize: React.FC<{
 );
 
 export const WishlistButton: React.FC<{
-  onClick?: () => void;
+  productId?: string | null;
   className?: string;
-}> = ({ onClick, className = "" }) => (
-  <Button
-    shape="rounded"
-    size="sm"
-    className={`border border-gray-300 bg-white text-black flex items-center gap-0.5 hover:bg-gray-100 transition-colors duration-200 ${className}`}
-    icon={<Heart className="w-3.5 h-3.5" strokeWidth={1} />}
-    onClick={onClick}
-  >
-    Thêm yêu thích
-  </Button>
-);
+  showText?: boolean;
+}> = ({ productId = null, className = "", showText = true }) => {
+  const { isLiked, toggle } = useLikes();
+  const liked = productId ? isLiked(productId) : false;
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!productId) return;
+    toggle(productId);
+  };
+
+  // Icon-only variant: circle, larger icon, centered
+  if (!showText) {
+    return (
+      <Button
+        shape="circle"
+        size={32}
+        className={`flex items-center justify-center hover:bg-gray-100 transition-colors duration-200 ${className}`}
+        icon={<Heart size={18} strokeWidth={1} color={liked ? '#ff4d6d' : '#222'} fill={liked ? '#ff4d6d' : 'none'} className="transition-colors duration-200" />}
+        onClick={handleClick}
+      />
+    );
+  }
+
+  // Text variant
+  return (
+    <Button
+      shape="rounded"
+      size="sm"
+      className={`border border-gray-300 bg-white text-black flex items-center gap-1 hover:bg-gray-100 transition-colors duration-200 ${liked ? 'bg-pink-50 border-pink-600 text-pink-600' : ''} ${className}`}
+      icon={<Heart size={14} strokeWidth={1} color={liked ? '#ff4d6d' : '#222'} fill={liked ? '#ff4d6d' : 'none'} className="transition-colors duration-200" />}
+      onClick={handleClick}
+    >
+      {liked ? 'Đã yêu thích' : 'Thêm yêu thích'}
+    </Button>
+  );
+};
 
 export const CompareButton: React.FC<{
   onClick?: () => void;
@@ -238,7 +265,7 @@ export const PaginationButton: React.FC<ButtonProps> = (props) => (
 export const SignUpButton = React.memo(function SignUpButton(props: ButtonProps) {
   const router = useRouter();
   const handleClick = () => {
-    if (props.onClick) props.onClick();
+    if (props.onClick) props.onClick(undefined as any);
     router.push("/register");
   };
   return (
@@ -257,7 +284,7 @@ export const SignUpButton = React.memo(function SignUpButton(props: ButtonProps)
 export const LoginButton = React.memo(function LoginButton(props: ButtonProps) {
   const router = useRouter();
   const handleClick = () => {
-    if (props.onClick) props.onClick();
+    if (props.onClick) props.onClick(undefined as any);
     router.push("/login");
   };
   return (

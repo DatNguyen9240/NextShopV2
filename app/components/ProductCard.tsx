@@ -1,7 +1,8 @@
 "use client";
 import React from "react";
-import { Expand, Heart } from "lucide-react";
+import { Expand } from "lucide-react";
 import Image from "next/image";
+import { WishlistButton } from "./Button";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import MoneyVND from "./MoneyVND";
@@ -38,7 +39,7 @@ const ProductImageActions = ({ productId }: { productId?: string }) => {
   return (
     <div className="absolute right-2 top-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-40">
       <button
-        className="bg-white rounded-full shadow flex items-center justify-center w-10 h-10"
+        className="flex items-center justify-center hover:bg-gray-100 transition-colors duration-200 bg-white rounded-full shadow flex items-center justify-center w-10 h-10"
         onClick={(e) => {
           e.stopPropagation();
           if (productId) {
@@ -49,9 +50,9 @@ const ProductImageActions = ({ productId }: { productId?: string }) => {
       >
         <Expand size={22} strokeWidth={1} color="#222" />
       </button>
-      <button className="bg-white rounded-full shadow flex items-center justify-center w-10 h-10">
-        <Heart size={22} strokeWidth={1} color="#222" />
-      </button>
+      <div className="bg-white rounded-full shadow flex items-center justify-center w-10 h-10">
+        <WishlistButton productId={productId} className="w-10 h-10 p-0" showText={false} />
+      </div>
     </div>
   );
 };
