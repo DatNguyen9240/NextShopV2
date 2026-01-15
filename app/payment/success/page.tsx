@@ -51,9 +51,10 @@ export default function PaymentSuccessPage() {
 
   const fetchPaymentStatus = async (id: string) => {
     try {
-      const response = await fetch(`http://localhost:5048/api/payments/status/${id}`);
-      if (response.ok) {
-        const data: PaymentStatus = await response.json();
+      const res = await axiosClient.get(`/api/payments/status/${id}`);
+      const payload = res.data?.data ?? res.data ?? null;
+      if (payload) {
+        const data: PaymentStatus = payload;
         setPaymentStatus(data);
         return (data.status ?? '').toLowerCase();
       }

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { setCookie } from "@/app/lib/axiosClient";
@@ -115,6 +115,7 @@ export default function LoginPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email })
       });
+
       if (!res.ok) {
         let errText = 'Không lấy được options';
         try {
@@ -228,6 +229,104 @@ export default function LoginPage() {
   };
 
 
+  // Google identity handling (typed)
+  type GoogleWindow = {
+    google?: {
+      accounts?: {
+        id?: {
+          initialize: (opts: { client_id: string; callback: (resp: { credential: string }) => void }) => void;
+          renderButton: (el: HTMLElement | null, opts?: { theme?: string; size?: string }) => void;
+          prompt: () => void;
+        }
+      }
+    }
+  };
+
+  const handleGoogleCredential = useCallback(async (resp: { credential: string }) => {
+    try {
+      setLoading(true);
+      setMessage(null);
+      const idToken = resp?.credential;
+
+      // early defensive: ensure credential string
+      if (!idToken || typeof idToken !== 'string') {
+        setMessage('Google login failed');
+        return;
+      }
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
+      const r = await fetch(`${API_URL}/api/auth/google`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken })
+      });
+      const data = await r.json();
+      if (!r.ok) {
+        const msg = data?.message || 'Google sign-in failed';
+        // Provide friendly suggestion when Google returned user-not-found or unverified
+        if (msg === 'User not found') setMessage('Tài khoản Google chưa được đăng ký. Vui lòng đăng ký trước.');
+        else if (msg === 'Email not verified') setMessage('Email chưa được đăng ký. Vui lòng đăng ký trước.');
+        else setMessage(msg);
+        return;
+      }
+
+      // If tokens were returned
+      const access = data.accessToken || data.token || data.access_token;
+      const refresh = data.refreshToken || data.refresh_token;
+      if (access) {
+        setCookie('accessToken', access, 1);
+        if (refresh && refresh !== 'null') setCookie('refreshToken', refresh, 7);
+        try { await refreshUser?.(); } catch {}
+        router.push('/');
+        return;
+      }
+
+      // If verification was sent
+      if (data?.verificationSent || (data?.success && !data?.accessToken)) {
+        setMessage('Đã gửi email xác thực. Vui lòng kiểm tra hộp thư và nhấn nút xác thực.');
+        return;
+      }
+
+      setMessage('Google sign-in failed');
+    } catch (err: unknown) {
+      console.error(err);
+      setMessage((err as Error)?.message || 'Google sign-in failed');
+    } finally {
+      setLoading(false);
+    }
+  }, [refreshUser, router]);
+
+  useEffect(() => {
+    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    if (!clientId) return;
+
+    const gw = typeof window !== 'undefined' ? (window as unknown as GoogleWindow) : undefined;
+
+    // load script if needed
+    if (gw && !gw.google) {
+      const s = document.createElement('script');
+      s.src = 'https://accounts.google.com/gsi/client';
+      s.async = true;
+      s.defer = true;
+      s.onload = () => {
+        try {
+          const g = (window as unknown as GoogleWindow).google;
+          g?.accounts?.id?.initialize({ client_id: clientId, callback: handleGoogleCredential });
+          g?.accounts?.id?.renderButton(document.getElementById('g_id_signin'), { theme: 'outline', size: 'large' });
+        } catch (e: unknown) {
+          console.debug('google initialize failed', e);
+        }
+      };
+      document.head.appendChild(s);
+    } else if (gw && gw.google) {
+      try {
+        const g = gw.google;
+        g.accounts?.id?.initialize({ client_id: clientId, callback: handleGoogleCredential });
+        g.accounts?.id?.renderButton(document.getElementById('g_id_signin'), { theme: 'outline', size: 'large' });
+      } catch (e: unknown) { console.debug('google initialize failed', e); }
+    }
+
+  }, [handleGoogleCredential]);
+
   return (
     <main className="max-w-md mx-auto mt-12 p-6 bg-white rounded-md shadow">
       <h1 className="text-2xl font-semibold mb-4">Đăng nhập</h1>
@@ -273,6 +372,10 @@ export default function LoginPage() {
           </button>
         </div>
       </form>
+
+      <div className="mt-6">
+        <div id="g_id_signin" />
+      </div>
 
       {mfaRequestId && (
         <div className="mt-4 p-4 bg-gray-50 border rounded">
