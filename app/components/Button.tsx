@@ -265,7 +265,7 @@ export const PaginationButton: React.FC<ButtonProps> = (props) => (
 export const SignUpButton = React.memo(function SignUpButton(props: ButtonProps) {
   const router = useRouter();
   const handleClick = () => {
-    if (props.onClick) props.onClick(undefined as any);
+    if (props.onClick) props.onClick(undefined as unknown as React.MouseEvent<HTMLButtonElement>);
     router.push("/register");
   };
   return (
@@ -284,7 +284,7 @@ export const SignUpButton = React.memo(function SignUpButton(props: ButtonProps)
 export const LoginButton = React.memo(function LoginButton(props: ButtonProps) {
   const router = useRouter();
   const handleClick = () => {
-    if (props.onClick) props.onClick(undefined as any);
+    if (props.onClick) props.onClick(undefined as unknown as React.MouseEvent<HTMLButtonElement>);
     router.push("/login");
   };
   return (

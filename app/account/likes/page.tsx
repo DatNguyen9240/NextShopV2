@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import Button from '@/app/components/Button';
 import ProductCardHorizontal from '@/app/components/ProductCardHorizontal';
+import type { Product as CardProduct } from '@/app/components/ProductCard';
 import { useAuth } from '@/app/providers/AuthProvider';
 import * as likeService from '@/app/services/productLikeService';
 import { getProductById } from '@/app/services/productService';
@@ -26,8 +27,7 @@ export default function LikesPage() {
   const [pageSize] = useState<number>(10);
 
   // product details cache for rendering cards
-  const [products, setProducts] = useState<Record<string, any>>({});
-  const [productsLoading, setProductsLoading] = useState(false);
+  const [products, setProducts] = useState<Record<string, CardProduct | null>>({});
 
   useEffect(() => {
     let mounted = true;
@@ -69,7 +69,6 @@ export default function LikesPage() {
       const idsToFetch = pageLikes.map(l => l.productId).filter(id => !products[id]);
       if (idsToFetch.length === 0) return;
 
-      setProductsLoading(true);
       try {
         const promises = idsToFetch.map(id => getProductById(id).catch(e => {
           console.error('[LikesPage] getProductById failed', id, e);
@@ -77,12 +76,24 @@ export default function LikesPage() {
         }));
         const results = await Promise.all(promises);
         if (!mounted) return;
-        const next: Record<string, any> = { ...products };
+        const next: Record<string, CardProduct | null> = { ...products };
         idsToFetch.forEach((id, idx) => {
-          const p = results[idx];
+          const p = results[idx] as {
+            productId?: string;
+            id?: string;
+            name?: string;
+            label?: string;
+            images?: string[];
+            image?: string;
+            variants?: Array<{ isDefault?: boolean; imageUrl?: string; priceAfterDiscount?: number; basePrice?: number; discountPercent?: number; stockQuantity?: number }>;
+            price?: number;
+            averageRating?: number;
+            totalStockQuantity?: number;
+          } | null;
+
           // map API product to card-friendly shape
           if (p) {
-            const variant = (p.variants && p.variants.length > 0) ? p.variants.find((v:any) => v.isDefault) ?? p.variants[0] : null;
+            const variant = (p.variants && p.variants.length > 0) ? p.variants.find((v) => v.isDefault) ?? p.variants[0] : null;
             const image = variant?.imageUrl ?? (p.images && p.images.length > 0 ? p.images[0] : p.image ?? '');
             const priceNew = variant ? String(variant.priceAfterDiscount ?? variant.basePrice ?? 0) : String(p.price ?? 0);
             const priceOld = variant ? String(variant.basePrice ?? '') : '';
@@ -99,20 +110,20 @@ export default function LikesPage() {
               rating,
               inStock: (totalStockQuantity ?? 0) > 0,
               totalStockQuantity,
-            };
+            } as CardProduct;
           } else {
             next[id] = null;
           }
         });
         setProducts(next);
       } finally {
-        if (mounted) setProductsLoading(false);
+        // noop
       }
     };
 
     void loadProducts();
     return () => { mounted = false; };
-  }, [likes, page]);
+  }, [likes, page, pageSize, products]);
 
   if (loading) return <div className="max-w-screen-xl mx-auto mt-12 p-6 bg-white rounded shadow">Đang tải...</div>;
   if (!user) return (
