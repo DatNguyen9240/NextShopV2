@@ -32,12 +32,13 @@ const InventoryAdjustModal: React.FC<{
       toast.success('Cập nhật kho thành công');
       if (onSuccess) onSuccess();
       onClose();
-    } catch (err: any) {
-      console.error('[updateInventory] error', err);
-      const serverData = err?.response?.data;
-      console.error('[updateInventory] response data', serverData);
-      const serverMsg = serverData?.message ?? serverData?.Message ?? serverData?.error ?? serverData?.Error ?? err?.message;
-      toast.error(serverMsg ?? 'Cập nhật kho thất bại');
+    } catch (err: unknown) {
+      type ErrWithResp = { response?: { data?: { message?: string } }; message?: string };
+      const e = err as ErrWithResp;
+      console.error('[updateInventory] error', e);
+      console.error('[updateInventory] response data', e?.response?.data);
+      const serverMsg = e?.response?.data?.message ?? e?.message ?? 'Cập nhật kho thất bại';
+      toast.error(serverMsg);
     } finally {
       setSubmitting(false);
     }
@@ -48,7 +49,10 @@ const InventoryAdjustModal: React.FC<{
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
       <div className="relative bg-white rounded-lg p-6 z-60 w-[420px] max-w-full">
         <h3 className="text-lg font-semibold mb-2">Điều chỉnh kho</h3>
-        <div className="text-sm text-gray-600 mb-4">{label ?? variantId}</div>
+        <div className="text-sm text-gray-600 mb-2">{label ?? variantId}</div>
+        {typeof currentStock === 'number' && (
+          <div className="text-xs text-gray-500 mb-3">Kho hiện tại: {currentStock}</div>
+        )}
         <div className="mb-3">
           <label className="block text-xs text-gray-600 mb-1">Số lượng thay đổi (dương = cộng, âm = trừ)</label>
           <input value={changeQty} onChange={(e) => setChangeQty(e.target.value)} type="number" inputMode="numeric" className="w-full border rounded px-3 py-2" placeholder="Nhập số (ví dụ: 5 hoặc -3)" />

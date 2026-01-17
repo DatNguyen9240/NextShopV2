@@ -7,7 +7,7 @@ import { toast } from 'react-hot-toast';
 import MoneyVND from "@/app/components/MoneyVND";
 import AddressAutocomplete from "@/app/components/AddressAutocomplete";
 import { getCart } from "@/app/services/cartService";
-import { createOrder } from "@/app/services/orderService";
+import { createOrder, type CreateOrderRequest } from '@/app/services/orderService';
 import { useAuth } from "@/app/providers/AuthProvider";
 import type { CartDto } from "@/app/types/cart";
 
@@ -53,6 +53,14 @@ const CheckoutPage: React.FC = () => {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [modalOrderId, setModalOrderId] = useState<string | null>(null);
 
+  // Coupon states
+  const [couponCode, setCouponCode] = useState('');
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState<null | { couponId: string; code: string }>(null);
+  const [discountAmount, setDiscountAmount] = useState<number>(0);
+  const [finalAmount, setFinalAmount] = useState<number | null>(null);
+  const [couponError, setCouponError] = useState<string | null>(null);
+
   const handlePlaceOrder = async () => {
     if (!cart || !shippingAddress) {
       toast.error("Vui lòng nhập địa chỉ giao hàng");
@@ -61,7 +69,7 @@ const CheckoutPage: React.FC = () => {
 
     try {
       // Create order request from cart
-      const orderRequest = {
+      const orderRequest: CreateOrderRequest = {
         items: cart.items.map(item => ({
           variantId: item.variantId,
           quantity: item.quantity
@@ -71,6 +79,11 @@ const CheckoutPage: React.FC = () => {
         buyerName: user?.fullName ?? undefined,
         buyerPhone: user?.phone ?? undefined
       };
+
+      // attach coupon if applied
+      if (appliedCoupon) {
+        orderRequest.couponIds = [appliedCoupon.couponId];
+      }
 
       const order = await createOrder(orderRequest);
       console.log('Created order:', order);
@@ -141,10 +154,88 @@ const CheckoutPage: React.FC = () => {
               ))}
             </div>
             <hr className="my-4" />
+
+            {/* Coupon input */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Mã giảm giá</label>
+              <div className="flex gap-2">
+                <input value={couponCode} onChange={(e) => setCouponCode(e.target.value)} placeholder="Nhập mã giảm giá" className="flex-1 border rounded px-3 py-2" />
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!couponCode || !cart) return toast.error('Nhập mã giảm giá');
+                    setCouponLoading(true);
+                    setCouponError(null);
+                    try {
+                      const { getCouponByCode, calculateDiscount } = await import('@/app/services/couponService');
+                      const coupon = await getCouponByCode(couponCode.trim());
+                      if (!coupon) {
+                        setCouponError('Mã không tồn tại');
+                        toast.error('Mã không tồn tại');
+                        setCouponLoading(false);
+                        return;
+                      }
+
+                      const isValid = coupon.isValid ?? true;
+                      if (!isValid) {
+                        setCouponError('Mã không hợp lệ hoặc đã hết hạn');
+                        toast.error('Mã không hợp lệ hoặc đã hết hạn');
+                        setCouponLoading(false);
+                        return;
+                      }
+
+                      const calc = await calculateDiscount(coupon.code, cart.totalAmount);
+                      const discountVal = Number(calc?.discountAmount ?? calc?.DiscountAmount ?? 0);
+                      const finalVal = Number(calc?.finalAmount ?? calc?.FinalAmount ?? (cart.totalAmount - discountVal));
+
+                      if (!calc || discountVal <= 0) {
+                        setCouponError('Mã không áp dụng được cho đơn hàng này');
+                        toast.error('Mã không áp dụng được cho đơn hàng này');
+                        setCouponLoading(false);
+                        return;
+                      }
+
+                      setAppliedCoupon({ couponId: coupon.couponId, code: coupon.code });
+                      setDiscountAmount(discountVal);
+                      setFinalAmount(finalVal);
+                      toast.success('Áp mã thành công');
+                    } catch (err: unknown) {
+                      type ErrWithResp = { response?: { data?: { message?: string; Message?: string } }; message?: string };
+                      const e = err as ErrWithResp;
+                      console.error('[applyCoupon] error', e);
+                      const serverMsg = e?.response?.data?.message || e?.response?.data?.Message || e?.message || 'Lỗi khi áp mã';
+                      setCouponError(String(serverMsg));
+                      toast.error(String(serverMsg));
+                    } finally {
+                      setCouponLoading(false);
+                    }
+                  }}
+                  className="px-4 py-2 bg-gray-100 border rounded"
+                  disabled={couponLoading}
+                >Áp mã</button>
+                {appliedCoupon && (
+                  <button type="button" onClick={() => { setAppliedCoupon(null); setCouponCode(''); setDiscountAmount(0); setFinalAmount(null); toast('Đã bỏ mã'); }} className="px-3 py-2 border rounded">Bỏ</button>
+                )}
+              </div>
+              {couponError && <div className="text-xs text-red-500 mt-1">{couponError}</div>}
+            </div>
+
             <div className="flex justify-between items-center text-lg font-semibold">
               <span>Tổng cộng:</span>
               <MoneyVND value={cart.totalAmount} color="text-pink-600" />
             </div>
+            {discountAmount > 0 && (
+              <div className="flex justify-between items-center text-md text-gray-700">
+                <span>Giảm:</span>
+                <MoneyVND value={discountAmount} />
+              </div>
+            )}
+            {finalAmount != null && (
+              <div className="flex justify-between items-center text-lg font-semibold mt-2">
+                <span>Thành tiền:</span>
+                <MoneyVND value={finalAmount} color="text-pink-600" />
+              </div>
+            )}
           </div>
 
           {/* Checkout Form */}

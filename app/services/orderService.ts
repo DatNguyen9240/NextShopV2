@@ -5,6 +5,7 @@ export interface CreateOrderRequest {
   buyerName?: string;
   buyerPhone?: string;
   shippingAddress?: string;
+  paymentMethod?: string;
   couponIds?: string[];
 }
 

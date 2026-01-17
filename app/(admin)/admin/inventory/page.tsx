@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { getProductsAdmin } from '@/app/services/productService';
 import { getVariantsByProductIdAdmin, getAllVariantsAdmin } from '@/app/services/variantService';
-import { updateInventory, getInventoryHistory, getCurrentStock, InventoryTransactionDto } from '@/app/services/inventoryService';
+import { getInventoryHistory, InventoryTransactionDto } from '@/app/services/inventoryService';
 import Button from '@/app/components/Button';
 import InventoryAdjustModal from './InventoryAdjustModal';
 import InventoryHistoryModal from './InventoryHistoryModal';
