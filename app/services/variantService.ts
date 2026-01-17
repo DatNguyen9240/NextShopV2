@@ -10,10 +10,15 @@ export async function getVariantsByProductIdAdmin(productId: string) {
   return res.data?.data ?? [];
 }
 
+export async function getAllVariantsAdmin() {
+  const res = await axiosClient.get(`/api/ProductVariant/admin`);
+  return res.data?.data ?? [];
+}
+
 export async function getDefaultVariant(productId: string) {
   const res = await axiosClient.get(`/api/ProductVariant/product/${productId}/default`);
   return res.data?.data;
-}
+} 
 
 export async function getDefaultVariantAdmin(productId: string) {
   const res = await axiosClient.get(`/api/ProductVariant/admin/product/${productId}/default`);

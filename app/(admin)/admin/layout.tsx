@@ -37,8 +37,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           <Link href="/admin/orders" title="Orders" className={`flex items-center ${collapsed ? 'justify-center py-3' : 'px-6 py-3'} text-gray-700 hover:bg-gray-200 hover:text-gray-900`}>
             <span className="w-8 h-8 flex items-center justify-center rounded-md bg-gray-100 text-sm font-medium">{collapsed ? 'O' : ''}</span>
             {!collapsed && <span className="ml-3">Orders</span>}
-          </Link>
-          <Link href="/admin/categories" title="Categories" className={`flex items-center ${collapsed ? 'justify-center py-3' : 'px-6 py-3'} text-gray-700 hover:bg-gray-200 hover:text-gray-900`}>
+          </Link>          <Link href="/admin/inventory" title="Inventory" className={`flex items-center ${collapsed ? 'justify-center py-3' : 'px-6 py-3'} text-gray-700 hover:bg-gray-200 hover:text-gray-900`}>
+            <span className="w-8 h-8 flex items-center justify-center rounded-md bg-gray-100 text-sm font-medium">{collapsed ? 'I' : ''}</span>
+            {!collapsed && <span className="ml-3">Inventory</span>}
+          </Link>          <Link href="/admin/categories" title="Categories" className={`flex items-center ${collapsed ? 'justify-center py-3' : 'px-6 py-3'} text-gray-700 hover:bg-gray-200 hover:text-gray-900`}>
             <span className="w-8 h-8 flex items-center justify-center rounded-md bg-gray-100 text-sm font-medium">{collapsed ? 'C' : ''}</span>
             {!collapsed && <span className="ml-3">Categories</span>}
           </Link>
