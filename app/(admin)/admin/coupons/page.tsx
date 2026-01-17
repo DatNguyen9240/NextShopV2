@@ -62,6 +62,7 @@ export default function AdminCouponsPage() {
                 <th className="px-4 py-3">% Giảm</th>
                 <th className="px-4 py-3">Điều kiện</th>
                 <th className="px-4 py-3">Thời gian</th>
+                <th className="px-4 py-3">Usage</th>
                 <th className="px-4 py-3">Trạng thái</th>
                 <th className="px-4 py-3">Actions</th>
               </tr>
@@ -72,8 +73,20 @@ export default function AdminCouponsPage() {
                   <td className="px-4 py-3 text-sm">{c.code}</td>
                   <td className="px-4 py-3 text-sm">{c.discountPercent}%</td>
                   <td className="px-4 py-3 text-sm">Min: {c.minOrderAmount ?? '—'} • Max: {c.maxDiscountAmount ?? '—'}</td>
-                  <td className="px-4 py-3 text-sm">{new Date(c.startDate).toLocaleDateString()} → {new Date(c.endDate).toLocaleDateString()}</td>
-                  <td className="px-4 py-3 text-sm">{c.isValid ? 'Active' : 'Inactive'}</td>
+                  <td className="px-4 py-3 text-sm">
+                    <div className="text-sm">
+                      <div>{new Date(c.startDate).toLocaleDateString()}</div>
+                      <div className="text-gray-500 text-xs">→ {new Date(c.endDate).toLocaleDateString()}</div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    <div className="text-sm">
+                      <div>Used: <strong>{c.usedCount ?? 0}</strong></div>
+                      <div>Reserved: <strong>{c.reservedCount ?? 0}</strong></div>
+                      <div>Limit: <strong>{c.usageLimit ?? '—'}</strong></div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-sm">{c.isValid ? <span className="px-2 py-1 bg-green-100 text-green-800 rounded">Active</span> : <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded">Inactive</span>}</td>
                   <td className="px-4 py-3 text-sm">
                     <div className="flex items-center gap-2">
                       <Button shape="roundedSquare" size="md" onClick={() => setEditing(c)} className="bg-gray-100 rounded-none px-4 py-2 text-sm">Sửa</Button>

@@ -10,6 +10,7 @@ export interface CouponDto {
   endDate: string;
   usageLimit?: number | null;
   usedCount?: number | null;
+  reservedCount?: number | null;
   isActive: boolean;
   // computed
   isValid?: boolean;
