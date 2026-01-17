@@ -1,27 +1,13 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { fetchMyOrders, PagedOrders } from '../../services/orderService';
+import { fetchMyOrders, PagedOrders, OrderDto } from '../../services/orderService';
 import Button from '@/app/components/Button';
 import MoneyVND from '@/app/components/MoneyVND';
 import { useRouter } from 'next/navigation';
 import { CheckCircle, Clock, XCircle } from 'lucide-react';
 
-interface OrderItem {
-  orderItemId: string;
-  productId?: string;
-  productName?: string | null;
-  quantity: number;
-  unitPrice: number;
-}
 
-interface OrderDto {
-  orderId: string;
-  status: string;
-  totalAmount: number;
-  orderDate: string;
-  items: OrderItem[];
-}
 
 // Lightweight type for errors that contain an HTTP response
 type ErrorWithResponse = { response?: { status?: number } };
