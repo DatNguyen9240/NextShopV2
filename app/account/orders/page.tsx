@@ -9,6 +9,7 @@ import { CheckCircle, Clock, XCircle } from 'lucide-react';
 
 interface OrderItem {
   orderItemId: string;
+  productId?: string;
   productName?: string | null;
   quantity: number;
   unitPrice: number;
@@ -69,19 +70,24 @@ export default function OrdersPage() {
 
   return (
     <main className="max-w-screen-xl mx-auto mt-12 px-4">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold">Lịch sử mua hàng</h1>
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold mb-4">Lịch sử mua hàng</h1>
 
-        {/* Filter + Header pagination / summary (responsive) */}
-        <div className="flex items-center gap-4 flex-wrap sm:flex-nowrap w-full sm:w-auto mt-3 sm:mt-0">
-          <div className="flex flex-wrap gap-2 mb-3 sm:mb-0">
-            <button onClick={() => setStatusFilter(null)} className={`px-3 py-1 rounded ${statusFilter === null ? 'bg-pink-50 border border-pink-200 text-pink-600' : 'border hover:bg-gray-100'}`}>Tất cả</button>
-            <button onClick={() => setStatusFilter('Paid')} className={`px-3 py-1 rounded ${statusFilter === 'Paid' ? 'bg-pink-50 border border-pink-200 text-pink-600' : 'border hover:bg-gray-100'}`}>Đã thanh toán</button>
-            <button onClick={() => setStatusFilter('Pending')} className={`px-3 py-1 rounded ${statusFilter === 'Pending' ? 'bg-pink-50 border border-pink-200 text-pink-600' : 'border hover:bg-gray-100'}`}>Chờ thanh toán</button>
+        {/* Filter buttons */}
+        <div className="flex flex-wrap gap-2 mb-4">
+          <button onClick={() => setStatusFilter(null)} className={`px-3 py-1 rounded ${statusFilter === null ? 'bg-pink-50 border border-pink-200 text-pink-600' : 'border hover:bg-gray-100'}`}>Tất cả</button>
+          <button onClick={() => setStatusFilter('Paid')} className={`px-3 py-1 rounded ${statusFilter === 'Paid' ? 'bg-pink-50 border border-pink-200 text-pink-600' : 'border hover:bg-gray-100'}`}>Đã thanh toán</button>
+          <button onClick={() => setStatusFilter('Pending')} className={`px-3 py-1 rounded ${statusFilter === 'Pending' ? 'bg-pink-50 border border-pink-200 text-pink-600' : 'border hover:bg-gray-100'}`}>Chờ thanh toán</button>
+          <button onClick={() => setStatusFilter('Shipped')} className={`px-3 py-1 rounded ${statusFilter === 'Shipped' ? 'bg-pink-50 border border-pink-200 text-pink-600' : 'border hover:bg-gray-100'}`}>Đang giao</button>
+          <button onClick={() => setStatusFilter('Completed')} className={`px-3 py-1 rounded ${statusFilter === 'Completed' ? 'bg-pink-50 border border-pink-200 text-pink-600' : 'border hover:bg-gray-100'}`}>Đã hoàn tất</button>
+          <button onClick={() => setStatusFilter('Cancelled')} className={`px-3 py-1 rounded ${statusFilter === 'Cancelled' ? 'bg-pink-50 border border-pink-200 text-pink-600' : 'border hover:bg-gray-100'}`}>Đã hủy</button>
+        </div>
+
+        {/* Pagination summary and controls */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="text-sm text-gray-600">
+            Hiển thị {Math.min((page - 1) * pageSize + 1, total)}–{Math.min(page * pageSize, total)} trên {total} đơn
           </div>
-
-          <div className="hidden sm:block text-sm text-gray-600">Hiển thị {Math.min((page - 1) * pageSize + 1, total)}–{Math.min(page * pageSize, total)} trên {total} đơn</div>
-          <div className="sm:hidden text-sm text-gray-600 w-full mb-2">Hiển thị {Math.min((page - 1) * pageSize + 1, total)}–{Math.min(page * pageSize, total)} trên {total} đơn</div>
 
           <div className="flex items-center gap-2">
             <button
@@ -119,15 +125,31 @@ export default function OrdersPage() {
                 </div>
 
                 <div className="flex items-center gap-3 mt-1">
-                  <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium ${o.status === 'Paid' ? 'bg-green-50 text-green-700' : o.status === 'Failed' ? 'bg-red-50 text-red-700' : 'bg-yellow-50 text-yellow-700'}`}>
-                    {o.status === 'Paid' ? (
+                  <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium ${
+                    o.status === 'Completed' ? 'bg-blue-50 text-blue-700' :
+                    o.status === 'Shipped' ? 'bg-purple-50 text-purple-700' :
+                    o.status === 'Paid' ? 'bg-green-50 text-green-700' :
+                    o.status === 'Cancelled' ? 'bg-red-50 text-red-700' :
+                    'bg-yellow-50 text-yellow-700'
+                  }`}>
+                    {o.status === 'Completed' ? (
+                      <CheckCircle className="text-blue-600" size={16} />
+                    ) : o.status === 'Shipped' ? (
+                      <CheckCircle className="text-purple-600" size={16} />
+                    ) : o.status === 'Paid' ? (
                       <CheckCircle className="text-green-600" size={16} />
-                    ) : o.status === 'Failed' ? (
+                    ) : o.status === 'Cancelled' ? (
                       <XCircle className="text-red-600" size={16} />
                     ) : (
                       <Clock className="text-yellow-600" size={16} />
                     )}
-                    <span>{o.status === 'Paid' ? 'Đã thanh toán' : o.status === 'Failed' ? 'Thất bại' : 'Chờ thanh toán'}</span>
+                    <span>
+                      {o.status === 'Completed' ? 'Đã hoàn tất' :
+                       o.status === 'Shipped' ? 'Đang giao' :
+                       o.status === 'Paid' ? 'Đã thanh toán' :
+                       o.status === 'Cancelled' ? 'Đã hủy' :
+                       'Chờ thanh toán'}
+                    </span>
                   </div>
 
                   <span className="text-sm text-gray-600">
@@ -147,13 +169,23 @@ export default function OrdersPage() {
                   </div>
                 </div>
 
-                {/* BUTTON */}
-                <Button
-                  onClick={() => router.push(`/payment/success?orderId=${o.orderId}`)}
-                  className="w-full sm:w-auto px-5 py-2 rounded-full bg-pink-600 hover:bg-pink-700 text-white shadow-md"
-                >
-                  Xem chi tiết
-                </Button>
+                {/* BUTTONS */}
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full sm:w-auto">
+                  <Button
+                    onClick={() => router.push(`/payment/success?orderId=${o.orderId}`)}
+                    className="w-full sm:w-auto px-4 py-2 rounded-full bg-pink-600 hover:bg-pink-700 text-white shadow-md"
+                  >
+                    Xem chi tiết
+                  </Button>
+                  {o.status === 'Completed' && o.items && o.items.length > 0 && (
+                    <Button
+                      onClick={() => router.push(`/product/${o.items[0].productId}`)}
+                      className="w-full sm:w-auto px-4 py-2 rounded-full bg-green-600 hover:bg-green-700 text-white shadow-md"
+                    >
+                      Đánh giá sản phẩm
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
           ))}
