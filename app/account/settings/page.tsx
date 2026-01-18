@@ -327,17 +327,17 @@ export default function SettingsPage() {
         <div className="md:col-span-4 space-y-4 p-4">
           <div>
             <label className="block text-sm mb-1">Họ và tên</label>
-            <input value={fullName} onChange={(e) => setFullName(e.target.value)} className="w-full border px-3 py-2 rounded" />
+            <input value={fullName} onChange={(e) => { setFullName(e.target.value); setMessage("Thông tin đã thay đổi. Nhấn 'Lưu' để cập nhật profile."); }} className="w-full border px-3 py-2 rounded" />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm mb-1">Số điện thoại</label>
-              <input value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full border px-3 py-2 rounded" />
+              <input value={phone} onChange={(e) => { setPhone(e.target.value); setMessage("Thông tin đã thay đổi. Nhấn 'Lưu' để cập nhật profile."); }} className="w-full border px-3 py-2 rounded" />
             </div>
             <div>
               <label className="block text-sm mb-1">Giới tính</label>
-              <select value={gender ?? ""} onChange={(e) => setGender(e.target.value || undefined)} className="w-full border px-3 py-2 rounded">
+              <select value={gender ?? ""} onChange={(e) => { setGender(e.target.value || undefined); setMessage("Thông tin đã thay đổi. Nhấn 'Lưu' để cập nhật profile."); }} className="w-full border px-3 py-2 rounded">
                 <option value="">Không khai báo</option>
                 <option value="Male">Nam</option>
                 <option value="Female">Nữ</option>
@@ -396,7 +396,7 @@ export default function SettingsPage() {
 
             <div className="mt-2">
               <label className="inline-flex items-center">
-                <input type="checkbox" checked={isDefault} onChange={(e) => setIsDefault(e.target.checked)} className="mr-2" />
+                <input type="checkbox" checked={isDefault} onChange={(e) => { setIsDefault(e.target.checked); setMessage("Thông tin đã thay đổi. Nhấn 'Lưu' để cập nhật profile."); }} className="mr-2" />
                 Đặt làm địa chỉ mặc định
               </label>
             </div>
