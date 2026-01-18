@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import Button from "@/app/components/Button";
 import { toast } from 'react-hot-toast';
 import MoneyVND from "@/app/components/MoneyVND";
-import AddressAutocomplete from "@/app/components/AddressAutocomplete";
 import { getCart } from "@/app/services/cartService";
 import { createOrder, type CreateOrderRequest } from '@/app/services/orderService';
 import { useAuth } from "@/app/providers/AuthProvider";
@@ -17,8 +16,6 @@ const CheckoutPage: React.FC = () => {
   const [cart, setCart] = useState<CartDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [shippingAddress, setShippingAddress] = useState("");
-  const [latitude, setLatitude] = useState<string | null>(null);
-  const [longitude, setLongitude] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState("COD");
 
   useEffect(() => {
@@ -63,7 +60,11 @@ const CheckoutPage: React.FC = () => {
 
   const handlePlaceOrder = async () => {
     if (!cart || !shippingAddress) {
-      toast.error("Vui lòng nhập địa chỉ giao hàng");
+      toast.error("Vui lòng cập nhật địa chỉ giao hàng mặc định trong hồ sơ");
+      return;
+    }
+    if (!user?.phone) {
+      toast.error("Vui lòng cập nhật số điện thoại trong hồ sơ");
       return;
     }
 
@@ -75,9 +76,9 @@ const CheckoutPage: React.FC = () => {
           quantity: item.quantity
         })),
         paymentMethod: paymentMethod,
-        shippingAddress: shippingAddress && shippingAddress.trim().length > 0 ? shippingAddress.trim() : undefined,
-        buyerName: user?.fullName ?? undefined,
-        buyerPhone: user?.phone ?? undefined
+        shippingAddress: undefined, // BE will use from profile
+        buyerName: undefined, // BE will use from profile
+        buyerPhone: undefined // BE will use from profile
       };
 
       // attach coupon if applied
@@ -248,27 +249,22 @@ const CheckoutPage: React.FC = () => {
                 <h3 className="font-medium text-gray-800 mb-2">Thông tin khách hàng</h3>
                 <p><strong>Tên:</strong> {user.fullName || 'Chưa cập nhật'}</p>
                 <p><strong>Email:</strong> {user.email}</p>
-                <p><strong>Số điện thoại:</strong> {user.phone || 'Chưa cập nhật'}</p>
+                <p><strong>Số điện thoại:</strong> {user.phone || <span className="text-red-500">Chưa cập nhật - <a href="/account/settings" className="text-blue-500 underline">Cập nhật ngay</a></span>}</p>
               </div>
             )}
 
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Địa chỉ giao hàng</label>
-
-                <AddressAutocomplete
-                  value={shippingAddress}
-                  onSelectAddress={(addr: string, placeId?: string, lat?: number | null, lng?: number | null) => {
-                    setShippingAddress(addr);
-                    setLatitude(lat != null ? String(lat) : null);
-                    setLongitude(lng != null ? String(lng) : null);
-                  }}
-                />
-
-                <div className="mt-2 text-xs text-gray-500">Chọn địa chỉ để tự động lấy tọa độ hoặc nhập tay trước khi lưu</div>
-                {/* preserve coords in hidden inputs */}
-                <input type="hidden" name="latitude" value={latitude ?? ""} />
-                <input type="hidden" name="longitude" value={longitude ?? ""} />
+                {shippingAddress ? (
+                  <div className="p-3 border rounded bg-gray-50">
+                    {shippingAddress}
+                  </div>
+                ) : (
+                  <div className="p-3 border rounded bg-red-50 text-red-600">
+                    Chưa có địa chỉ mặc định. <a href="/account/settings" className="text-blue-500 underline">Cập nhật ngay</a>
+                  </div>
+                )}
               </div>
 
               <div>
@@ -304,6 +300,7 @@ const CheckoutPage: React.FC = () => {
                 size="md"
                 className="bg-pink-600 hover:bg-pink-700 text-white w-full py-3 mt-6"
                 onClick={handlePlaceOrder}
+                disabled={!user?.phone || !shippingAddress}
               >
                 Đặt hàng
               </Button>

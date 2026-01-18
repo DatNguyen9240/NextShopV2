@@ -39,17 +39,16 @@ export default function SettingsPage() {
   const [showDeleteAvatarConfirm, setShowDeleteAvatarConfirm] = useState(false);
 
   // Profile modal
-  const [showProfileModal, setShowProfileModal] = useState(false);
+  // const [showProfileModal, setShowProfileModal] = useState(false);
 
   // Map position state
   const [mapLat, setMapLat] = useState<number | null>(null);
   const [mapLng, setMapLng] = useState<number | null>(null);
   const reverseGeocode = async (lat: number, lng: number) => {
     try {
-      const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1&zoom=18`, {
+      const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1&zoom=18&accept-language=vi`, {
         headers: {
-          'User-Agent': 'NextShopV2/1.0 (https://nextshopv2.vercel.app)',
-          'Referer': 'https://nextshopv2.vercel.app'
+          'User-Agent': 'NextShopV2-App/1.0'
         }
       });
       if (!response.ok) {
@@ -57,21 +56,34 @@ export default function SettingsPage() {
         return null;
       }
       const data = await response.json();
-      if (data && data.address) {
-        // Build detailed address from components
-        const addr = data.address;
-        const parts = [];
-        if (addr.house_number) parts.push(addr.house_number);
-        if (addr.road) parts.push(addr.road);
-        if (addr.neighbourhood || addr.suburb) parts.push(addr.neighbourhood || addr.suburb);
-        if (addr.city_district || addr.district) parts.push(addr.city_district || addr.district);
-        if (addr.city) parts.push(addr.city);
-        if (addr.state) parts.push(addr.state);
-        if (addr.country) parts.push(addr.country);
-        return parts.join(', ');
+      if (data && data.display_name) {
+        // Use display_name for full address
+        return data.display_name;
       }
     } catch (error) {
       console.error('Reverse geocoding failed:', error);
+    }
+    return null;
+  };
+
+  const forwardGeocode = async (addr: string) => {
+    try {
+      const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addr)}&limit=1&accept-language=vi`, {
+        headers: {
+          'User-Agent': 'NextShopV2-App/1.0'
+        }
+      });
+      if (!response.ok) {
+        console.warn('Nominatim forward geocode failed:', response.status);
+        return null;
+      }
+      const data = await response.json();
+      if (data && data.length > 0) {
+        const result = data[0];
+        return { lat: parseFloat(result.lat), lng: parseFloat(result.lon), displayName: result.display_name };
+      }
+    } catch (error) {
+      console.error('Forward geocoding failed:', error);
     }
     return null;
   };
@@ -80,29 +92,22 @@ export default function SettingsPage() {
   const [passkeys, setPasskeys] = useState<Array<{ id: string; credentialId: string; createdAt: string; lastUsedAt?: string | null }>>([]);
   const [loadingPasskeys, setLoadingPasskeys] = useState(false);
 
-  const didLoad = React.useRef(false);
-
   useEffect(() => {
-    // Prevent duplicate loads in quick succession (e.g., refreshUser updates `user` causing effect to re-run)
-    if (didLoad.current) return;
+    if (!user) {
+      setLoading(true);
+      setLoadingPasskeys(true);
+      return;
+    }
 
     const load = async () => {
-      didLoad.current = true;
       setLoading(true);
       setLoadingPasskeys(true);
       try {
-        // Ensure we have a user (attempt to refresh once if missing)
-        let u = user;
-        if (!u) {
-          u = await refreshUser();
-        }
-        if (!u) return;
-
-        setFullName(u.fullName ?? "");
-        setPhone(u.phone ?? "");
-        setGender(u.gender ?? undefined);
-        setAvatarUrl(u.avatar ?? null);
-        setAvatarPreview(u.avatar ?? null);
+        setFullName(user.fullName ?? "");
+        setPhone(user.phone ?? "");
+        setGender(user.gender ?? undefined);
+        setAvatarUrl(user.avatar ?? null);
+        setAvatarPreview(user.avatar ?? null);
         setHasUnsavedAvatar(false);
 
         // addresses from context helper
@@ -134,36 +139,23 @@ export default function SettingsPage() {
       }
     };
     void load();
-  }, [refreshUser, getAddresses, user]);
-
-  // Keep form fields (including avatar) synced to user when user context updates
-  useEffect(() => {
-    if (!user) return;
-    setFullName(user.fullName ?? "");
-    setPhone(user.phone ?? "");
-    setGender(user.gender ?? undefined);
-    setAvatarUrl(user.avatar ?? null);
-    setAvatarPreview(user.avatar ?? null);
-    setHasUnsavedAvatar(false);
-
-    const addrs = (getAddresses() || []) as Address[];
-    addrs.sort((a, b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0));
-    setAddresses(addrs);
-
-    const addr = addrs.find((a) => a.isDefault) || addrs[0];
-    if (addr) {
-      setAddress(addr.fullAddress || "");
-      setLatitude(addr.latitude != null ? String(addr.latitude) : null);
-      setLongitude(addr.longitude != null ? String(addr.longitude) : null);
-      setAddressId(addr.addressId);
-      setIsDefault(!!addr.isDefault);
-      // Initialize map position
-      if (addr.latitude != null && addr.longitude != null) {
-        setMapLat(addr.latitude);
-        setMapLng(addr.longitude);
-      }
-    }
   }, [user, getAddresses]);
+
+  // Forward geocode when address changes and no coords
+  useEffect(() => {
+    if (address && address.trim().length > 0 && (!latitude || !longitude)) {
+      const timeoutId = setTimeout(async () => {
+        const geo = await forwardGeocode(address.trim());
+        if (geo) {
+          setLatitude(String(geo.lat));
+          setLongitude(String(geo.lng));
+          setMapLat(geo.lat);
+          setMapLng(geo.lng);
+        }
+      }, 1000); // debounce 1s
+      return () => clearTimeout(timeoutId);
+    }
+  }, [address, latitude, longitude]);
 
   const handleFileChange = async (file?: File) => {
     if (!file) return;
@@ -369,6 +361,7 @@ export default function SettingsPage() {
                   setMapLat(lat);
                   setMapLng(lng);
                 }
+                setMessage("Địa chỉ đã được chọn. Nhấn 'Lưu' để cập nhật profile.");
               }}
             />
 
@@ -386,7 +379,6 @@ export default function SettingsPage() {
                     setAddressId(undefined); // Clear placeId since it's from map
                   }
                   setMessage("Vị trí đã được chọn. Nhấn 'Lưu' để cập nhật profile.");
-                  setShowProfileModal(true);
                 }}
                 initialLat={latitude ? parseFloat(latitude) : undefined}
                 initialLng={longitude ? parseFloat(longitude) : undefined}
@@ -585,28 +577,6 @@ export default function SettingsPage() {
           </div>
         </div>
       </form>
-
-      {/* Profile Modal */}
-      {showProfileModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-md max-w-md w-full mx-4">
-            <h2 className="text-xl font-semibold mb-4">Thông tin Hồ sơ</h2>
-            <div className="space-y-2">
-              <p><strong>Họ và tên:</strong> {fullName}</p>
-              <p><strong>Số điện thoại:</strong> {phone || 'Chưa cập nhật'}</p>
-              <p><strong>Giới tính:</strong> {gender === 'Male' ? 'Nam' : gender === 'Female' ? 'Nữ' : gender === 'Other' ? 'Khác' : 'Không khai báo'}</p>
-              <p><strong>Địa chỉ:</strong> {address || 'Chưa cập nhật'}</p>
-              <p><strong>Tọa độ:</strong> {latitude && longitude ? `${latitude}, ${longitude}` : 'Chưa cập nhật'}</p>
-            </div>
-            <button
-              onClick={() => setShowProfileModal(false)}
-              className="mt-4 bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
-            >
-              Đóng
-            </button>
-          </div>
-        </div>
-      )}
 
     </main>
   );
