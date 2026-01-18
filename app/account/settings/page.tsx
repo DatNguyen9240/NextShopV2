@@ -8,6 +8,7 @@ import { uploadImage } from "../../services/uploadService";
 import { useAuth } from "@/app/providers/AuthProvider";
 import AddressAutocomplete from "../../components/AddressAutocomplete";
 import ConfirmModal from "../../components/ConfirmModal";
+import LocationPicker from "../../components/LocationPicker";
 
 type Address = { addressId: string; fullAddress: string; latitude?: number | null; longitude?: number | null; isDefault?: boolean };
 
@@ -36,6 +37,44 @@ export default function SettingsPage() {
   const [pendingDeleteAddressId, setPendingDeleteAddressId] = useState<string | null>(null);
   // avatar delete confirm
   const [showDeleteAvatarConfirm, setShowDeleteAvatarConfirm] = useState(false);
+
+  // Profile modal
+  const [showProfileModal, setShowProfileModal] = useState(false);
+
+  // Map position state
+  const [mapLat, setMapLat] = useState<number | null>(null);
+  const [mapLng, setMapLng] = useState<number | null>(null);
+  const reverseGeocode = async (lat: number, lng: number) => {
+    try {
+      const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1&zoom=18`, {
+        headers: {
+          'User-Agent': 'NextShopV2/1.0 (https://nextshopv2.vercel.app)',
+          'Referer': 'https://nextshopv2.vercel.app'
+        }
+      });
+      if (!response.ok) {
+        console.warn('Nominatim request failed:', response.status);
+        return null;
+      }
+      const data = await response.json();
+      if (data && data.address) {
+        // Build detailed address from components
+        const addr = data.address;
+        const parts = [];
+        if (addr.house_number) parts.push(addr.house_number);
+        if (addr.road) parts.push(addr.road);
+        if (addr.neighbourhood || addr.suburb) parts.push(addr.neighbourhood || addr.suburb);
+        if (addr.city_district || addr.district) parts.push(addr.city_district || addr.district);
+        if (addr.city) parts.push(addr.city);
+        if (addr.state) parts.push(addr.state);
+        if (addr.country) parts.push(addr.country);
+        return parts.join(', ');
+      }
+    } catch (error) {
+      console.error('Reverse geocoding failed:', error);
+    }
+    return null;
+  };
 
   // Passkeys
   const [passkeys, setPasskeys] = useState<Array<{ id: string; credentialId: string; createdAt: string; lastUsedAt?: string | null }>>([]);
@@ -118,6 +157,11 @@ export default function SettingsPage() {
       setLongitude(addr.longitude != null ? String(addr.longitude) : null);
       setAddressId(addr.addressId);
       setIsDefault(!!addr.isDefault);
+      // Initialize map position
+      if (addr.latitude != null && addr.longitude != null) {
+        setMapLat(addr.latitude);
+        setMapLng(addr.longitude);
+      }
     }
   }, [user, getAddresses]);
 
@@ -222,6 +266,8 @@ export default function SettingsPage() {
       setAddressId(undefined);
       setIsDefault(true);
       setEditingAddressId(undefined);
+      setMapLat(null);
+      setMapLng(null);
       setMessage("Đã xóa địa chỉ");
     } catch {
       setMessage("Xóa thất bại");
@@ -313,13 +359,41 @@ export default function SettingsPage() {
             {/* Address autocomplete using RapidAPI Google Places */}
             <AddressAutocomplete
               value={address}
-              onSelectAddress={(addr, placeId, lat, lng) => {
+              onSelectAddress={async (addr, placeId, lat, lng) => {
                 setAddress(addr);
                 setAddressId(placeId);
                 setLatitude(lat != null ? String(lat) : null);
                 setLongitude(lng != null ? String(lng) : null);
+                // Update map position
+                if (lat != null && lng != null) {
+                  setMapLat(lat);
+                  setMapLng(lng);
+                }
               }}
             />
+
+            <div className="mt-2">
+              <LocationPicker
+                onLocationSelect={async (lat, lng) => {
+                  setLatitude(String(lat));
+                  setLongitude(String(lng));
+                  setMapLat(lat);
+                  setMapLng(lng);
+                  // Reverse geocode to get address
+                  const geocodedAddress = await reverseGeocode(lat, lng);
+                  if (geocodedAddress) {
+                    setAddress(geocodedAddress);
+                    setAddressId(undefined); // Clear placeId since it's from map
+                  }
+                  setMessage("Vị trí đã được chọn. Nhấn 'Lưu' để cập nhật profile.");
+                  setShowProfileModal(true);
+                }}
+                initialLat={latitude ? parseFloat(latitude) : undefined}
+                initialLng={longitude ? parseFloat(longitude) : undefined}
+                positionLat={mapLat}
+                positionLng={mapLng}
+              />
+            </div>
 
             <div className="mt-2 text-xs text-gray-500">
               <div>Chọn địa chỉ để tự động lấy tọa độ hoặc nhập tay trước khi lưu</div>
@@ -354,6 +428,11 @@ export default function SettingsPage() {
                           setAddressId(a.addressId);
                           setIsDefault(!!a.isDefault);
                           setEditingAddressId(a.addressId);
+                          // Update map position
+                          if (a.latitude != null && a.longitude != null) {
+                            setMapLat(a.latitude);
+                            setMapLng(a.longitude);
+                          }
                         }} className="text-xs text-blue-600">Sửa</button>
                         <button type="button" onClick={() => {
                           setPendingDeleteAddressId(a.addressId);
@@ -506,6 +585,29 @@ export default function SettingsPage() {
           </div>
         </div>
       </form>
+
+      {/* Profile Modal */}
+      {showProfileModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-md max-w-md w-full mx-4">
+            <h2 className="text-xl font-semibold mb-4">Thông tin Hồ sơ</h2>
+            <div className="space-y-2">
+              <p><strong>Họ và tên:</strong> {fullName}</p>
+              <p><strong>Số điện thoại:</strong> {phone || 'Chưa cập nhật'}</p>
+              <p><strong>Giới tính:</strong> {gender === 'Male' ? 'Nam' : gender === 'Female' ? 'Nữ' : gender === 'Other' ? 'Khác' : 'Không khai báo'}</p>
+              <p><strong>Địa chỉ:</strong> {address || 'Chưa cập nhật'}</p>
+              <p><strong>Tọa độ:</strong> {latitude && longitude ? `${latitude}, ${longitude}` : 'Chưa cập nhật'}</p>
+            </div>
+            <button
+              onClick={() => setShowProfileModal(false)}
+              className="mt-4 bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
+            >
+              Đóng
+            </button>
+          </div>
+        </div>
+      )}
+
     </main>
   );
 }
