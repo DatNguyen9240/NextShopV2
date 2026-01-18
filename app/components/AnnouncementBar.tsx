@@ -1,10 +1,25 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import axios from '../lib/axiosClient';
 
 const AnnouncementBar = React.memo(function AnnouncementBar() {
+  const [announcement, setAnnouncement] = useState<{ text: string; className: string } | null>(null);
+
+  useEffect(() => {
+    axios.get('/api/Announcements/active')
+      .then(response => {
+        const data = response.data;
+        if (data.success && data.data) {
+          setAnnouncement({ text: data.data.text, className: data.data.className });
+        }
+      })
+      .catch(err => console.error('Failed to fetch announcement', err));
+  }, []);
+
+  if (!announcement) return null;
+
   return (
-    <div className="w-full bg-purple-600 text-white text-center py-1 px-2 text-sm font-semibold">
-      Miễn phí vận chuyển với đơn hàng trị giá 300.000đ trở lên và chỉ ship ở
-      khu vực Bình Long
+    <div className={announcement.className}>
+      {announcement.text}
     </div>
   );
 });

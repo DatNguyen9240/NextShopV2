@@ -48,6 +48,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             <span className="w-8 h-8 flex items-center justify-center rounded-md bg-gray-100 text-sm font-medium">{collapsed ? 'A' : ''}</span>
             {!collapsed && <span className="ml-3">Advertisment</span>}
           </Link>
+          <Link href="/admin/announcements" title="Announcements" className={`flex items-center ${collapsed ? 'justify-center py-3' : 'px-6 py-3'} text-gray-700 hover:bg-gray-200 hover:text-gray-900`}>
+            <span className="w-8 h-8 flex items-center justify-center rounded-md bg-gray-100 text-sm font-medium">{collapsed ? 'An' : ''}</span>
+            {!collapsed && <span className="ml-3">Announcements</span>}
+          </Link>
           <Link href="/admin/notifications" title="Notifications" className={`flex items-center ${collapsed ? 'justify-center py-3' : 'px-6 py-3'} text-gray-700 hover:bg-gray-200 hover:text-gray-900`}>
             <span className="w-8 h-8 flex items-center justify-center rounded-md bg-gray-100 text-sm font-medium">{collapsed ? 'N' : ''}</span>
             {!collapsed && <span className="ml-3">Notifications</span>}
