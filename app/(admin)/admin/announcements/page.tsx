@@ -5,7 +5,6 @@ import axios from '../../../lib/axiosClient';
 
 interface Announcement {
   id: string;
-  text: string;
   className: string;
   isActive: boolean;
   createdAt: string;
@@ -18,7 +17,6 @@ export default function AnnouncementsAdminPage() {
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState<Announcement | null>(null);
   const [formData, setFormData] = useState({
-    text: '',
     className: 'w-full bg-purple-600 text-white text-center py-1 px-2 text-sm font-semibold',
     isActive: false,
   });
@@ -67,7 +65,6 @@ export default function AnnouncementsAdminPage() {
         }
       }
       setFormData({
-        text: '',
         className: 'w-full bg-purple-600 text-white text-center py-1 px-2 text-sm font-semibold',
         isActive: false,
       });
@@ -82,7 +79,6 @@ export default function AnnouncementsAdminPage() {
   const handleEdit = (announcement: Announcement) => {
     setEditing(announcement);
     setFormData({
-      text: announcement.text,
       className: announcement.className,
       isActive: announcement.isActive,
     });
@@ -134,24 +130,18 @@ export default function AnnouncementsAdminPage() {
       <form onSubmit={handleSubmit} className="mb-6 p-4 border rounded space-y-4">
         <h2 className="text-lg font-semibold">{editing ? 'Edit Announcement' : 'Add New Announcement'}</h2>
         <div>
-          <label className="block text-sm font-medium">Text</label>
+          <label className="block text-sm font-medium">HTML/Tailwind Classes</label>
           <textarea
-            value={formData.text}
-            onChange={(e) => setFormData({ ...formData, text: e.target.value })}
-            className="w-full p-2 border rounded"
-            rows={3}
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium">Tailwind Classes</label>
-          <input
-            type="text"
             value={formData.className}
             onChange={(e) => setFormData({ ...formData, className: e.target.value })}
             className="w-full p-2 border rounded"
+            rows={5}
+            placeholder="Enter HTML content with Tailwind classes..."
             required
           />
+          <p className="text-sm text-gray-500 mt-1">
+            Enter HTML content with Tailwind CSS classes. Example: &lt;div class=&quot;bg-blue-600 text-white p-4&quot;&gt;Announcement content&lt;/div&gt;
+          </p>
         </div>
         {editing && (
           <div>
@@ -180,7 +170,6 @@ export default function AnnouncementsAdminPage() {
               onClick={() => {
                 setEditing(null);
                 setFormData({
-                  text: '',
                   className: 'w-full bg-purple-600 text-white text-center py-1 px-2 text-sm font-semibold',
                   isActive: false,
                 });
@@ -202,8 +191,7 @@ export default function AnnouncementsAdminPage() {
             <div key={announcement.id} className="border rounded p-4">
               <div className="flex justify-between items-start">
                 <div className="flex-1">
-                  <p className="font-medium">{announcement.text}</p>
-                  <p className="text-sm text-gray-600">Classes: {announcement.className}</p>
+                  <p className="text-sm text-gray-600">Classes: {announcement.className.substring(0, 100)}{announcement.className.length > 100 ? '...' : ''}</p>
                   <p className="text-sm text-gray-500">Status: {announcement.isActive ? 'Active' : 'Inactive'}</p>
                 </div>
                 <div className="flex gap-2">
@@ -229,9 +217,7 @@ export default function AnnouncementsAdminPage() {
               </div>
               <div className="mt-2 p-2 border rounded bg-gray-50">
                 <strong>Preview:</strong>
-                <div className={announcement.className}>
-                  {announcement.text}
-                </div>
+                <div dangerouslySetInnerHTML={{ __html: announcement.className }} />
               </div>
             </div>
           ))
