@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { fetchAllOrders, updateOrderStatus, deleteOrder, getOrderById, OrderDto } from '@/app/services/orderService';
+import { createShipment, CreateShipmentRequest } from '@/app/services/shipmentService';
 import Button from '@/app/components/Button';
 import ConfirmModal from '@/app/components/ConfirmModal';
 import OrderDetailsModal from './OrderDetailsModal';
@@ -77,6 +78,18 @@ export default function AdminOrders() {
     }
   }
 
+  async function onCreateShipment(orderId: string) {
+    try {
+      const request: CreateShipmentRequest = { orderId, carrier: 'GHN', status: 'Preparing' };
+      await createShipment(request);
+      toast.success('Đã tạo shipment thành công');
+      await load(); // Reload to update
+    } catch (e) {
+      console.error('[onCreateShipment] error', e);
+      toast.error('Tạo shipment thất bại');
+    }
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -86,7 +99,8 @@ export default function AdminOrders() {
             <option value="all">Tất cả</option>
             <option value="Pending">Pending</option>
             <option value="Processing">Processing</option>
-            <option value="Completed">Completed</option>
+            <option value="Paid">Paid</option>
+            <option value="Shipped">Shipped</option>
             <option value="Cancelled">Cancelled</option>
           </select>
           <input value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} placeholder="Tìm kiếm OrderId hoặc tên" className="border rounded px-3 py-2 text-sm" />
@@ -119,7 +133,8 @@ export default function AdminOrders() {
                     <select className="border rounded px-2 py-1 text-sm" value={o.status} onChange={(e) => onChangeStatus(o.orderId, e.target.value)}>
                       <option>Pending</option>
                       <option>Processing</option>
-                      <option>Completed</option>
+                      <option>Paid</option>
+                      <option>Shipped</option>
                       <option>Cancelled</option>
                     </select>
                   </td>
@@ -145,6 +160,16 @@ export default function AdminOrders() {
                       >
                         {detailsLoading ? 'Đang tải...' : 'Xem'}
                       </Button>
+                      {(o.status === 'Paid' || o.status === 'Shipped') && (
+                        <Button
+                          shape="roundedSquare"
+                          size="sm"
+                          onClick={() => onCreateShipment(o.orderId)}
+                          className="bg-blue-600 text-white rounded-md px-3 py-2 text-sm"
+                        >
+                          Tạo Shipment
+                        </Button>
+                      )}
                       <Button shape="roundedSquare" size="sm" onClick={() => confirmDelete(o.orderId)} className="bg-red-600 text-white rounded-md px-3 py-2 text-sm">Xóa</Button>
                     </div>
                   </td>

@@ -16,7 +16,7 @@ export interface CreateOrderItemRequest {
 
 export async function createOrder(data: CreateOrderRequest) {
   try {
-    const res = await axiosClient.post('/api/Order', data);
+    const res = await axiosClient.post('/api/orders', data);
     console.log('Order API response:', res);
     console.log('Order data:', res.data);
     return res.data?.data;
@@ -29,7 +29,7 @@ export async function createOrder(data: CreateOrderRequest) {
 // Admin: fetch all orders
 export async function fetchAllOrders(): Promise<OrderDto[]> {
   try {
-    const res = await axiosClient.get('/api/Order');
+    const res = await axiosClient.get('/api/orders');
     const payload = res.data?.data ?? res.data;
     return Array.isArray(payload) ? payload : [];
   } catch (err: unknown) {
@@ -40,7 +40,7 @@ export async function fetchAllOrders(): Promise<OrderDto[]> {
 
 export async function getOrderById(id: string): Promise<OrderDto | null> {
   try {
-    const res = await axiosClient.get(`/api/Order/${id}`);
+    const res = await axiosClient.get(`/api/orders/${id}`);
     return res.data?.data ?? null;
   } catch (err: unknown) {
     console.error('[getOrderById] error', err);
@@ -50,7 +50,7 @@ export async function getOrderById(id: string): Promise<OrderDto | null> {
 
 export async function updateOrderStatus(id: string, status: string) {
   try {
-    const res = await axiosClient.put(`/api/Order/${id}/status`, { status });
+    const res = await axiosClient.put(`/api/orders/${id}/status`, { status });
     return res.data?.success ?? true;
   } catch (err: unknown) {
     console.error('[updateOrderStatus] error', err);
@@ -60,7 +60,7 @@ export async function updateOrderStatus(id: string, status: string) {
 
 export async function deleteOrder(id: string) {
   try {
-    const res = await axiosClient.delete(`/api/Order/${id}`);
+    const res = await axiosClient.delete(`/api/orders/${id}`);
     return res.data?.success ?? true;
   } catch (err: unknown) {
     console.error('[deleteOrder] error', err);
@@ -122,7 +122,7 @@ export interface PagedOrders {
 }
 
 export async function fetchMyOrders(page = 1, pageSize = 10, status?: string): Promise<PagedOrders> {
-  const res = await axiosClient.get('/api/Order/my-orders', { params: { page, pageSize, status: status ?? undefined } });
+  const res = await axiosClient.get('/api/orders/my-orders', { params: { page, pageSize, status: status ?? undefined } });
   const payload = res.data?.data ?? res.data;
 
   if (payload?.items) {

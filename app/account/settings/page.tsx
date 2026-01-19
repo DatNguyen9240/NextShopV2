@@ -46,13 +46,9 @@ export default function SettingsPage() {
   const [mapLng, setMapLng] = useState<number | null>(null);
   const reverseGeocode = async (lat: number, lng: number) => {
     try {
-      const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1&zoom=18&accept-language=vi`, {
-        headers: {
-          'User-Agent': 'NextShopV2-App/1.0'
-        }
-      });
+      const response = await fetch(`/api/reverse-geocode?lat=${lat}&lng=${lng}`);
       if (!response.ok) {
-        console.warn('Nominatim request failed:', response.status);
+        console.warn('Reverse geocode request failed:', response.status);
         return null;
       }
       const data = await response.json();
