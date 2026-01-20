@@ -43,7 +43,11 @@ export default function LoginPage() {
         // Redirect based on refreshed user role if available
         const user = await refreshUser?.();
         const isAdmin = user?.role?.toLowerCase() === 'admin';
-        setTimeout(() => router.push(isAdmin ? '/admin' : '/'), 500);
+        const isShipper = user?.role?.toLowerCase() === 'shipper';
+        let redirectPath = '/';
+        if (isAdmin) redirectPath = '/admin';
+        else if (isShipper) redirectPath = '/shipper';
+        setTimeout(() => router.push(redirectPath), 500);
         return;
       }
 
@@ -91,7 +95,13 @@ export default function LoginPage() {
       }
       if (refresh && refresh !== 'null') setCookie('refreshToken', refresh, 7);
       try { await refreshUser?.(); } catch {}
-      router.push('/');
+      const user = await refreshUser?.();
+      const isAdmin = user?.role?.toLowerCase() === 'admin';
+      const isShipper = user?.role?.toLowerCase() === 'shipper';
+      let redirectPath = '/';
+      if (isAdmin) redirectPath = '/admin';
+      else if (isShipper) redirectPath = '/shipper';
+      router.push(redirectPath);
     } catch (err: unknown) {
       setMessage((err as Error)?.message || 'Xác thực thất bại');
     } finally {
@@ -215,7 +225,13 @@ export default function LoginPage() {
             window.dispatchEvent(new Event('notifications:updated'));
           }
         } catch { /* ignore */ }
-        router.push('/');
+        const user = await refreshUser?.();
+        const isAdmin = user?.role?.toLowerCase() === 'admin';
+        const isShipper = user?.role?.toLowerCase() === 'shipper';
+        let redirectPath = '/';
+        if (isAdmin) redirectPath = '/admin';
+        else if (isShipper) redirectPath = '/shipper';
+        router.push(redirectPath);
       } else {
         setMessage('Đăng nhập bằng passkey thất bại');
       }
@@ -276,7 +292,13 @@ export default function LoginPage() {
         setCookie('accessToken', access, 1);
         if (refresh && refresh !== 'null') setCookie('refreshToken', refresh, 7);
         try { await refreshUser?.(); } catch {}
-        router.push('/');
+        const user = await refreshUser?.();
+        const isAdmin = user?.role?.toLowerCase() === 'admin';
+        const isShipper = user?.role?.toLowerCase() === 'shipper';
+        let redirectPath = '/';
+        if (isAdmin) redirectPath = '/admin';
+        else if (isShipper) redirectPath = '/shipper';
+        router.push(redirectPath);
         return;
       }
 

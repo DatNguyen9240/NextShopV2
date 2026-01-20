@@ -37,6 +37,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           <Link href="/admin/orders" title="Orders" className={`flex items-center ${collapsed ? 'justify-center py-3' : 'px-6 py-3'} text-gray-700 hover:bg-gray-200 hover:text-gray-900`}>
             <span className="w-8 h-8 flex items-center justify-center rounded-md bg-gray-100 text-sm font-medium">{collapsed ? 'O' : ''}</span>
             {!collapsed && <span className="ml-3">Orders</span>}
+          </Link>
+          <Link href="/admin/shipments" title="Shipments" className={`flex items-center ${collapsed ? 'justify-center py-3' : 'px-6 py-3'} text-gray-700 hover:bg-gray-200 hover:text-gray-900`}>
+            <span className="w-8 h-8 flex items-center justify-center rounded-md bg-gray-100 text-sm font-medium">{collapsed ? 'S' : ''}</span>
+            {!collapsed && <span className="ml-3">Shipments</span>}
           </Link>          <Link href="/admin/inventory" title="Inventory" className={`flex items-center ${collapsed ? 'justify-center py-3' : 'px-6 py-3'} text-gray-700 hover:bg-gray-200 hover:text-gray-900`}>
             <span className="w-8 h-8 flex items-center justify-center rounded-md bg-gray-100 text-sm font-medium">{collapsed ? 'I' : ''}</span>
             {!collapsed && <span className="ml-3">Inventory</span>}
@@ -63,6 +67,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           <Link href="/admin/coupons" title="Coupons" className={`flex items-center ${collapsed ? 'justify-center py-3' : 'px-6 py-3'} text-gray-700 hover:bg-gray-200 hover:text-gray-900`}>
             <span className="w-8 h-8 flex items-center justify-center rounded-md bg-gray-100 text-sm font-medium">{collapsed ? 'Co' : ''}</span>
             {!collapsed && <span className="ml-3">Coupons</span>}
+          </Link>
+          <Link href="/admin/users" title="Users" className={`flex items-center ${collapsed ? 'justify-center py-3' : 'px-6 py-3'} text-gray-700 hover:bg-gray-200 hover:text-gray-900`}>
+            <span className="w-8 h-8 flex items-center justify-center rounded-md bg-gray-100 text-sm font-medium">{collapsed ? 'U' : ''}</span>
+            {!collapsed && <span className="ml-3">Users</span>}
           </Link>
           <div className="mt-8 pt-6 border-t border-gray-200">
             <Link href="/" title="Back to store" className={`flex items-center ${collapsed ? 'justify-center py-3' : 'px-6 py-3'} text-blue-600 hover:bg-blue-50 hover:text-blue-800 rounded-md transition-colors`}>

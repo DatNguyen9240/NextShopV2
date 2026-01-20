@@ -68,7 +68,7 @@ export default function PaymentSuccessPage() {
 
   const fetchOrderDetails = async (id: string) => {
     try {
-      const res = await axiosClient.get(`/api/Order/${id}`);
+      const res = await axiosClient.get(`/api/orders/${id}`);
       // ResponseHelper wraps data in `data` property sometimes
       const payload = res.data?.data ?? res.data?.Data ?? res.data;
       if (payload) {

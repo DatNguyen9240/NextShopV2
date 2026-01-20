@@ -95,6 +95,12 @@ const defaultStyles = {
   light: "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
 };
 
+// Fallback styles if CartoCDN fails
+const fallbackStyles = {
+  dark: "https://demotiles.maplibre.org/style.json",
+  light: "https://demotiles.maplibre.org/style.json",
+};
+
 type MapStyleOption = string | MapLibreGL.StyleSpecification;
 
 type Theme = "light" | "dark";
@@ -187,14 +193,26 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
     };
     const loadHandler = () => setIsLoaded(true);
 
+    const errorHandler = (e: Error) => {
+      console.warn('Map style failed to load, trying fallback:', e);
+      const fallbackStyle = resolvedTheme === "dark" ? fallbackStyles.dark : fallbackStyles.light;
+      if (currentStyleRef.current !== fallbackStyle) {
+        console.log('Switching to fallback style:', fallbackStyle);
+        currentStyleRef.current = fallbackStyle;
+        map.setStyle(fallbackStyle);
+      }
+    };
+
     map.on("load", loadHandler);
     map.on("styledata", styleDataHandler);
+    map.on("error", errorHandler);
     setMapInstance(map);
 
     return () => {
       clearStyleTimeout();
       map.off("load", loadHandler);
       map.off("styledata", styleDataHandler);
+      map.off("error", errorHandler);
       map.remove();
       setIsLoaded(false);
       setIsStyleLoaded(false);
