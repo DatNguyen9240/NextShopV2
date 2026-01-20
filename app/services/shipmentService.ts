@@ -44,11 +44,15 @@ export interface UpdateShipmentRequest {
 }
 
 export const createShipment = async (request: CreateShipmentRequest): Promise<ShipmentResponse> => {
-  const response = await axiosClient.post('/api/shipments', request);
-  if (response.data.success) {
-    return response.data.data;
+  try {
+    const response = await axiosClient.post('/api/shipments', request);
+    if (response.data.success) {
+      return response.data.data;
+    }
+    throw new Error(response.data.message || 'Failed to create shipment');
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || error.message || 'Failed to create shipment');
   }
-  throw new Error('Failed to create shipment');
 };
 
 export const fetchAllShipments = async (): Promise<ShipmentResponse[]> => {

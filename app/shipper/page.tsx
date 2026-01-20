@@ -38,53 +38,6 @@ export default function ShipperPage() {
   const connectionRef = useRef<signalR.HubConnection | null>(null);
   const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
 
-  const geocodeAddress = async (address: string): Promise<{ lat: number; lng: number } | null> => {
-    try {
-      // Try Google Maps API first
-      const googleApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-      if (googleApiKey) {
-        console.log('Using Google Maps Geocoding API');
-        const response = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${googleApiKey}`);
-        const data = await response.json();
-        console.log('Google Geocode response:', data);
-        if (data.results && data.results.length > 0) {
-          const { lat, lng } = data.results[0].geometry.location;
-          console.log('Geocoded coordinates:', { lat, lng });
-          return { lat, lng };
-        }
-      }
-
-      // Fallback to RapidAPI if Google Maps key not available
-      console.log('Using RapidAPI Places API');
-      const rapidApiKey = process.env.NEXT_PUBLIC_RAPIDAPI_GOOGLE_PLACES_KEY;
-      const rapidApiHost = process.env.NEXT_PUBLIC_RAPIDAPI_GOOGLE_PLACES_HOST;
-      if (!rapidApiKey || !rapidApiHost) {
-        console.error('No geocoding API keys available!');
-        return null;
-      }
-
-      const response = await fetch(`https://${rapidApiHost}/maps/api/geocode/json?address=${encodeURIComponent(address)}&language=vi`, {
-        method: 'GET',
-        headers: {
-          'X-RapidAPI-Key': rapidApiKey,
-          'X-RapidAPI-Host': rapidApiHost
-        }
-      });
-      const data = await response.json();
-      console.log('RapidAPI Geocode response:', data);
-      if (data.results && data.results.length > 0) {
-        const { lat, lng } = data.results[0].geometry.location;
-        console.log('Geocoded coordinates:', { lat, lng });
-        return { lat, lng };
-      } else {
-        console.error('No geocoding results:', data);
-      }
-    } catch (error) {
-      console.error('Geocode error:', error);
-    }
-    return null;
-  };
-
   const getRouteCoordinates = async (fromLat: number, fromLng: number, toLat: number, toLng: number): Promise<[number, number][] | null> => {
     try {
       // Use Next.js API route to avoid CORS issues
@@ -163,24 +116,8 @@ export default function ShipperPage() {
       console.log('Shipments response:', response.data);
       if (response.data.success) {
         const orders = response.data.data;
-        console.log('Orders before geocoding:', orders);
-
-        // Geocode delivery addresses if available
-        const ordersWithLocation = await Promise.all(orders.map(async (order: Order) => {
-          console.log('Processing order:', order.shipmentId, 'deliveryAddress:', order.deliveryAddress, 'deliveryLat:', order.deliveryLat);
-          if (order.deliveryAddress && !order.deliveryLat) {
-            console.log('Geocoding address:', order.deliveryAddress);
-            const location = await geocodeAddress(order.deliveryAddress);
-            console.log('Geocoded result:', location);
-            if (location) {
-              return { ...order, deliveryLat: location.lat, deliveryLng: location.lng };
-            }
-          }
-          return order;
-        }));
-
-        console.log('Orders after geocoding:', ordersWithLocation);
-        setOrders(ordersWithLocation);
+        console.log('Orders from API:', orders);
+        setOrders(orders);
       }
     } catch (error) {
       console.error('Error loading orders:', error);
