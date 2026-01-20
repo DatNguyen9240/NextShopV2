@@ -193,7 +193,7 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
     };
     const loadHandler = () => setIsLoaded(true);
 
-    const errorHandler = (e: any) => {
+    const errorHandler = (e: Error) => {
       console.warn('Map style failed to load, trying fallback:', e);
       const fallbackStyle = resolvedTheme === "dark" ? fallbackStyles.dark : fallbackStyles.light;
       if (currentStyleRef.current !== fallbackStyle) {

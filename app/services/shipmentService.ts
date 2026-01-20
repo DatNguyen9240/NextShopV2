@@ -50,8 +50,11 @@ export const createShipment = async (request: CreateShipmentRequest): Promise<Sh
       return response.data.data;
     }
     throw new Error(response.data.message || 'Failed to create shipment');
-  } catch (error: any) {
-    throw new Error(error.response?.data?.message || error.message || 'Failed to create shipment');
+  } catch (error: unknown) {
+    const message = error instanceof Error && error.message 
+      ? error.message 
+      : 'Failed to create shipment';
+    throw new Error(message);
   }
 };
 
