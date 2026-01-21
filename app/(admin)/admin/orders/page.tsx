@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { fetchAllOrders, updateOrderStatus, deleteOrder, getOrderById, OrderDto } from '@/app/services/orderService';
+import { fetchAllOrders, updateOrderStatus, deleteOrder, getOrderById, cancelOrder, OrderDto } from '@/app/services/orderService';
 import { createShipment, CreateShipmentRequest } from '@/app/services/shipmentService';
 import Button from '@/app/components/Button';
 import ConfirmModal from '@/app/components/ConfirmModal';
+import CancelOrderModal from '@/app/components/CancelOrderModal';
 import OrderDetailsModal from './OrderDetailsModal';
 import { toast } from 'react-hot-toast';
 
@@ -17,6 +18,9 @@ export default function AdminOrders() {
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [toDeleteId, setToDeleteId] = useState<string | null>(null);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelingOrderId, setCancelingOrderId] = useState<string | null>(null);
+  const [cancelLoading, setCancelLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string | 'all'>('all');
   const [search, setSearch] = useState('');
 
@@ -47,7 +51,33 @@ export default function AdminOrders() {
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const pageItems = filtered.slice((page - 1) * pageSize, page * pageSize);
 
+  function requestCancel(id: string) {
+    setCancelingOrderId(id);
+    setShowCancelModal(true);
+  }
+
+  async function performCancel(reason?: string, adminReason?: string) {
+    if (!cancelingOrderId) return;
+    setCancelLoading(true);
+    try {
+      await cancelOrder(cancelingOrderId, reason, adminReason);
+      setOrders(prev => prev.map(o => o.orderId === cancelingOrderId ? { ...o, status: 'Cancelled', cancelReason: reason ?? o.cancelReason, adminCancelReason: adminReason ?? o.adminCancelReason, cancelledBy: adminReason ? 'Admin' : 'User' } : o));
+      toast.success('Đã hủy đơn hàng');
+    } catch (e) {
+      console.error('[performCancel] error', e);
+      toast.error('Hủy đơn hàng thất bại');
+    } finally {
+      setCancelLoading(false);
+      setCancelingOrderId(null);
+      setShowCancelModal(false);
+    }
+  }
+
   async function onChangeStatus(id: string, newStatus: string) {
+    if (newStatus === 'Cancelled') {
+      requestCancel(id);
+      return;
+    }
     try {
       await updateOrderStatus(id, newStatus);
       setOrders(prev => prev.map(o => o.orderId === id ? { ...o, status: newStatus } : o));
@@ -119,6 +149,8 @@ export default function AdminOrders() {
                 <th className="px-4 py-3">Buyer</th>
                 <th className="px-4 py-3">Total</th>
                 <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Lý do hủy (User)</th>
+                <th className="px-4 py-3">Lý do hủy (Admin)</th>
                 <th className="px-4 py-3">Date</th>
                 <th className="px-4 py-3">Actions</th>
               </tr>
@@ -138,6 +170,8 @@ export default function AdminOrders() {
                       <option>Cancelled</option>
                     </select>
                   </td>
+                  <td className="px-4 py-3 text-sm max-w-xs truncate" title={o.cancelReason ?? ''}>{o.cancelReason ?? '—'}</td>
+                  <td className="px-4 py-3 text-sm max-w-xs truncate" title={o.adminCancelReason ?? ''}>{o.adminCancelReason ?? '—'}</td>
                   <td className="px-4 py-3 text-sm">{new Date(o.orderDate).toLocaleString('vi-VN')}</td>
                   <td className="px-4 py-3 text-sm">
                     <div className="flex items-center gap-2">
@@ -191,6 +225,8 @@ export default function AdminOrders() {
       )}
 
       {selected && <OrderDetailsModal order={selected} onClose={() => setSelected(null)} />}
+
+      <CancelOrderModal show={showCancelModal} isAdmin confirmLoading={cancelLoading} onConfirm={(reason, adminReason) => performCancel(reason, adminReason)} onCancel={() => { setShowCancelModal(false); setCancelingOrderId(null); }} />
 
       <ConfirmModal show={showConfirm} title="Xóa đơn hàng" message="Bạn có chắc chắn muốn xóa đơn hàng này?" onConfirm={performDelete} onCancel={() => setShowConfirm(false)} />
     </div>

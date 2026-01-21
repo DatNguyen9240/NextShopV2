@@ -1,11 +1,13 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { fetchMyOrders, PagedOrders, OrderDto } from '../../services/orderService';
+import { fetchMyOrders, cancelOrder, PagedOrders, OrderDto } from '../../services/orderService';
 import Button from '@/app/components/Button';
 import MoneyVND from '@/app/components/MoneyVND';
+import CancelOrderModal from '@/app/components/CancelOrderModal';
 import { useRouter } from 'next/navigation';
 import { CheckCircle, Clock, XCircle } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 
 
@@ -23,6 +25,36 @@ export default function OrdersPage() {
   const [pageSize] = useState<number>(10);
   const [total, setTotal] = useState<number>(0);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
+
+  // Modal state
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelOrderId, setCancelOrderId] = useState<string | null>(null);
+
+  const handleCancelOrder = (orderId: string) => {
+    setCancelOrderId(orderId);
+    setShowCancelModal(true);
+  };
+
+  const confirmCancelOrder = async (reason?: string) => {
+    if (!cancelOrderId) return;
+    try {
+      await cancelOrder(cancelOrderId, reason || undefined);
+      toast.success('Đơn hàng đã được hủy thành công.');
+      // Reload orders
+      window.location.reload();
+    } catch (err) {
+      console.error('Failed to cancel order', err);
+      toast.error('Không thể hủy đơn hàng. Vui lòng thử lại.');
+    } finally {
+      setShowCancelModal(false);
+      setCancelOrderId(null);
+    }
+  };
+
+  const cancelCancelOrder = () => {
+    setShowCancelModal(false);
+    setCancelOrderId(null);
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -163,6 +195,14 @@ export default function OrdersPage() {
                   >
                     Xem chi tiết
                   </Button>
+                  {o.status === 'Pending' && (
+                    <Button
+                      onClick={() => handleCancelOrder(o.orderId)}
+                      className="w-full sm:w-auto px-4 py-2 rounded-full bg-red-600 hover:bg-red-700 text-white shadow-md"
+                    >
+                      Hủy đơn
+                    </Button>
+                  )}
                   {o.status === 'Completed' && o.items && o.items.length > 0 && (
                     <Button
                       onClick={() => router.push(`/product/${o.items[0].productId}`)}
@@ -183,6 +223,12 @@ export default function OrdersPage() {
           Bạn chưa có đơn hàng nào.
         </div>
       )}
+
+      <CancelOrderModal
+        show={showCancelModal}
+        onConfirm={confirmCancelOrder}
+        onCancel={cancelCancelOrder}
+      />
     </main>
   );
 }
