@@ -29,6 +29,7 @@ const Nav = React.memo(function Nav({ categories }: NavProps) {
         icon: sub.icon,
       })) : undefined,
     } as MenuItem)),
+    { label: "Giới thiệu", href: "/about", icon: undefined, subMenu: undefined },
   ];
 
   // NOTE: we intentionally do NOT auto-open submenus based on route. Dropdown visibility is purely on hover.
