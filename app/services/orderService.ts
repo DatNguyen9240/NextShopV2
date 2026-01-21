@@ -68,6 +68,19 @@ export async function deleteOrder(id: string) {
   }
 }
 
+export async function cancelOrder(id: string, reason?: string, adminReason?: string) {
+  try {
+    const body: { reason?: string; adminReason?: string } = {};
+    if (reason) body.reason = reason;
+    if (adminReason) body.adminReason = adminReason;
+    const res = await axiosClient.put(`/api/orders/${id}/cancel`, body);
+    return res.data?.success ?? true;
+  } catch (err: unknown) {
+    console.error('[cancelOrder] error', err);
+    throw err;
+  }
+}
+
 // Fetch paged orders for current user
 export interface OrderItemDto {
   orderItemId: string;
@@ -112,6 +125,9 @@ export interface OrderDto {
   coupons?: unknown[];
   shippingAddress?: string | null;
   items: OrderItemDto[];
+  cancelReason?: string | null;
+  adminCancelReason?: string | null;
+  cancelledBy?: string | null;
 }
 
 export interface PagedOrders {

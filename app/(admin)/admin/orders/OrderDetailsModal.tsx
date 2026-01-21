@@ -30,6 +30,18 @@ const OrderDetailsModal: React.FC<{ order: OrderDto; onClose: () => void }> = ({
             <div className="font-medium">{order.status}</div>
           </div>
           <div>
+            <div className="text-sm text-gray-500">Đã hủy bởi</div>
+            <div className="font-medium">{order.cancelledBy ?? '—'}</div>
+          </div>
+          <div>
+            <div className="text-sm text-gray-500">Lý do hủy (Người dùng)</div>
+            <div className="font-medium">{order.cancelReason ?? '—'}</div>
+          </div>
+          <div>
+            <div className="text-sm text-gray-500">Lý do hủy (Admin)</div>
+            <div className="font-medium">{order.adminCancelReason ?? '—'}</div>
+          </div>
+          <div>
             <div className="text-sm text-gray-500">Ngày đặt</div>
             <div className="font-medium">{new Date(order.orderDate).toLocaleString('vi-VN')}</div>
           </div>
