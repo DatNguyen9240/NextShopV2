@@ -12,7 +12,7 @@ interface Product {
   description: string;
   averageRating: number;
   totalStockQuantity: number;
-  variants: { imageUrl?: string }[];
+  variants?: { imageUrl?: string }[];
   additionalInfo?: string;
   isActive?: boolean;
   // Add other fields as needed
@@ -98,7 +98,7 @@ export default function AdminProducts() {
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="h-12 w-12 relative rounded overflow-hidden">
                     <Image
-                      src={product.variants[0]?.imageUrl || '/placeholder.png'}
+                      src={product.variants?.[0]?.imageUrl ?? '/placeholder.png'}
                       alt={product.name}
                       fill
                       sizes="48px"

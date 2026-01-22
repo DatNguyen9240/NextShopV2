@@ -97,8 +97,8 @@ const defaultStyles = {
 
 // Fallback styles if CartoCDN fails
 const fallbackStyles = {
-  dark: "https://demotiles.maplibre.org/style.json",
-  light: "https://demotiles.maplibre.org/style.json",
+  dark: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
+  light: "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
 };
 
 type MapStyleOption = string | MapLibreGL.StyleSpecification;

@@ -39,7 +39,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
   React.useEffect(() => {
     if (product?.categoryId) {
       // ensure we fetch when product data becomes available
-      try { relatedRefresh(); } catch (e) { /* ignore */ }
+      try { relatedRefresh(); } catch { /* ignore */ }
     }
   }, [product?.categoryId, relatedRefresh]);
 
