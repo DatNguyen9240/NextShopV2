@@ -21,4 +21,4 @@ COPY --from=builder /app ./
 EXPOSE ${PORT:-3000}
 
 # Use shell form so $PORT is expanded
-CMD ["sh", "-c", "npm run start -p ${PORT:-3000}"]
+CMD ["sh", "-c", "npm run start"]
