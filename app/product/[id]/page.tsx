@@ -5,6 +5,7 @@ import ProductModal, { ProductDto } from "@/app/@modal/product/pop-up/[id]/Clien
 import ProductCarousel from "@/app/components/ProductCarousel";
 import ProductInforTab from "@/app/components/ProductInforTab";
 import ProductsTitle from "@/app/components/ProductsTitle";
+import useProducts from "@/app/hooks/useProducts";
 import { getProductById } from "@/app/services/productService";
 
 export default function ProductPage({ params }: { params: { id: string } }) {
@@ -31,6 +32,17 @@ export default function ProductPage({ params }: { params: { id: string } }) {
     return () => { mounted = false; };
   }, [id]);
 
+  // Related products by same category as current product (exclude current product)
+  const { products: relatedProducts, loading: relatedLoading, error: relatedError, refresh: relatedRefresh } = useProducts({ categoryId: product?.categoryId, pageSize: 8, autoFetch: Boolean(product?.categoryId) });
+  const filteredRelated = (relatedProducts || []).filter(p => p.id !== id);
+
+  React.useEffect(() => {
+    if (product?.categoryId) {
+      // ensure we fetch when product data becomes available
+      try { relatedRefresh(); } catch (e) { /* ignore */ }
+    }
+  }, [product?.categoryId, relatedRefresh]);
+
   return (
     <>
       <ProductModal isModal={false} id={id} product={product} />
@@ -43,7 +55,19 @@ export default function ProductPage({ params }: { params: { id: string } }) {
           description="Không thể bỏ qua những sản phẩm hot nhất!"
         />
         <div className="px-4 mt-4">
-          <ProductCarousel products={[]} />
+          {product?.categoryId ? (
+            relatedLoading ? (
+              <div className="py-6 text-gray-500">Đang tải sản phẩm liên quan...</div>
+            ) : relatedError ? (
+              <div className="py-6 text-red-500">Không thể tải sản phẩm liên quan.</div>
+            ) : filteredRelated.length > 0 ? (
+              <ProductCarousel products={filteredRelated} />
+            ) : (
+              <div className="py-6 text-gray-500">Không có sản phẩm liên quan.</div>
+            )
+          ) : (
+            <div className="py-6 text-gray-500">Chưa có danh mục sản phẩm để đề xuất.</div>
+          )}
         </div>
       </section>
     </>

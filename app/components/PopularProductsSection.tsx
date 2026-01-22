@@ -8,6 +8,7 @@ import Carousel from "./Carousel";
 import { useBreakpoint } from "@/app/hooks/useBreakpoint";
 import ProductList from "./ProductCarousel";
 import useProducts from "@/app/hooks/useProducts";
+import { useAdvertisements } from "@/app/hooks/useAdvertisements";
 
 
 const PopularProductsSection: React.FC = () => {
@@ -24,15 +25,18 @@ const PopularProductsSection: React.FC = () => {
     setCategoryId(id);
   }, [categoryId]);
   const { products, loading, error, refresh } = useProducts({ pageSize: 20, categoryId });
+  const { images: popularAds, loading: adsLoading } = useAdvertisements('popular');
   const breakpoint = useBreakpoint();
   const carouselSize = breakpoint === 'base' ? 'sm' : 'md';
   return (
     <section className="w-full xl:mx-[100px] lg:mx-0 mt-10 flex relative">
-      <div className="hidden xl:block flex-shrink-0" style={{ width: 260 }}>
-        <div className="sticky top-2">
-          <AdBanner type="popular"/>
+      {!adsLoading && popularAds && popularAds.length > 0 && (
+        <div className="hidden xl:block flex-shrink-0" style={{ width: 260 }}>
+          <div className="sticky top-2">
+            <AdBanner type="popular"/>
+          </div>
         </div>
-      </div>
+      )}
       <div className="w-[980px] overflow-hidden sm:ml-0 sm:pl-0 md:ml-0 md:pl-0 lg:ml-4 lg:pl-4 ml-0 pl-0">
         <div className="flex items-center justify-between mb-2">
           <div className="hidden xl:block">

@@ -13,7 +13,12 @@ const FeaturedProductAd: React.FC = () => {
   const hatCategory = categories.find(c => /N[oó]n|mũ|mu/i.test(c.name));
   const categoryId = hatCategory?.categoryId;
 
-  const { products, loading, error, refresh } = useProducts({ categoryId, pageSize: 12 });
+  const { products, loading, error, refresh } = useProducts({ categoryId, pageSize: 12, autoFetch: Boolean(categoryId) });
+
+  // If category becomes available later, ensure we fetch
+  React.useEffect(() => {
+    if (categoryId) refresh();
+  }, [categoryId, refresh]);
 
   return (
     <div>

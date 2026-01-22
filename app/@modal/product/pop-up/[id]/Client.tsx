@@ -44,6 +44,7 @@ export type ProductDto = {
   images?: string[];
   variants?: Variant[];
   totalStockQuantity?: number;
+  categoryId?: string;
 };
 
 function ProductInfo({ product }: { product?: ProductDto | null }) {
