@@ -221,7 +221,7 @@ export default function SettingsPage() {
         // refresh from server (via context)
         await refreshUser();
         const addrs = (getAddresses() || []) as Address[];
-        addrs.sort((a,b) => (b.isDefault?1:0) - (a.isDefault?1:0));
+        addrs.sort((a, b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0));
         setAddresses(addrs);
       } else {
         // Even if no address provided, still refresh profile data
@@ -245,7 +245,7 @@ export default function SettingsPage() {
       await deleteAddress(pendingDeleteAddressId);
       await refreshUser();
       const addrs = (getAddresses() || []) as Address[];
-      addrs.sort((x,y) => (y.isDefault?1:0) - (x.isDefault?1:0));
+      addrs.sort((x, y) => (y.isDefault ? 1 : 0) - (x.isDefault ? 1 : 0));
       setAddresses(addrs);
       // Clear the address form state after deletion and exit edit mode
       setAddress("");
@@ -281,7 +281,7 @@ export default function SettingsPage() {
       <form onSubmit={handleSave} className="md:grid md:grid-cols-5 md:gap-6">
         {/* Left column: avatar + upload */}
         <div className="md:col-span-1 flex flex-col items-center space-y-3 p-4 rounded">
-            {/* clickable avatar: clicking the avatar opens file picker */}
+          {/* clickable avatar: clicking the avatar opens file picker */}
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}

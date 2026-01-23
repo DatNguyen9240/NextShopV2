@@ -22,6 +22,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({ onSelectAddre
   const [places, setPlaces] = useState<Place[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSelected, setIsSelected] = useState(false);
+  const [errorStatus, setErrorStatus] = useState<number | null>(null);
 
   // Keep internal query in sync when parent sets `value` (e.g., when clicking Edit in settings)
   useEffect(() => {
@@ -40,22 +41,16 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({ onSelectAddre
       setIsLoading(true);
       try {
         const response = await fetch(
-          `https://${RAPIDAPI_CONFIG.GOOGLE_PLACES.HOST}/maps/api/place/queryautocomplete/json?input=${encodeURIComponent(
-            query
-          )}&language=vi&components=country:vn&location=21.028511,105.804817&radius=10000`,
-          {
-            headers: {
-              "x-rapidapi-host": RAPIDAPI_CONFIG.GOOGLE_PLACES.HOST,
-              "x-rapidapi-key": RAPIDAPI_CONFIG.GOOGLE_PLACES.API_KEY,
-            },
-          }
+          `/api/places/autocomplete?input=${encodeURIComponent(query)}`
         );
 
         if (!response.ok) {
-          throw new Error("Network response was not ok");
+          setErrorStatus(response.status);
+          throw new Error(`Error: ${response.status}`);
         }
 
         const data = await response.json();
+        setErrorStatus(null);
         if (data.status === "OK" || data.status === "ZERO_RESULTS") {
           setPlaces(data.predictions || []);
         } else {
@@ -81,13 +76,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({ onSelectAddre
     // fetch place details to get geometry
     try {
       const resp = await fetch(
-        `https://${RAPIDAPI_CONFIG.GOOGLE_PLACES.HOST}/maps/api/place/details/json?placeid=${place.place_id}&language=vi`,
-        {
-          headers: {
-            "x-rapidapi-host": RAPIDAPI_CONFIG.GOOGLE_PLACES.HOST,
-            "x-rapidapi-key": RAPIDAPI_CONFIG.GOOGLE_PLACES.API_KEY,
-          },
-        }
+        `/api/places/details?placeid=${place.place_id}`
       );
 
       if (!resp.ok) throw new Error("Failed to fetch place details");
@@ -133,6 +122,12 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({ onSelectAddre
               <div className="text-sm text-gray-600">{place.structured_formatting.secondary_text}</div>
             </div>
           ))}
+        </div>
+      )}
+
+      {errorStatus === 429 && !isSelected && (
+        <div className="absolute z-10 w-full mt-1 bg-white border border-yellow-400 p-3 rounded-lg shadow-lg text-sm text-yellow-700">
+          ⚠️ Tìm kiếm đang bận hoặc quá tải (429). Vui lòng thử lại sau vài giây.
         </div>
       )}
     </div>

@@ -29,6 +29,22 @@ function MapClickHandler({ onLocationSelect }: { onLocationSelect: (lat: number,
   return null;
 }
 
+function MapPositionUpdater({ position }: { position: [number, number] | null }) {
+  const { map } = useMap();
+
+  React.useEffect(() => {
+    if (!map || !position) return;
+    // Fly to new position when it changes
+    map.flyTo({
+      center: position,
+      zoom: 15,
+      duration: 1000
+    });
+  }, [map, position]);
+
+  return null;
+}
+
 export default function LocationPicker({ onLocationSelect, initialLat, initialLng, positionLat, positionLng }: LocationPickerProps) {
   const [markerPosition, setMarkerPosition] = useState<[number, number] | null>(
     initialLat && initialLng ? [initialLng, initialLat] : null
@@ -52,6 +68,7 @@ export default function LocationPicker({ onLocationSelect, initialLat, initialLn
     <div className="h-64 w-full">
       <Map center={center} zoom={13}>
         <MapClickHandler onLocationSelect={handleLocationSelect} />
+        <MapPositionUpdater position={markerPosition} />
         {markerPosition && (
           <MapMarker longitude={markerPosition[0]} latitude={markerPosition[1]}>
             <MarkerContent>
