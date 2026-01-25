@@ -19,6 +19,18 @@ const nextConfig: NextConfig = {
       "nonson.vn",
     ],
   },
+  async rewrites() {
+    return [
+      {
+        source: '/_next/src/:path*',
+        destination: '/empty.js.map',
+      },
+      {
+        source: '/src/lib/:path*',
+        destination: '/empty.js.map',
+      },
+    ];
+  },
 };
 
 export default nextConfig;

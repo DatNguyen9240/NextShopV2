@@ -13,7 +13,7 @@ export async function getUserFromCookie() {
 
   try {
     const res = await axios.get(`${baseURL}/api/auth/me`, { headers: { Authorization: `Bearer ${accessToken}` } });
-    console.debug('[getUserFromCookie] /me success');
+    // console.debug('[getUserFromCookie] /me success');
     return res.data;
   } catch (err: unknown) {
     // If token expired/invalid (401), attempt server-side refresh using refresh token cookie
@@ -23,7 +23,7 @@ export async function getUserFromCookie() {
       if (!refreshToken) {
         console.debug('[getUserFromCookie] no refreshToken cookie present; returning null');
         // remove access cookie to avoid repeated 401s
-        try { cookieStore.delete('accessToken'); } catch {}
+        try { cookieStore.delete('accessToken'); } catch { }
         return null;
       }
 
@@ -47,11 +47,11 @@ export async function getUserFromCookie() {
 
         // retry /me with new token
         const retry = await axios.get(`${baseURL}/api/auth/me`, { headers: { Authorization: `Bearer ${newAccess}` } });
-        console.debug('[getUserFromCookie] /me success after refresh');
+        // console.debug('[getUserFromCookie] /me success after refresh');
         return retry.data;
       } catch (refreshErr) {
         console.warn('[getUserFromCookie] refresh failed, clearing cookies', refreshErr);
-        try { cookieStore.delete('accessToken'); cookieStore.delete('refreshToken'); } catch {}
+        try { cookieStore.delete('accessToken'); cookieStore.delete('refreshToken'); } catch { }
         return null;
       }
     }

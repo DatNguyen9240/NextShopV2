@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { RAPIDAPI_CONFIG } from "@/app/config/rapidapi";
 
 interface Place {
   place_id: string;

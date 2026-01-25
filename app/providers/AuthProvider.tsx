@@ -56,7 +56,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, initialUse
       // If no tokens are present, skip calling /me which would otherwise trigger an unnecessary 401/refresh attempt
       const accessToken = getCookie('accessToken');
       const refreshToken = getCookie('refreshToken');
-      console.debug('[AuthProvider.refreshUser] cookies on refresh attempt', { accessToken: !!accessToken, refreshToken: !!refreshToken });
+      // console.debug('[AuthProvider.refreshUser] cookies on refresh attempt', { accessToken: !!accessToken, refreshToken: !!refreshToken });
       if (!accessToken && !refreshToken) {
         setUser(null);
         return null;
