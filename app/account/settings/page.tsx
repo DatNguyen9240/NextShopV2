@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useState, useRef } from "react";
+import axios from 'axios';
 import { updateProfile, upsertAddress, deleteAddress } from "../../services/authService";
 import { getPasskeys, startRegister, verifyRegister, revokePasskey } from '../../services/webauthnService';
 import MfaEmailSection from './MfaEmailSection';
@@ -12,6 +13,8 @@ import LocationPicker from "../../components/LocationPicker";
 
 type Address = { addressId: string; fullAddress: string; latitude?: number | null; longitude?: number | null; isDefault?: boolean };
 
+type ApiResponse = { success?: boolean; message?: string; };
+
 export default function SettingsPage() {
   const { refreshUser, user, getAddresses } = useAuth();
   const [addresses, setAddresses] = useState<Address[]>([]);
@@ -21,6 +24,7 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
+  const [phoneError, setPhoneError] = useState<string | null>(null);
   const [gender, setGender] = useState<string | undefined>(undefined);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
@@ -205,9 +209,20 @@ export default function SettingsPage() {
     e.preventDefault();
     setSaving(true);
     setMessage(null);
+    setPhoneError(null);
     try {
       // update profile (including avatar and gender)
-      await updateProfile({ fullName, phone, gender, avatarUrl });
+      const res = await updateProfile({ fullName, phone, gender, avatarUrl }) as ApiResponse;
+      if (res && typeof res === 'object' && res.success === false) {
+        const m = typeof res.message === 'string' ? res.message : 'Cập nhật thất bại';
+        if (m.toLowerCase().includes('số điện thoại')) {
+          setPhoneError(m);
+        } else {
+          setMessage(m);
+        }
+        setSaving(false);
+        return;
+      }
       setHasUnsavedAvatar(false);
       // update or create address if provided
       if (address && address.trim().length > 0) {
@@ -231,8 +246,18 @@ export default function SettingsPage() {
       // Refresh auth user so header/avatar updates
       // (done above)
     } catch (err: unknown) {
-      const e = err as { message?: string };
-      setMessage(e?.message ?? "Save failed");
+      if (axios.isAxiosError(err)) {
+        const data = err.response?.data as ApiResponse | undefined;
+        const m = data?.message ?? err.message ?? 'Lưu thất bại';
+        if (typeof m === 'string' && m.toLowerCase().includes('số điện thoại')) {
+          setPhoneError(m);
+        } else {
+          setMessage(typeof m === 'string' ? m : 'Save failed');
+        }
+      } else {
+        const e = err as { message?: string };
+        setMessage(e?.message ?? "Save failed");
+      }
     } finally {
       setSaving(false);
     }
@@ -329,7 +354,8 @@ export default function SettingsPage() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm mb-1">Số điện thoại</label>
-              <input value={phone} onChange={(e) => { setPhone(e.target.value); setMessage("Thông tin đã thay đổi. Nhấn 'Lưu' để cập nhật profile."); }} className="w-full border px-3 py-2 rounded" />
+              <input value={phone} onChange={(e) => { setPhone(e.target.value); setPhoneError(null); setMessage("Thông tin đã thay đổi. Nhấn 'Lưu' để cập nhật profile."); }} className="w-full border px-3 py-2 rounded" />
+              {phoneError && <div className="text-sm text-red-600 mt-1">{phoneError}</div>}
             </div>
             <div>
               <label className="block text-sm mb-1">Giới tính</label>

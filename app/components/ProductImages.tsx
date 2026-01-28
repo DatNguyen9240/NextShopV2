@@ -13,7 +13,7 @@ export default function ProductImages(props: ProductImagesProps) {
   const [showLightbox, setShowLightbox] = useState(false);
   const [initialLightboxIndex, setInitialLightboxIndex] = useState<number>(0);
 
-  const thumbs = !isLoading && images && images.length > 0 ? images : [];
+  const thumbs = !isLoading && images && images.length > 0 ? images.filter((i): i is string => Boolean(i && String(i).trim())) : [];
   const main = thumbs.length > 0 && Math.max(0, Math.min(selectedIndex, thumbs.length - 1)) >= 0 ? thumbs[selectedIndex] : null;
 
   // Loading skeleton

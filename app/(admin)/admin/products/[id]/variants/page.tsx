@@ -4,15 +4,13 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Image from 'next/image';
 import { getVariantsByProductIdAdmin, updateVariant, createVariant } from '../../../../../services/variantService';
+import { getAttributesByProductId, getVariantAttributeValueIds, assignVariantAttributeValue, removeVariantAttributeValue, ProductAttribute } from '../../../../../services/attributeService';
 import ImageUploader from '@/app/components/ImageUploader';
-import { PRESET_COLORS, PRESET_SIZES } from '@/app/config/colors';
 import { formatVND } from '@/app/utils/priceUtils';
 
 interface Variant {
   productVariantId: string;
   sku: string;
-  color?: string;
-  size?: string;
   stockQuantity: number;
   isDefault: boolean;
   isActive?: boolean;
@@ -31,13 +29,15 @@ export default function ProductVariants() {
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editData, setEditData] = useState<Partial<Variant>>({});
+  const [attributes, setAttributes] = useState<ProductAttribute[]>([]);
+  // variantId -> attributeId -> attributeValueId | null
+  const [variantAttrMap, setVariantAttrMap] = useState<Record<string, Record<string, string | null>>>({});
+  const [savingAttr, setSavingAttr] = useState<Record<string, boolean>>({});
   // uploading state reserved for future file uploads
   // const [uploading, setUploading] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newVariant, setNewVariant] = useState({
     sku: '',
-    color: '',
-    size: '',
     // use '' for empty input state so we don't store NaN when user clears the field
     stockQuantity: '' as number | '',
     basePrice: '' as number | '',
@@ -47,6 +47,8 @@ export default function ProductVariants() {
     imageUrl: '',
     imgHover: ''
   });
+  // map attributeId -> attributeValueId (or null)
+  const [newVariantAttributes, setNewVariantAttributes] = useState<Record<string, string | null>>({});
 
   const startEdit = (variant: Variant) => {
     setEditingId(variant.productVariantId);
@@ -91,8 +93,6 @@ export default function ProductVariants() {
       const payload = {
         productId: id,
         sku: newVariant.sku,
-        color: newVariant.color,
-        size: newVariant.size,
         stockQuantity: safeNum(newVariant.stockQuantity),
         basePrice: safeNum(newVariant.basePrice),
         discountPercent: safeNum(newVariant.discountPercent),
@@ -101,23 +101,63 @@ export default function ProductVariants() {
         imageUrl: newVariant.imageUrl,
         imgHover: newVariant.imgHover
       };
-      await createVariant(payload);
-      // Refresh variants
+      const created = await createVariant(payload);
+
+      // assign selected attribute values to created variant (if any)
+      try {
+        const createdObj = created as Record<string, unknown> | null;
+        const createdId = createdObj && typeof createdObj['productVariantId'] === 'string' ? (createdObj['productVariantId'] as string) : null;
+        if (createdId) {
+          const assignPromises: Promise<unknown>[] = [];
+          Object.values(newVariantAttributes).forEach((attributeValueId) => {
+            if (attributeValueId) {
+              assignPromises.push(assignVariantAttributeValue(createdId, attributeValueId));
+            }
+          });
+          if (assignPromises.length > 0) {
+            await Promise.allSettled(assignPromises);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to assign attribute values on create:', err);
+        // proceed anyway and refresh list
+      }
+
+      // Refresh variants and rebuild attribute maps for the refreshed variants (parallel requests)
       const data = await getVariantsByProductIdAdmin(id as string);
-      // normalize isActive when refreshing
-      setVariants(data.map((v: Partial<Variant>) => ({ ...v, isActive: typeof v.isActive === 'undefined' ? true : v.isActive }) as Variant));
+      const normalized = data.map((v: Partial<Variant>) => ({ ...v, isActive: typeof v.isActive === 'undefined' ? true : v.isActive }) as Variant);
+      setVariants(normalized);
+
+      // Rebuild attribute mapping for the refreshed variants (parallel requests)
+      const maps = await Promise.all(normalized.map(async (v: Variant) => {
+        const assignedIds = await getVariantAttributeValueIds(v.productVariantId);
+        const map: Record<string, string | null> = {};
+        (attributes ?? []).forEach((a: ProductAttribute) => {
+          const val = (a.values ?? []).find(x => assignedIds.includes(x.attributeValueId));
+          map[a.attributeId] = val ? val.attributeValueId : null;
+        });
+        return { id: v.productVariantId, map };
+      }));
+
+      const mapObj: Record<string, Record<string, string | null>> = {};
+      maps.forEach(m => mapObj[m.id] = m.map);
+      setVariantAttrMap(prev => ({ ...prev, ...mapObj }));
+
       setNewVariant({
         sku: '',
-        color: '',
-        size: '',
-        stockQuantity: 0,
-        basePrice: 0,
-        discountPercent: 0,
+        // use '' for empty input state so we don't store NaN when user clears the field
+        stockQuantity: '' as number | '',
+        basePrice: '' as number | '',
+        discountPercent: '' as number | '',
         isDefault: false,
         isActive: true,
         imageUrl: '',
         imgHover: ''
       });
+      // reset attribute selections
+      const resetAttrs: Record<string, string | null> = {};
+      attributes.forEach((a: ProductAttribute) => { resetAttrs[a.attributeId] = null; });
+      setNewVariantAttributes(resetAttrs);
       setShowAddForm(false);
     } catch (error) {
       console.error('Error adding variant:', error);
@@ -125,19 +165,43 @@ export default function ProductVariants() {
   };
 
   useEffect(() => {
-    const fetchVariants = async () => {
+    const fetchVariantsAndAttributes = async () => {
       try {
         const data = await getVariantsByProductIdAdmin(id as string);
         // ensure isActive defaults to true if missing from API
         const normalized = data.map((v: Partial<Variant>) => ({ ...v, isActive: typeof v.isActive === 'undefined' ? true : v.isActive } as Variant));
         setVariants(normalized);
+
+        // load attributes for this product (attributes include their values)
+        const attrs = await getAttributesByProductId(id as string);
+        setAttributes(attrs);
+
+        // initialize newVariantAttributes map so Add form shows selects
+        const initialAttrs: Record<string, string | null> = {};
+        attrs.forEach((a: ProductAttribute) => { initialAttrs[a.attributeId] = null; });
+        setNewVariantAttributes(initialAttrs);
+
+        // load variant attribute assignments in parallel
+        const maps = await Promise.all(normalized.map(async (v: Variant) => {
+          const assignedIds = await getVariantAttributeValueIds(v.productVariantId);
+          const map: Record<string, string | null> = {};
+          attrs.forEach((a: ProductAttribute) => {
+            const val = (a.values ?? []).find(x => assignedIds.includes(x.attributeValueId));
+            map[a.attributeId] = val ? val.attributeValueId : null;
+          });
+          return { id: v.productVariantId, map };
+        }));
+
+        const mapObj: Record<string, Record<string, string | null>> = {};
+        maps.forEach(m => mapObj[m.id] = m.map);
+        setVariantAttrMap(mapObj);
       } catch (error) {
-        console.error('Error fetching variants:', error);
+        console.error('Error fetching variants or attributes:', error);
       } finally {
         setLoading(false);
       }
     };
-    fetchVariants();
+    fetchVariantsAndAttributes();
   }, [id]);
 
   if (loading) return <div>Loading...</div>;
@@ -168,32 +232,7 @@ export default function ProductVariants() {
                 className="border border-gray-300 rounded px-3 py-2"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Color</label>
-              <select
-                value={newVariant.color || ''}
-                onChange={(e) => handleNewVariantChange('color', e.target.value)}
-                className="w-full border border-gray-300 rounded px-3 py-2 bg-white"
-              >
-                <option value="">-- Select color --</option>
-                {PRESET_COLORS.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
-            </div> 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Size</label>
-              <select
-                value={newVariant.size || ''}
-                onChange={(e) => handleNewVariantChange('size', e.target.value)}
-                className="w-full border border-gray-300 rounded px-3 py-2 bg-white"
-              >
-                <option value="">-- Select size --</option>
-                {PRESET_SIZES.map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
-            </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Stock</label>
               <input
@@ -244,6 +283,24 @@ export default function ProductVariants() {
                 />
               </div>
             </div>
+
+            {/* Attribute selects for Add New Variant */}
+            {attributes.map((a) => (
+              <div key={a.attributeId}>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{a.name}</label>
+                <select
+                  value={newVariantAttributes[a.attributeId] ?? ''}
+                  onChange={(e) => setNewVariantAttributes(prev => ({ ...prev, [a.attributeId]: e.target.value || null }))}
+                  className="w-full border border-gray-300 rounded px-3 py-2"
+                >
+                  <option value="">-</option>
+                  {(a.values ?? []).map(v => (
+                    <option key={v.attributeValueId} value={v.attributeValueId}>{v.value}</option>
+                  ))}
+                </select>
+              </div>
+            ))}
+
             <div className="col-span-full flex items-center space-x-6">
               <div className="flex items-center">
                 <input
@@ -279,14 +336,16 @@ export default function ProductVariants() {
           <thead className="bg-gray-50">
             <tr>
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SKU</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Color</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Size</th>
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Base Price</th>
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Discount %</th>
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Final Price</th>
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Default</th>
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Active</th>
+              {/* Attribute columns */}
+              {attributes.map((a) => (
+                <th key={a.attributeId} className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{a.name}</th>
+              ))}
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hover Image</th>
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -305,38 +364,6 @@ export default function ProductVariants() {
                     />
                   ) : (
                     variant.sku
-                  )}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {editingId === variant.productVariantId ? (
-                    <select
-                      value={String(editData.color ?? '')}
-                      onChange={(e) => handleChange('color', e.target.value)}
-                      className="w-full border border-gray-300 rounded px-2 py-1 bg-white"
-                    >
-                      <option value="">-- Select color --</option>
-                      {PRESET_COLORS.map((c) => (
-                        <option key={c} value={c}>{c}</option>
-                      ))}
-                    </select>
-                  ) : (
-                    variant.color || '-'
-                  )}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {editingId === variant.productVariantId ? (
-                    <select
-                      value={String(editData.size ?? '')}
-                      onChange={(e) => handleChange('size', e.target.value)}
-                      className="w-full border border-gray-300 rounded px-2 py-1 bg-white"
-                    >
-                      <option value="">-- Select size --</option>
-                      {PRESET_SIZES.map((s) => (
-                        <option key={s} value={s}>{s}</option>
-                      ))}
-                    </select>
-                  ) : (
-                    variant.size || '-'
                   )}
                 </td>
                 <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
@@ -404,6 +431,58 @@ export default function ProductVariants() {
                     )
                   )}
                 </td>
+
+                {/* Attribute cells */}
+                {attributes.map((a) => {
+                  const selected = variantAttrMap[variant.productVariantId]?.[a.attributeId] ?? '';
+                  return (
+                    <td key={a.attributeId} className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
+                      <select
+                        value={selected ?? ''}
+                        disabled={Boolean(savingAttr[variant.productVariantId + '|' + a.attributeId])}
+                        onChange={async (e) => {
+                          const newVal = e.target.value || '';
+                          const prev = variantAttrMap[variant.productVariantId]?.[a.attributeId] ?? null;
+                          try {
+                            setSavingAttr(prev => ({ ...prev, [variant.productVariantId + '|' + a.attributeId]: true }));
+                            if (!newVal) {
+                              if (prev) await removeVariantAttributeValue(variant.productVariantId, prev);
+                            } else {
+                              try {
+                                await assignVariantAttributeValue(variant.productVariantId, newVal);
+                              } catch (err: unknown) {
+                                // Show error message
+                                console.error('Assign failed', err);
+                                alert(err instanceof Error ? err.message : 'Failed to assign attribute value');
+                                // revert select to previous value
+                                setVariantAttrMap(prevMap => ({ ...prevMap }));
+                                return;
+                              }
+                            }
+
+                            setVariantAttrMap(prevMap => ({
+                              ...prevMap,
+                              [variant.productVariantId]: {
+                                ...(prevMap[variant.productVariantId] ?? {}),
+                                [a.attributeId]: newVal || null
+                              }
+                            }));
+                          } catch (err) {
+                            console.error('Error saving attribute:', err);
+                          } finally {
+                            setSavingAttr(prev => ({ ...prev, [variant.productVariantId + '|' + a.attributeId]: false }));
+                          }
+                        }}
+                        className="w-full border border-gray-300 rounded px-2 py-1 bg-white"
+                      >
+                        <option value="">-</option>
+                        {(a.values ?? []).map(v => (
+                          <option key={v.attributeValueId} value={v.attributeValueId}>{v.value}</option>
+                        ))}
+                      </select>
+                    </td>
+                  );
+                })}
                 <td className="px-4 py-2 whitespace-nowrap">
                   {editingId === variant.productVariantId ? (
                     <div>

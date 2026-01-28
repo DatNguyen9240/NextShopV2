@@ -19,11 +19,11 @@ const AdBanner: React.FC<AdBannerProps> = ({ type = "home_sidebar", className })
 
   return (
     <div className={`flex flex-col gap-6 hidden xl:flex ${className ?? ''}`} style={{ width: DEFAULT_WIDTH }}>
-      {images.slice(0, 2).map((src, idx) => {
+      {images.filter(Boolean).slice(0, 2).map((src, idx) => {
         const height = idx === 0 ? 352 : 400;
         return (
           <div key={idx} className="relative rounded-xl overflow-hidden" style={{ width: DEFAULT_WIDTH, height }}>
-            <Image src={src} alt={`ad-${idx}`} fill sizes="260px" className="object-cover" priority={idx === 0} />
+            <Image src={src as string} alt={`ad-${idx}`} fill sizes="260px" className="object-cover" priority={idx === 0} />
           </div>
         );
       })}

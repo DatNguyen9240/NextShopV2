@@ -64,34 +64,43 @@ const ProductImage = ({
   productId,
   className = "",
 }: {
-  src: string;
+  src?: string | null;
   alt: string;
-  hoverSrc?: string;
+  hoverSrc?: string | null;
   productId?: string;
   className?: string;
 }) => {
   const router = useRouter();
+  const hasSrc = Boolean(src && String(src).trim());
+  const hasHover = Boolean(hoverSrc && String(hoverSrc).trim());
+
   return (
     <div
       className={`relative w-full h-[120px] sm:h-[160px] md:h-[200px] lg:h-[220px] xl:h-[240px] overflow-hidden group mb-6 cursor-pointer ${className}`}
       onClick={() => productId && router.push(`/product/${productId}`)}
     >
-      <Image
-        src={src}
-        alt={alt}
-        fill
-        className="
-          object-cover rounded-t-lg
-          transition-opacity duration-500
-          group-hover:opacity-0
-          absolute top-0 left-0 z-10
-        "
-        sizes="(min-width:1280px) 490px, (min-width:1024px) 235px, (min-width:768px) 380px, 250px"
-      />
-      {/* Ảnh hover */}
-      {hoverSrc && (
+      {/* Primary image or placeholder when src is empty */}
+      {hasSrc ? (
         <Image
-          src={hoverSrc}
+          src={src as string}
+          alt={alt}
+          fill
+          className="
+            object-cover rounded-t-lg
+            transition-opacity duration-500
+            group-hover:opacity-0
+            absolute top-0 left-0 z-10
+          "
+          sizes="(min-width:1280px) 490px, (min-width:1024px) 235px, (min-width:768px) 380px, 250px"
+        />
+      ) : (
+        <div className="absolute top-0 left-0 w-full h-full bg-gray-100 rounded-t-lg z-10" />
+      )}
+
+      {/* Hover image only when provided */}
+      {hasHover && (
+        <Image
+          src={hoverSrc as string}
           alt={alt}
           fill
           className="

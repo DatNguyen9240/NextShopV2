@@ -20,7 +20,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Store,
-  UserCircle
+  UserCircle,
+  Tag
 } from 'lucide-react';
 
 interface AdminLayoutProps {
@@ -70,6 +71,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { href: '/admin/shipments', label: 'Vận chuyển', icon: Truck },
     { href: '/admin/inventory', label: 'Kho hàng', icon: Box },
     { href: '/admin/categories', label: 'Danh mục', icon: Layers },
+    { href: '/admin/attributes', label: 'Thuộc tính', icon: Tag },
     { href: '/admin/advertisements', label: 'Quảng cáo', icon: Megaphone },
     { href: '/admin/announcements', label: 'Thông báo', icon: BellRing },
     { href: '/admin/footer', label: 'Footer', icon: PanelBottom },

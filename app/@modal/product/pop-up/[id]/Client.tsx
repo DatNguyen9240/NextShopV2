@@ -12,7 +12,6 @@ import {
   ButtonMinus,
   ButtonPlus,
   AddToCartButton,
-  ButtonSize,
   WishlistButton,
   CompareButton,
   ButtonClose,
@@ -29,8 +28,7 @@ export type Variant = {
   imgHover?: string;
   isDefault?: boolean;
   discountPercent?: number;
-  size?: string | null;
-  color?: string | null;
+  attributes?: Record<string, string>;
   stockQuantity?: number;
 };
 
@@ -66,8 +64,7 @@ function ProductInfo({ product }: { product?: ProductDto | null }) {
 
 export default function ProductModal({ id, isModal = true, product: initialProduct }: { id: string; isModal?: boolean; product?: ProductDto | null }) {
   const router = useRouter();
-  const [selectedSize, setSelectedSize] = useState<string | null>(null);
-  const [selectedColor, setSelectedColor] = useState<string | null>(null);
+  const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string | null>>({});
   const [quantity, setQuantity] = useState(1);
   const [product, setProduct] = useState<ProductDto | null>(initialProduct ?? null);
   const [loading, setLoading] = useState(true);
@@ -96,8 +93,16 @@ export default function ProductModal({ id, isModal = true, product: initialProdu
           const initial = defaultVariant ?? (variants.length > 0 ? variants[0] : null);
 
           setSelectedVariant(initial ?? null);
-          setSelectedSize(initial?.size ?? null);
-          setSelectedColor(initial?.color ?? null);
+          if (initial) {
+            const attrs: Record<string, string | null> = {};
+            for (const k in initial.attributes ?? {}) {
+              const v = initial.attributes?.[k];
+              if (v !== undefined && v !== null && String(v).trim() !== '') {
+                attrs[k.toLowerCase()] = v;
+              }
+            }
+            setSelectedAttributes(attrs);
+          }
           // compute images local to avoid referencing outer uniqueImages (which depends on product)
           const localImages = Array.from(new Set(variants.map((v: Variant) => v.imageUrl).filter((u): u is string => typeof u === 'string' && !!u)));
           const initImage = (initial as Variant | null)?.imageUrl;
@@ -129,39 +134,75 @@ export default function ProductModal({ id, isModal = true, product: initialProdu
     setSelectedImageIndex(0);
   }, [product?.productId, id]);
 
+  // Build attribute metadata (preserve first-seen key casing for display)
+  const attributeDisplayMap: Record<string, string> = {};
+  const attributeValuesMap: Record<string, string[]> = {};
+  if (product?.variants) {
+    for (const v of product.variants) {
+      for (const k in v.attributes ?? {}) {
+        const lk = k.toLowerCase();
+        if (!attributeDisplayMap[lk]) attributeDisplayMap[lk] = k;
+        const val = v.attributes?.[k];
+        if (val) {
+          attributeValuesMap[lk] = attributeValuesMap[lk] ?? [];
+          if (!attributeValuesMap[lk].includes(val)) attributeValuesMap[lk].push(val);
+        }
+      }
+    }
+  }
+  const attributeKeysOrder = Object.keys(attributeDisplayMap);
+
   useEffect(() => {
     if (!product || !product.variants) return;
     const variants = product.variants;
 
-    const resolve = (color?: string | null, size?: string | null) => {
-      const byBoth = variants.filter((v) => (!color || v.color === color) && (!size || v.size === size));
-      if (byBoth.length > 0) return byBoth[0];
-
-      if (color) {
-        const byColor = variants.filter((v) => v.color === color);
-        if (byColor.length > 0) return byColor[0];
+    // Normalize variant attributes to lowercased keys for reliable comparison
+    const normalizedAttrsList = variants.map((v) => {
+      const m: Record<string, string> = {};
+      for (const k in v.attributes ?? {}) {
+        const val = v.attributes?.[k];
+        if (val !== undefined && val !== null && String(val).trim() !== '') {
+          m[k.toLowerCase()] = val;
+        }
       }
+      return m;
+    });
 
-      if (size) {
-        const bySize = variants.filter((v) => v.size === size);
-        if (bySize.length > 0) return bySize[0];
+    const activeKeys = Object.keys(selectedAttributes).filter((k) => selectedAttributes[k]);
+
+    // Try exact match (all active keys) first
+    let foundIndex = variants.findIndex((v, i) => activeKeys.every((key) => normalizedAttrsList[i][key] === selectedAttributes[key]));
+
+    // Fallback: try matching any single active attribute
+    if (foundIndex === -1) {
+      for (const key of activeKeys) {
+        const idx = variants.findIndex((v, i) => normalizedAttrsList[i][key] === selectedAttributes[key]);
+        if (idx >= 0) {
+          foundIndex = idx;
+          break;
+        }
       }
+    }
 
-      const def = variants.find((v) => v.isDefault) ?? variants[0];
-      return def;
-    };
+    const newVariant = foundIndex >= 0 ? variants[foundIndex] : (variants.find((v) => v.isDefault) ?? variants[0]);
 
-    const newVariant = resolve(selectedColor, selectedSize);
     if (newVariant && (!selectedVariant || newVariant.productVariantId !== selectedVariant.productVariantId)) {
       setSelectedVariant(newVariant);
-      if (newVariant.size) setSelectedSize(newVariant.size);
-      if (newVariant.color) setSelectedColor(newVariant.color);
+
+      // Merge attributes from newVariant into selectedAttributes (lowercased keys)
+      const merged: Record<string, string | null> = { ...(selectedAttributes ?? {}) };
+      for (const k in newVariant.attributes ?? {}) {
+        const val = newVariant.attributes?.[k];
+        if (val !== undefined && val !== null && String(val).trim() !== '') merged[k.toLowerCase()] = val;
+      }
+      setSelectedAttributes(merged);
+
       // Change main image to the variant's image (if present)
       const idx = newVariant.imageUrl ? uniqueImages.findIndex((u) => u === newVariant.imageUrl) : -1;
       setSelectedImageIndex(idx >= 0 ? idx : 0);
       console.debug('[ProductModal] Resolved variant:', newVariant);
     }
-  }, [selectedColor, selectedSize, product, uniqueImages, selectedVariant]);
+  }, [selectedAttributes, product, uniqueImages, selectedVariant]);
 
   return (
     <>
@@ -198,21 +239,20 @@ export default function ProductModal({ id, isModal = true, product: initialProdu
 
               <p className="text-gray-700 mb-12">{product?.description}</p>
 
-              <div className="mb-4 flex items-center">
-                <span className="mr-2 text-black">Color:</span>
-                {Array.from(new Set((product?.variants || []).map((v) => v.color || ""))).filter(Boolean).map((color) => (
-                  <button key={String(color)} className={`px-3 py-1 rounded-md mr-2 ${selectedColor === color ? 'bg-pink-50 border border-pink-600 text-pink-600' : 'bg-white border border-gray-200'}`} onClick={() => setSelectedColor(String(color))}>
-                    {color}
-                  </button>
-                ))}
-              </div>
-
-              <div className="mb-4 flex items-center">
-                <span className="mr-2 text-black">Size:</span>
-                {Array.from(new Set((product?.variants || []).map((v) => v.size || "M"))).map((size) => (
-                  <ButtonSize key={String(size)} value={String(size)} selected={selectedSize === String(size)} onClick={() => setSelectedSize(String(size))} />
-                ))}
-              </div>
+              {attributeKeysOrder.map((lk) => (
+                <div key={lk} className="mb-4 flex items-center">
+                  <span className="mr-2 text-black">{attributeDisplayMap[lk]}:</span>
+                  {attributeValuesMap[lk]?.map((value) => (
+                    <button
+                      key={String(value)}
+                      className={`px-3 py-1 rounded-md mr-2 ${selectedAttributes[lk] === value ? 'bg-pink-50 border border-pink-600 text-pink-600' : 'bg-white border border-gray-200'}`}
+                      onClick={() => setSelectedAttributes((prev) => ({ ...(prev ?? {}), [lk]: String(value) }))}
+                    >
+                      {value}
+                    </button>
+                  ))}
+                </div>
+              ))}
 
               <div className="flex items-center gap-4 my-6">
                 <ButtonMinus onClick={() => setQuantity((q) => Math.max(1, q - 1))} />

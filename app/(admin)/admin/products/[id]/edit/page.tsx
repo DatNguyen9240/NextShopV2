@@ -11,6 +11,7 @@ export default function EditProductPage() {
   const { id } = useParams();
   const router = useRouter();
   const [categories, setCategories] = useState<{ categoryId: string; name: string }[]>([]);
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
@@ -45,6 +46,8 @@ export default function EditProductPage() {
           additionalInfo: productRes.additionalInfo || '',
           categoryIds: currentCategoryIds
         });
+
+
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -101,6 +104,8 @@ export default function EditProductPage() {
         : [...prev.categoryIds, categoryId]
     }));
   };
+
+
 
   if (loading) return <div>Loading...</div>;
 
@@ -197,6 +202,8 @@ export default function EditProductPage() {
             ))}
           </div>
         </div>
+
+
         <button
           type="submit"
           disabled={saving}

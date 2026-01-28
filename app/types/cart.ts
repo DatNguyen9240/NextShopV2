@@ -1,8 +1,7 @@
 export type VariantInfo = {
   price: number;
   productName: string;
-  color?: string;
-  size?: string;
+  attributes?: Record<string, string>;
   imageUrl?: string;
   sku?: string;
   stockQuantity?: number;

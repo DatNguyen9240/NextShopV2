@@ -17,6 +17,8 @@ const nextConfig: NextConfig = {
       "static.vecteezy.com",
       "api.qrserver.com",
       "nonson.vn",
+      // Allow Shopee-hosted images used by some merchants
+      "down-vn.img.susercontent.com",
     ],
   },
   async rewrites() {

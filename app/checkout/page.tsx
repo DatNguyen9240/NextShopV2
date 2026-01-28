@@ -141,7 +141,7 @@ const CheckoutPage: React.FC = () => {
 
                     <div>
                       <p className="font-medium">{item.variantInfo?.productName ?? 'Unknown Product'}</p>
-                      <p className="text-sm text-gray-600">{item.variantInfo?.color ?? ''}{item.variantInfo?.color && item.variantInfo?.size ? ` · ${item.variantInfo.size}` : item.variantInfo?.size ? item.variantInfo.size : ''}</p>
+                      <p className="text-sm text-gray-600">{(() => { const color = item.variantInfo?.attributes?.['Color'] ?? item.variantInfo?.attributes?.['color'] ?? ''; const size = item.variantInfo?.attributes?.['Size'] ?? item.variantInfo?.attributes?.['size'] ?? ''; return color ? `${color}${color && size ? ` · ${size}` : ''}` : size; })()}</p>
                       <p className="text-sm text-gray-500">SKU: {item.variantInfo?.sku ?? '—'}</p>
                       <p className="text-sm text-gray-600">Số lượng: {item.quantity}</p>
                     </div>

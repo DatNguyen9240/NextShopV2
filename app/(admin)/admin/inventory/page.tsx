@@ -122,7 +122,7 @@ export default function AdminInventory() {
                     </div>
                   </td>
                   <td className="px-4 py-3 text-sm">{v.sku ?? v.variantSku}</td>
-                  <td className="px-4 py-3 text-sm">{v.color ?? ''} {v.size ? ` • ${v.size}` : ''}</td>
+                  <td className="px-4 py-3 text-sm">{(() => { const attrs = (v as unknown as { attributes?: Record<string,string> }).attributes ?? null; const color = attrs?.['Color'] ?? attrs?.['color'] ?? v.color ?? ''; const size = attrs?.['Size'] ?? attrs?.['size'] ?? v.size ?? ''; return color ? `${color}${size ? ` • ${size}` : ''}` : size; })()}</td>
                   <td className="px-4 py-3 text-sm">{v.stockQuantity ?? v.stock ?? '—'}</td>
                   <td className="px-4 py-3 text-sm">
                     <div className="flex items-center gap-2">

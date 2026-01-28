@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from 'next/link';
 import Button from "@/app/components/Button";
 import MoneyVND from "@/app/components/MoneyVND";
 import axiosClient from "@/app/lib/axiosClient";
@@ -16,14 +17,18 @@ interface PaymentStatus {
 interface OrderItem {
   orderItemId: string;
   variantId: string;
+  productId?: string | null;
   quantity: number;
   unitPrice: number;
   totalPrice: number;
   productName?: string | null;
   variant?: {
+    sku?: string | null;
     color?: string | null;
     size?: string | null;
     imageUrl?: string | null;
+    attributesDisplay?: string;
+    attributes?: Record<string, string> | null;
   } | null;
 }
 
@@ -82,15 +87,56 @@ export default function PaymentSuccessPage() {
           items: (payload.items ?? payload.Items ?? []).map((it: Record<string, unknown>) => ({
             orderItemId: (it.orderItemId ?? it.OrderItemId) as string,
             variantId: (it.variantId ?? it.VariantId) as string,
+            productId: (it.productId ?? it.ProductId ?? null) as string | null,
             quantity: (it.quantity ?? it.Quantity) as number,
             unitPrice: (it.unitPrice ?? it.UnitPrice) as number,
             totalPrice: ((it.quantity ?? it.Quantity) as number) * ((it.unitPrice ?? it.UnitPrice) as number),
             productName: (it.productName ?? it.ProductName ?? (((it.variant as Record<string, unknown>)?.product as Record<string, unknown>)?.name) ?? null) as string | null,
-            variant: {
-              color: ((it.variant as Record<string, unknown>)?.color ?? (it.Variant as Record<string, unknown>)?.Color ?? null) as string | null,
-              size: ((it.variant as Record<string, unknown>)?.size ?? (it.Variant as Record<string, unknown>)?.Size ?? null) as string | null,
-              imageUrl: ((it.variant as Record<string, unknown>)?.imageUrl ?? (it.Variant as Record<string, unknown>)?.ImageUrl ?? null) as string | null,
-            }
+            variant: (() => {
+              const nested = (it.variant ?? it.Variant) as Record<string, unknown> | null;
+
+              // sku from nested variant (live variant SKU)
+              const sku = nested && typeof nested['sku'] === 'string' && String(nested['sku']).trim() !== '' ? String(nested['sku']) : null;
+
+              // attributes may come from nested.attributes (preferred) or fallback to variantOptionsJson (old snapshot)
+              let rawAttrs: Record<string, unknown> | null = null;
+              if (nested && nested['attributes'] && typeof nested['attributes'] === 'object') rawAttrs = nested['attributes'] as Record<string, unknown>;
+
+              if (!rawAttrs) {
+                try {
+                  const vo = it.variantOptionsJson ?? ((it.variant as Record<string, unknown>)?.variantOptionsJson ?? null);
+                  if (typeof vo === 'string') {
+                    const parsed = JSON.parse(vo as string) as Record<string, unknown>;
+                    if (parsed && parsed['attributes'] && typeof parsed['attributes'] === 'object') rawAttrs = parsed['attributes'] as Record<string, unknown>;
+                  }
+                } catch {
+                  rawAttrs = null;
+                }
+              }
+
+              // sanitize attributes: remove image/url keys
+              let attrs: Record<string, string> | null = null;
+              if (rawAttrs) {
+                attrs = {};
+                for (const k of Object.keys(rawAttrs)) {
+                  const lk = k.toLowerCase();
+                  if (lk === 'imageurl' || lk === 'image' || lk === 'url') continue;
+                  const v = rawAttrs[k];
+                  if (v !== undefined && v !== null && String(v).trim() !== '') attrs[k] = String(v);
+                }
+                if (Object.keys(attrs).length === 0) attrs = null;
+              }
+
+              // build display string
+              const attributesDisplay = attrs ? Object.keys(attrs).map(k => `${k}: ${attrs![k]}`).join(' • ') : '';
+
+              const color = attrs ? ((attrs['Color'] as string | undefined) ?? (attrs['color'] as string | undefined) ?? null) : null;
+              const size = attrs ? ((attrs['Size'] as string | undefined) ?? (attrs['size'] as string | undefined) ?? null) : null;
+
+              const imageUrl = (nested && typeof nested['imageUrl'] === 'string' && String(nested['imageUrl']).trim() !== '') ? String(nested['imageUrl']) : null;
+
+              return { sku, color, size, imageUrl, attributesDisplay, attributes: attrs };
+            })()
           }))
         });
       }
@@ -306,8 +352,15 @@ export default function PaymentSuccessPage() {
                         </div>
 
                         <div className="col-span-7">
-                          <div className="font-medium text-gray-800">{item.productName ?? 'Sản phẩm'}</div>
-                          <div className="text-sm text-gray-500 mt-1">{item.variant?.color ?? ''} {item.variant?.size ? `· ${item.variant.size}` : ''}</div>
+                          <div className="font-medium text-gray-800">
+                            {item.productId ? (
+                              <Link href={`/product/${item.productId}`} className="hover:underline">{item.productName ?? 'Sản phẩm'}</Link>
+                            ) : (
+                              item.productName ?? 'Sản phẩm'
+                            )}
+                          </div>
+                          <div className="text-sm text-gray-500 mt-1">{item.variant?.attributesDisplay ? item.variant.attributesDisplay : (item.variant?.color ? (`${item.variant.color}${item.variant.size ? ` · ${item.variant.size}` : ''}`) : (item.variant?.size ?? ''))}</div>
+                          {item.variant?.sku && <div className="text-xs text-gray-400 mt-1">SKU: {item.variant.sku}</div>}
                         </div>
 
                         <div className="col-span-3 text-right">

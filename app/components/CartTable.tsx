@@ -68,7 +68,11 @@ const CartTableRow: React.FC<{ item: CartItemType; onChangeQty: (id: string, qty
         </div>
         {/* Rating not available from cart items; keep space for future */}
         <div className="flex mt-1">
-          <span className="text-sm text-gray-500">{item.variantInfo?.color ? `${item.variantInfo.color}${item.variantInfo.size ? ' • ' + item.variantInfo.size : ''}` : item.variantInfo?.size ?? ''}</span>
+          {(() => {
+            const color = item.variantInfo?.attributes?.['Color'] ?? item.variantInfo?.attributes?.['color'] ?? '';
+            const size = item.variantInfo?.attributes?.['Size'] ?? item.variantInfo?.attributes?.['size'] ?? '';
+            return <span className="text-sm text-gray-500">{color ? `${color}${size ? ' • ' + size : ''}` : size}</span>;
+          })()}
         </div>
       </div>
     </td>

@@ -56,18 +56,27 @@ const OrderDetailsModal: React.FC<{ order: OrderDto; onClose: () => void }> = ({
           <div className="space-y-3">
             {order.items?.map(item => {
               const v = item.variant ?? null;
-              // try parse variantOptionsJson if present
-              type VariantOpts = { color?: string; size?: string; imageUrl?: string };
-              let opts: VariantOpts | null = null;
+              // try parse variantOptionsJson if present (supports attributes map)
+              let opts: Record<string, unknown> | null = null;
               try {
-                if (item.variantOptionsJson) opts = JSON.parse(item.variantOptionsJson) as VariantOpts;
+                if (item.variantOptionsJson) opts = JSON.parse(item.variantOptionsJson as string) as Record<string, unknown>;
               } catch {
                 opts = null;
               }
-              const imageUrl = v?.imageUrl ?? opts?.imageUrl ?? (v?.imgHover ?? null) ?? null;
-              const color = v?.color ?? opts?.color ?? null;
-              const size = v?.size ?? opts?.size ?? null;
+              const attrs = opts && opts['attributes'] ? (opts['attributes'] as Record<string, unknown>) : null;
+              const imageUrl = v?.imageUrl ?? (opts ? (opts['imageUrl'] as string | undefined) : undefined) ?? (v?.imgHover ?? null) ?? null;
               const sku = item.variantSku ?? item.productSku ?? v?.sku ?? null;
+
+              // Build attribute pairs to display (preserve keys as-is)
+              const attrPairs: string[] = [];
+              if (attrs) {
+                for (const k in attrs) {
+                  const val = attrs[k];
+                  if (val !== undefined && val !== null && String(val).trim() !== '') {
+                    attrPairs.push(`${k}: ${String(val)}`);
+                  }
+                }
+              }
 
               return (
                 <div key={item.orderItemId} className="grid grid-cols-1 sm:grid-cols-[64px_1fr_160px] gap-4 items-start border-b pb-3">
@@ -85,7 +94,7 @@ const OrderDetailsModal: React.FC<{ order: OrderDto; onClose: () => void }> = ({
                       <div className="font-medium text-sm">{item.productName}</div>
                       <div className="text-xs text-gray-500 mt-1">SKU: <span className="text-gray-700">{sku ?? '—'}</span></div>
                       <div className="text-xs text-gray-500">Variant ID: <span className="text-gray-700">{v?.productVariantId ?? item.variantId ?? '—'}</span></div>
-                      <div className="text-xs text-gray-500 mt-1">{color ? `Màu: ${color}` : ''} {size ? ` • Size: ${size}` : ''}</div>
+                      <div className="text-xs text-gray-500 mt-1">{attrPairs.join(' • ')}</div>
 
                       <div className="flex items-center gap-6 mt-2">
                         <div className="text-sm text-gray-500">Số lượng: {item.quantity}</div>
