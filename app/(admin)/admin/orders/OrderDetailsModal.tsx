@@ -65,9 +65,14 @@ const OrderDetailsModal: React.FC<{ order: OrderDto; onClose: () => void }> = ({
               }
               // Merge attributes from variant and variantOptionsJson (opts). opts attributes take precedence.
               const attrsFromOpts = opts && opts['attributes'] ? (opts['attributes'] as Record<string, unknown>) : {};
-              const attrsFromVariant = (v && (v as any).attributes) ? ((v as any).attributes as Record<string, unknown>) : {};
+              let attrsFromVariant: Record<string, unknown> = {};
+              if (v && typeof v === 'object') {
+                const maybeAttrs = (v as { attributes?: unknown }).attributes;
+                if (maybeAttrs && typeof maybeAttrs === 'object' && !Array.isArray(maybeAttrs)) {
+                  attrsFromVariant = maybeAttrs as Record<string, unknown>;
+                }
+              }
               const attrs = { ...attrsFromVariant, ...attrsFromOpts };
-              const hasAttrs = Object.keys(attrs).length > 0 ? (attrs as Record<string, unknown>) : null;
               const imageUrl = v?.imageUrl ?? (opts ? (opts['imageUrl'] as string | undefined) : undefined) ?? (v?.imgHover ?? null) ?? null;
               const sku = item.variantSku ?? item.productSku ?? v?.sku ?? null;
 
