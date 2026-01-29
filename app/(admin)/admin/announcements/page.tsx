@@ -5,6 +5,7 @@ import axios from '../../../lib/axiosClient';
 
 interface Announcement {
   id: string;
+  name: string;
   className: string;
   isActive: boolean;
   createdAt: string;
@@ -27,7 +28,7 @@ export default function AnnouncementsAdminPage() {
 
   const loadAnnouncements = async () => {
     try {
-      const response = await axios.get('/api/Announcements');
+      const response = await axios.get('/api/MarketingElements?name=Announcement');
       const data = response.data;
       if (data.success) {
         setAnnouncements(data.data);
@@ -44,7 +45,7 @@ export default function AnnouncementsAdminPage() {
     setSaving(true);
     try {
       if (editing) {
-        const response = await axios.put(`/api/Announcements/${editing.id}`, formData);
+        const response = await axios.put(`/api/MarketingElements/${editing.id}`, { ...formData, name: 'Announcement' });
         const data = response.data;
         if (data.success) {
           alert('Announcement updated successfully');
@@ -54,8 +55,8 @@ export default function AnnouncementsAdminPage() {
           alert('Failed to update: ' + data.message);
         }
       } else {
-        const createData = { ...formData, isActive: false }; // Always create as inactive
-        const response = await axios.post('/api/Announcements', createData);
+        const createData = { ...formData, name: 'Announcement', isActive: false }; // Always create as inactive
+        const response = await axios.post('/api/MarketingElements', createData);
         const data = response.data;
         if (data.success) {
           alert('Announcement created successfully');
@@ -87,7 +88,7 @@ export default function AnnouncementsAdminPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this announcement?')) return;
     try {
-      const response = await axios.delete(`/api/Announcements/${id}`);
+      const response = await axios.delete(`/api/MarketingElements/${id}`);
       const data = response.data;
       if (data.success) {
         alert('Announcement deleted successfully');
@@ -105,7 +106,7 @@ export default function AnnouncementsAdminPage() {
     const announcement = announcements.find(a => a.id === id);
     if (!announcement) return;
     try {
-      const response = await axios.put(`/api/Announcements/${id}`, {
+      const response = await axios.put(`/api/MarketingElements/${id}`, {
         ...announcement,
         isActive: true,
       });

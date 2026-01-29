@@ -8,10 +8,11 @@ const Footer = () => {
   useEffect(() => {
     const loadFooterInfo = async () => {
       try {
-        const response = await axios.get('/api/FooterInfo');
+        const response = await axios.get('/api/MarketingElements/public?name=Footer');
         const data = response.data;
-        if (data.success && data.data) {
-          setFooterInfo({ className: data.data.className });
+        if (data.success && data.data && data.data.length > 0) {
+          const footer = data.data[0];
+          setFooterInfo({ className: footer.className });
         }
       } catch (error) {
         console.error('Failed to load footer info:', error);

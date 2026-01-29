@@ -5,6 +5,7 @@ import axios from '../../../lib/axiosClient';
 
 interface FooterInfo {
   id: string;
+  name: string;
   className: string;
   createdAt: string;
   updatedAt: string;
@@ -24,12 +25,13 @@ export default function FooterAdminPage() {
 
   const loadFooterInfo = async () => {
     try {
-      const response = await axios.get('/api/FooterInfo');
+      const response = await axios.get('/api/MarketingElements?name=Footer');
       const data = response.data;
-      if (data.success && data.data) {
-        setFooterInfo(data.data);
+      if (data.success && data.data && data.data.length > 0) {
+        const footer = data.data[0]; // Take first footer
+        setFooterInfo(footer);
         setFormData({
-          className: data.data.className || '',
+          className: footer.className || '',
         });
       }
     } catch (error) {
@@ -43,7 +45,13 @@ export default function FooterAdminPage() {
     e.preventDefault();
     setSaving(true);
     try {
-      const response = await axios.post('/api/FooterInfo', formData);
+      const submitData = { ...formData, name: 'Footer' };
+      let response;
+      if (footerInfo) {
+        response = await axios.put(`/api/MarketingElements/${footerInfo.id}`, submitData);
+      } else {
+        response = await axios.post('/api/MarketingElements', submitData);
+      }
       const data = response.data;
       if (data.success) {
         setFooterInfo(data.data);

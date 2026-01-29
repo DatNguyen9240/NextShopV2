@@ -5,11 +5,14 @@ const AnnouncementBar = React.memo(function AnnouncementBar() {
   const [announcement, setAnnouncement] = useState<{ className: string } | null>(null);
 
   useEffect(() => {
-    axios.get('/api/Announcements/active')
+    axios.get('/api/MarketingElements/public?name=Announcement')
       .then(response => {
         const data = response.data;
         if (data.success && data.data) {
-          setAnnouncement({ className: data.data.className });
+          const activeAnnouncement = data.data.find((item: any) => item.isActive);
+          if (activeAnnouncement) {
+            setAnnouncement({ className: activeAnnouncement.className });
+          }
         }
       })
       .catch(err => console.error('Failed to fetch announcement', err));
