@@ -2,23 +2,18 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
-    domains: [
-      "res.cloudinary.com",
-      "lamia.com.vn",
-      "localhost",
-      "tse3.mm.bing.net",
-      "tse2.mm.bing.net",
-      "tse1.mm.bing.net",
-      "tse4.mm.bing.net",
-      "5.imimg.com",
-      "th.bing.com",
-      "img.freepik.com",
-      // Allow images served from Vecteezy previews used in admin uploads/previews
-      "static.vecteezy.com",
-      "api.qrserver.com",
-      "nonson.vn",
-      // Allow Shopee-hosted images used by some merchants
-      "down-vn.img.susercontent.com",
+    remotePatterns: [
+      { protocol: 'https', hostname: 'res.cloudinary.com', pathname: '/**' },
+      { protocol: 'https', hostname: 'lamia.com.vn', pathname: '/**' },
+      { protocol: 'http', hostname: 'localhost', pathname: '/**' },
+      { protocol: 'https', hostname: '*.mm.bing.net', pathname: '/**' },
+      { protocol: 'https', hostname: '5.imimg.com', pathname: '/**' },
+      { protocol: 'https', hostname: 'th.bing.com', pathname: '/**' },
+      { protocol: 'https', hostname: 'img.freepik.com', pathname: '/**' },
+      { protocol: 'https', hostname: 'static.vecteezy.com', pathname: '/**' },
+      { protocol: 'https', hostname: 'api.qrserver.com', pathname: '/**' },
+      { protocol: 'https', hostname: 'nonson.vn', pathname: '/**' },
+      { protocol: 'https', hostname: 'down-vn.img.susercontent.com', pathname: '/**' },
     ],
   },
   async rewrites() {

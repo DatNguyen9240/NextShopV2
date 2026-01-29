@@ -110,7 +110,7 @@ export default function BannersAdminPage() {
         width={64}
         height={64}
         className="object-cover rounded"
-        onError={() => setImgSrc('/images/placeholder.png')}
+        onError={() => setImgSrc('/images/placeholder.svg')}
       />
     );
   }
