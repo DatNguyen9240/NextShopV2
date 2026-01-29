@@ -221,7 +221,7 @@ export default function ProductVariants() {
       {showAddForm && (
         <div className="bg-white shadow-md rounded-lg p-6 mb-6">
           <h3 className="text-lg font-semibold mb-4">Add New Variant</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">SKU</label>
               <input
@@ -344,9 +344,9 @@ export default function ProductVariants() {
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Active</th>
               {/* Attribute columns */}
               {attributes.map((a) => (
-                <th key={a.attributeId} className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{a.name}</th>
+                <th key={a.attributeId} className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[140px]">{a.name}</th>
               ))}
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th> 
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hover Image</th>
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
             </tr>
@@ -436,7 +436,7 @@ export default function ProductVariants() {
                 {attributes.map((a) => {
                   const selected = variantAttrMap[variant.productVariantId]?.[a.attributeId] ?? '';
                   return (
-                    <td key={a.attributeId} className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
+                    <td key={a.attributeId} className="px-6 py-2 whitespace-nowrap text-sm text-gray-500 min-w-[140px]">
                       <select
                         value={selected ?? ''}
                         disabled={Boolean(savingAttr[variant.productVariantId + '|' + a.attributeId])}
