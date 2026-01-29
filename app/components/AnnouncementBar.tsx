@@ -1,6 +1,15 @@
 import React, { useState, useEffect } from "react";
 import axios from '../lib/axiosClient';
 
+interface MarketingElement {
+  id: string;
+  name: string;
+  className: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 const AnnouncementBar = React.memo(function AnnouncementBar() {
   const [announcement, setAnnouncement] = useState<{ className: string } | null>(null);
 
@@ -9,7 +18,7 @@ const AnnouncementBar = React.memo(function AnnouncementBar() {
       .then(response => {
         const data = response.data;
         if (data.success && data.data) {
-          const activeAnnouncement = data.data.find((item: any) => item.isActive);
+          const activeAnnouncement = data.data.find((item: MarketingElement) => item.isActive);
           if (activeAnnouncement) {
             setAnnouncement({ className: activeAnnouncement.className });
           }
