@@ -17,6 +17,11 @@ const roboto = Roboto({
 export const metadata: Metadata = {
   title: "Bán quần áo nam nữ túi xách tại Bình Long",
   description: "Bán quần áo nam nữ túi xách tại Bình Long",
+  icons: {
+    icon: "/logo/01.png",
+    shortcut: "/logo/01.png",
+    apple: "/logo/01.png",
+  },
 };
 
 export default async function RootLayout({
