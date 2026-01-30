@@ -22,7 +22,7 @@ messaging.onBackgroundMessage((payload) => {
   const notificationOptions = {
     body: payload.notification.body,
     icon: payload.notification.icon || '/icon.png',
-    badge: '/badge.png',
+    badge: payload.notification.badge || '/badge/01.png',
     data: payload.data
   };
 
