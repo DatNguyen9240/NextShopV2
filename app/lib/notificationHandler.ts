@@ -68,6 +68,7 @@ export function setupForegroundListener(callback?: (payload: MessagePayload) => 
       new Notification(payload.notification.title, {
         body: payload.notification.body || '',
         icon: payload.notification.icon || '/icon.png',
+        badge: '/badge/01.png',
         data: payload.data
       });
     }
