@@ -18,9 +18,9 @@ export const metadata: Metadata = {
   title: "Bán quần áo nam nữ túi xách tại Bình Long",
   description: "Bán quần áo nam nữ túi xách tại Bình Long",
   icons: {
-    icon: "/logo/01.png",
-    shortcut: "/logo/01.png",
-    apple: "/logo/01.png",
+    icon: "/badge/01.png",
+    shortcut: "/badge/01.png",
+    apple: "/badge/01.png",
   },
 };
 

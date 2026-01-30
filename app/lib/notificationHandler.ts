@@ -67,8 +67,8 @@ export function setupForegroundListener(callback?: (payload: MessagePayload) => 
     if (payload && Notification.permission === 'granted' && payload.notification && payload.notification.title) {
       new Notification(payload.notification.title, {
         body: payload.notification.body || '',
-        icon: payload.notification.icon || '/logo/01.png',
-        badge: '/badge/01.png',
+        icon: payload.notification.icon,
+        badge: '',
         data: payload.data
       });
     }
