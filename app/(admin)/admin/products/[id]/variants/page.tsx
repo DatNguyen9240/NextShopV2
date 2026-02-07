@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Image from 'next/image';
-import { getVariantsByProductIdAdmin, updateVariant, createVariant } from '../../../../../services/variantService';
+import { getVariantsByProductIdAdmin, updateVariant, createVariant, deleteVariant } from '../../../../../services/variantService';
 import { getAttributesByProductId, getVariantAttributeValueIds, assignVariantAttributeValue, removeVariantAttributeValue, ProductAttribute } from '../../../../../services/attributeService';
 import ImageUploader from '@/app/components/ImageUploader';
 import { formatVND } from '@/app/utils/priceUtils';
@@ -36,6 +36,7 @@ export default function ProductVariants() {
   // uploading state reserved for future file uploads
   // const [uploading, setUploading] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [newVariant, setNewVariant] = useState({
     sku: '',
     // use '' for empty input state so we don't store NaN when user clears the field
@@ -69,6 +70,36 @@ export default function ProductVariants() {
       setEditData({});
     } catch (error) {
       console.error('Error updating variant:', error);
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (!deletingId) return;
+    try {
+      await deleteVariant(deletingId);
+      // Refresh variants
+      const data = await getVariantsByProductIdAdmin(id as string);
+      const normalized = data.map((v: Partial<Variant>) => ({ ...v, isActive: typeof v.isActive === 'undefined' ? true : v.isActive }) as Variant);
+      setVariants(normalized);
+
+      // Rebuild attribute mapping
+      const maps = await Promise.all(normalized.map(async (v: Variant) => {
+        const assignedIds = await getVariantAttributeValueIds(v.productVariantId);
+        const map: Record<string, string | null> = {};
+        (attributes ?? []).forEach((a: ProductAttribute) => {
+          const val = (a.values ?? []).find(x => assignedIds.includes(x.attributeValueId));
+          map[a.attributeId] = val ? val.attributeValueId : null;
+        });
+        return { id: v.productVariantId, map };
+      }));
+
+      const mapObj: Record<string, Record<string, string | null>> = {};
+      maps.forEach(m => mapObj[m.id] = m.map);
+      setVariantAttrMap(prev => ({ ...prev, ...mapObj }));
+
+      setDeletingId(null);
+    } catch (error) {
+      console.error('Error deleting variant:', error);
     }
   };
 
@@ -526,7 +557,10 @@ export default function ProductVariants() {
                       <button onClick={cancelEdit} className="text-red-600 hover:text-red-900">Cancel</button>
                     </div>
                   ) : (
-                    <button onClick={() => startEdit(variant)} className="text-indigo-600 hover:text-indigo-900">Edit</button>
+                    <div className="flex space-x-2">
+                      <button onClick={() => startEdit(variant)} className="text-indigo-600 hover:text-indigo-900">Edit</button>
+                      <button onClick={() => setDeletingId(variant.productVariantId)} className="text-red-600 hover:text-red-900">Delete</button>
+                    </div>
                   )}
                 </td>
               </tr>
@@ -535,6 +569,30 @@ export default function ProductVariants() {
           </table>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {deletingId && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+            <h3 className="text-lg font-semibold mb-4">Confirm Delete</h3>
+            <p className="mb-4">Are you sure you want to delete this variant? This action cannot be undone.</p>
+            <div className="flex justify-end space-x-2">
+              <button
+                onClick={() => setDeletingId(null)}
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
