@@ -114,18 +114,7 @@ export default function ProductModal({ id, isModal = true, product: initialProdu
           const initial = defaultVariant ?? (variants.length > 0 ? variants[0] : null);
 
           setSelectedVariant(initial ?? null);
-          if (initial) {
-            const attrs: Record<string, string | null> = {};
-            for (const k in initial.attributes ?? {}) {
-              const v = initial.attributes?.[k];
-              if (v !== undefined && v !== null && String(v).trim() !== '') {
-                attrs[k.toLowerCase()] = v;
-              }
-            }
-            setSelectedAttributes(attrs);
-          } else {
-            setSelectedAttributes({});
-          }
+          setSelectedAttributes({});
           // compute images local to avoid referencing outer uniqueImages (which depends on product)
           const localImages = Array.from(new Set(variants.map((v: Variant) => v.imageUrl).filter((u): u is string => typeof u === 'string' && !!u)));
           const initImage = (initial as Variant | null)?.imageUrl;
@@ -211,6 +200,19 @@ export default function ProductModal({ id, isModal = true, product: initialProdu
       setSelectedImageIndex(imgIdx >= 0 ? imgIdx : 0);
     }
   }, [product?.productId, selectedAttributes, uniqueImages]);
+
+  // Mặc định chọn attribute đầu tiên cho mỗi key
+  useEffect(() => {
+    if (!product || loading || Object.keys(selectedAttributes).length > 0) return;
+    const initialAttrs: Record<string, string | null> = {};
+    Object.keys(attributeDisplayMap).forEach(lk => {
+      const values = attributeValuesMap[lk];
+      if (values && values.length > 0) {
+        initialAttrs[lk] = values[0];
+      }
+    });
+    setSelectedAttributes(initialAttrs);
+  }, [product, loading, attributeDisplayMap, attributeValuesMap, selectedAttributes]);
 
   return (
     <>
