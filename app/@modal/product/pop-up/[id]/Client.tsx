@@ -90,6 +90,8 @@ export default function ProductModal({ id, isModal = true, product: initialProdu
   const [product, setProduct] = useState<ProductDto | null>(initialProduct ?? null);
   const [loading, setLoading] = useState(true);
   const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null);
+
+  // Keep thumbnails positions fixed — track which image index is selected for main view
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   useEffect(() => {
@@ -196,13 +198,13 @@ export default function ProductModal({ id, isModal = true, product: initialProdu
       const v = resolveVariantBySelection(next);
       if (!v) return next;
 
-      // auto-sync các key chưa chọn theo variant v
+      // auto-sync toàn bộ attributes theo variant v (để combo luôn hợp lệ)
       const synced = normalizeAttrs(v.attributes);
-      const result = { ...next };
-      for (const k in synced) {
-        if (!(k in result) || !result[k]) result[k] = synced[k];
-      }
-      return result;
+
+      // đảm bảo vẫn giữ key vừa chọn (phòng trường hợp dữ liệu lỗi)
+      synced[key] = value;
+
+      return synced;
     });
   }
 
@@ -270,16 +272,15 @@ export default function ProductModal({ id, isModal = true, product: initialProdu
                   <span className="mr-2 text-black">{attributeDisplayMap[lk]}:</span>
                   {attributeValuesMap[lk]?.map((value) => {
                     const available = new Set(getAvailableValuesForKey(lk));
-                    const disabled = !available.has(value);
+                    const isDisabled = !available.has(value);
                     return (
                       <button
                         key={value}
-                        disabled={disabled}
                         className={`px-3 py-1 rounded-md mr-2 ${
                           selectedAttributes[lk] === value
                             ? "bg-pink-50 border border-pink-600 text-pink-600"
-                            : disabled
-                            ? "bg-gray-100 border border-gray-300 text-gray-400 cursor-not-allowed"
+                            : isDisabled
+                            ? "bg-gray-100 border border-gray-300 text-gray-400"
                             : "bg-white border border-gray-200"
                         }`}
                         onClick={() => applySelection(lk, value)}
