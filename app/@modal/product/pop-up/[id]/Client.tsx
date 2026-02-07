@@ -202,7 +202,7 @@ export default function ProductModal({ id, isModal = true, product: initialProdu
       setSelectedImageIndex(idx >= 0 ? idx : 0);
       console.debug('[ProductModal] Resolved variant:', newVariant);
     }
-  }, [selectedAttributes, product, uniqueImages, selectedVariant]);
+  }, [selectedAttributes, product, uniqueImages]);
 
   return (
     <>
@@ -239,7 +239,7 @@ export default function ProductModal({ id, isModal = true, product: initialProdu
 
               <p className="text-gray-700 mb-12">{product?.description}</p>
 
-              {attributeKeysOrder.map((lk) => (
+              {attributeKeysOrder.filter(lk => attributeValuesMap[lk].length > 1).map((lk) => (
                 <div key={lk} className="mb-4 flex items-center">
                   <span className="mr-2 text-black">{attributeDisplayMap[lk]}:</span>
                   {attributeValuesMap[lk]?.map((value) => (
