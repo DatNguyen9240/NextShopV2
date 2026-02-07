@@ -200,14 +200,6 @@ export default function ProductModal({ id, isModal = true, product: initialProdu
     if (!selectedVariant || newVariant.productVariantId !== selectedVariant.productVariantId) {
       setSelectedVariant(newVariant);
 
-      // đồng bộ selectedAttributes theo variant mới (không merge lung tung)
-      const nextAttrs: Record<string, string | null> = {};
-      const nv = normalizeAttrs(newVariant.attributes);
-      for (const k in attributeDisplayMap) {
-        nextAttrs[k] = nv[k] ?? null;
-      }
-      setSelectedAttributes(nextAttrs);
-
       const imgIdx = newVariant.imageUrl ? uniqueImages.findIndex((u) => u === newVariant.imageUrl) : -1;
       setSelectedImageIndex(imgIdx >= 0 ? imgIdx : 0);
     }
@@ -260,20 +252,7 @@ export default function ProductModal({ id, isModal = true, product: initialProdu
                           : "bg-white border border-gray-200"
                       }`}
                       onClick={() => {
-                        setSelectedAttributes((prev) => {
-                          const next = { ...(prev ?? {}) };
-
-                          // set key đang click
-                          next[lk] = String(value);
-
-                          // reset các key khác để tránh giữ lựa chọn cũ không còn hợp lệ
-                          for (const other of Object.keys(attributeDisplayMap)) {
-                            if (other === lk) continue;
-                            next[other] = null;
-                          }
-
-                          return next;
-                        });
+                        setSelectedAttributes((prev) => ({ ...(prev ?? {}), [lk]: String(value) }));
                       }}
                     >
                       {value}
