@@ -97,6 +97,11 @@ export default function ProductModal({ id, isModal = true, product: initialProdu
       // If parent provided product, use it and skip network fetch
       if (initialProduct) {
         setProduct(initialProduct);
+        const variants: Variant[] = initialProduct.variants ?? [];
+        const initial = variants.find(v => v.isDefault) ?? variants[0] ?? null;
+
+        setSelectedVariant(initial);
+        setSelectedAttributes(initial ? normalizeAttrs(initial.attributes) : {});
         setLoading(false);
         return;
       }
@@ -114,7 +119,12 @@ export default function ProductModal({ id, isModal = true, product: initialProdu
           const initial = defaultVariant ?? (variants.length > 0 ? variants[0] : null);
 
           setSelectedVariant(initial ?? null);
-          setSelectedAttributes({});
+
+          if (initial) {
+            setSelectedAttributes(normalizeAttrs(initial.attributes));
+          } else {
+            setSelectedAttributes({});
+          }
           // compute images local to avoid referencing outer uniqueImages (which depends on product)
           const localImages = Array.from(new Set(variants.map((v: Variant) => v.imageUrl).filter((u): u is string => typeof u === 'string' && !!u)));
           const initImage = (initial as Variant | null)?.imageUrl;
@@ -196,23 +206,17 @@ export default function ProductModal({ id, isModal = true, product: initialProdu
     if (!selectedVariant || newVariant.productVariantId !== selectedVariant.productVariantId) {
       setSelectedVariant(newVariant);
 
+      const nv = normalizeAttrs(newVariant.attributes);
+      setSelectedAttributes((prev) => {
+        // nếu user chưa chọn gì, hoặc chọn chưa đủ, đồng bộ theo variant
+        if (!prev || Object.values(prev).every(v => !v)) return nv;
+        return prev;
+      });
+
       const imgIdx = newVariant.imageUrl ? uniqueImages.findIndex((u) => u === newVariant.imageUrl) : -1;
       setSelectedImageIndex(imgIdx >= 0 ? imgIdx : 0);
     }
   }, [product?.productId, selectedAttributes, uniqueImages]);
-
-  // Mặc định chọn attribute đầu tiên cho mỗi key
-  useEffect(() => {
-    if (!product || loading || Object.keys(selectedAttributes).length > 0) return;
-    const initialAttrs: Record<string, string | null> = {};
-    Object.keys(attributeDisplayMap).forEach(lk => {
-      const values = attributeValuesMap[lk];
-      if (values && values.length > 0) {
-        initialAttrs[lk] = values[0];
-      }
-    });
-    setSelectedAttributes(initialAttrs);
-  }, [product, loading, attributeDisplayMap, attributeValuesMap, selectedAttributes]);
 
   return (
     <>
