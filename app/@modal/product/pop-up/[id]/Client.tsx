@@ -45,6 +45,27 @@ export type ProductDto = {
   categoryId?: string;
 };
 
+function normalizeAttrs(attrs?: Record<string, string>) {
+  const m: Record<string, string> = {};
+  for (const k in attrs ?? {}) {
+    const v = attrs?.[k];
+    if (v != null && String(v).trim() !== "") m[k.toLowerCase()] = String(v);
+  }
+  return m;
+}
+
+function isMatchAllKeys(
+  variantAttrs: Record<string, string>,
+  selected: Record<string, string | null>
+) {
+  for (const k in selected) {
+    const sel = selected[k];
+    if (!sel) continue; // key chưa chọn thì bỏ qua
+    if (variantAttrs[k] !== sel) return false;
+  }
+  return true;
+}
+
 function ProductInfo({ product }: { product?: ProductDto | null }) {
   if (!product) return null;
   return (
@@ -152,57 +173,54 @@ export default function ProductModal({ id, isModal = true, product: initialProdu
   }
   const attributeKeysOrder = Object.keys(attributeDisplayMap);
 
-  useEffect(() => {
-    if (!product || !product.variants) return;
-    const variants = product.variants;
+  const variants = product?.variants ?? [];
+  const normalizedVariantAttrs = variants.map((v) => normalizeAttrs(v.attributes));
 
-    // Normalize variant attributes to lowercased keys for reliable comparison
-    const normalizedAttrsList = variants.map((v) => {
-      const m: Record<string, string> = {};
-      for (const k in v.attributes ?? {}) {
-        const val = v.attributes?.[k];
-        if (val !== undefined && val !== null && String(val).trim() !== '') {
-          m[k.toLowerCase()] = val;
-        }
-      }
-      return m;
-    });
+  function getAvailableValuesForKey(key: string) {
+    // giữ nguyên các lựa chọn khác, bỏ key hiện tại ra để tính option hợp lệ
+    const selectedWithoutKey: Record<string, string | null> = { ...(selectedAttributes ?? {}) };
+    delete selectedWithoutKey[key];
 
-    const activeKeys = Object.keys(selectedAttributes).filter((k) => selectedAttributes[k]);
-
-    // Try exact match (all active keys) first
-    let foundIndex = variants.findIndex((v, i) => activeKeys.every((key) => normalizedAttrsList[i][key] === selectedAttributes[key]));
-
-    // Fallback: try matching any single active attribute
-    if (foundIndex === -1) {
-      for (const key of activeKeys) {
-        const idx = variants.findIndex((v, i) => normalizedAttrsList[i][key] === selectedAttributes[key]);
-        if (idx >= 0) {
-          foundIndex = idx;
-          break;
-        }
-      }
+    const possible = new Set<string>();
+    for (let i = 0; i < variants.length; i++) {
+      if (!isMatchAllKeys(normalizedVariantAttrs[i], selectedWithoutKey)) continue;
+      const val = normalizedVariantAttrs[i][key];
+      if (val) possible.add(val);
     }
+    return Array.from(possible);
+  }
 
-    const newVariant = foundIndex >= 0 ? variants[foundIndex] : (variants.find((v) => v.isDefault) ?? variants[0]);
+  useEffect(() => {
+    if (!product?.variants?.length) return;
 
-    if (newVariant && (!selectedVariant || newVariant.productVariantId !== selectedVariant.productVariantId)) {
+    const variants = product.variants;
+    const normalized = variants.map((v) => normalizeAttrs(v.attributes));
+
+    // Chỉ chọn variant khi match tất cả key đã chọn (các key có value)
+    const idx = variants.findIndex((v, i) => isMatchAllKeys(normalized[i], selectedAttributes));
+
+    const newVariant =
+      idx >= 0
+        ? variants[idx]
+        : (variants.find((v) => v.isDefault) ?? variants[0] ?? null);
+
+    if (!newVariant) return;
+
+    if (!selectedVariant || newVariant.productVariantId !== selectedVariant.productVariantId) {
       setSelectedVariant(newVariant);
 
-      // Merge attributes from newVariant into selectedAttributes (lowercased keys)
-      const merged: Record<string, string | null> = { ...(selectedAttributes ?? {}) };
-      for (const k in newVariant.attributes ?? {}) {
-        const val = newVariant.attributes?.[k];
-        if (val !== undefined && val !== null && String(val).trim() !== '') merged[k.toLowerCase()] = val;
+      // đồng bộ selectedAttributes theo variant mới (không merge lung tung)
+      const nextAttrs: Record<string, string | null> = {};
+      const nv = normalizeAttrs(newVariant.attributes);
+      for (const k in attributeDisplayMap) {
+        nextAttrs[k] = nv[k] ?? null;
       }
-      setSelectedAttributes(merged);
+      setSelectedAttributes(nextAttrs);
 
-      // Change main image to the variant's image (if present)
-      const idx = newVariant.imageUrl ? uniqueImages.findIndex((u) => u === newVariant.imageUrl) : -1;
-      setSelectedImageIndex(idx >= 0 ? idx : 0);
-      console.debug('[ProductModal] Resolved variant:', newVariant);
+      const imgIdx = newVariant.imageUrl ? uniqueImages.findIndex((u) => u === newVariant.imageUrl) : -1;
+      setSelectedImageIndex(imgIdx >= 0 ? imgIdx : 0);
     }
-  }, [selectedAttributes, product, uniqueImages]);
+  }, [product?.productId, selectedAttributes, uniqueImages]); // bỏ selectedVariant khỏi deps để đỡ loop
 
   return (
     <>
@@ -239,14 +257,33 @@ export default function ProductModal({ id, isModal = true, product: initialProdu
 
               <p className="text-gray-700 mb-12">{product?.description}</p>
 
-              {attributeKeysOrder.filter(lk => attributeValuesMap[lk].length > 1).map((lk) => (
+              {attributeKeysOrder.map((lk) => (
                 <div key={lk} className="mb-4 flex items-center">
                   <span className="mr-2 text-black">{attributeDisplayMap[lk]}:</span>
-                  {attributeValuesMap[lk]?.map((value) => (
+                  {getAvailableValuesForKey(lk).map((value) => (
                     <button
-                      key={String(value)}
-                      className={`px-3 py-1 rounded-md mr-2 ${selectedAttributes[lk] === value ? 'bg-pink-50 border border-pink-600 text-pink-600' : 'bg-white border border-gray-200'}`}
-                      onClick={() => setSelectedAttributes((prev) => ({ ...(prev ?? {}), [lk]: String(value) }))}
+                      key={value}
+                      className={`px-3 py-1 rounded-md mr-2 ${
+                        selectedAttributes[lk] === value
+                          ? "bg-pink-50 border border-pink-600 text-pink-600"
+                          : "bg-white border border-gray-200"
+                      }`}
+                      onClick={() => {
+                        setSelectedAttributes((prev) => {
+                          const next = { ...(prev ?? {}) };
+
+                          // set key đang click
+                          next[lk] = String(value);
+
+                          // reset các key khác để tránh giữ lựa chọn cũ không còn hợp lệ
+                          for (const other of Object.keys(attributeDisplayMap)) {
+                            if (other === lk) continue;
+                            next[other] = null;
+                          }
+
+                          return next;
+                        });
+                      }}
                     >
                       {value}
                     </button>
@@ -258,16 +295,19 @@ export default function ProductModal({ id, isModal = true, product: initialProdu
                 <ButtonMinus onClick={() => setQuantity((q) => Math.max(1, q - 1))} />
                 <span className="mx-2 text-xl text-black">{quantity}</span>
                 <ButtonPlus onClick={() => setQuantity((q) => q + 1)} />
-                <AddToCartButton disabled={(product?.totalStockQuantity ?? 0) <= 0} onClick={async () => {
-                  if (!selectedVariant) return;
-                  try {
-                    await import('@/app/services/cartService').then(m => m.addToCart({ variantId: selectedVariant.productVariantId, quantity }));
-                    toast.success('Đã thêm vào giỏ hàng');
-                  } catch (e) {
-                    console.error(e);
-                    toast.error('Thêm vào giỏ hàng thất bại');
-                  }
-                }} />
+                <AddToCartButton
+                  disabled={!selectedVariant || (selectedVariant.stockQuantity ?? 0) <= 0}
+                  onClick={async () => {
+                    if (!selectedVariant) return;
+                    try {
+                      await import('@/app/services/cartService').then(m => m.addToCart({ variantId: selectedVariant.productVariantId, quantity }));
+                      toast.success('Đã thêm vào giỏ hàng');
+                    } catch (e) {
+                      console.error(e);
+                      toast.error('Thêm vào giỏ hàng thất bại');
+                    }
+                  }}
+                />
               </div>
               <div className="flex gap-3">
                 <WishlistButton productId={product?.productId ?? null} />
