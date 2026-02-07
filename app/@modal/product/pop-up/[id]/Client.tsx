@@ -141,10 +141,6 @@ export default function ProductModal({ id, isModal = true, product: initialProdu
 
   // Keep thumbnails positions fixed — track which image index is selected for main view
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  useEffect(() => {
-    // Reset selected image when product changes
-    setSelectedImageIndex(0);
-  }, [product?.productId, id]);
 
   // Build attribute metadata (preserve first-seen key casing for display)
   const attributeDisplayMap: Record<string, string> = {};
@@ -203,25 +199,7 @@ export default function ProductModal({ id, isModal = true, product: initialProdu
       const imgIdx = newVariant.imageUrl ? uniqueImages.findIndex((u) => u === newVariant.imageUrl) : -1;
       setSelectedImageIndex(imgIdx >= 0 ? imgIdx : 0);
     }
-  }, [product?.productId, selectedAttributes, uniqueImages]); // bỏ selectedVariant khỏi deps để đỡ loop
-
-  // Auto-select attributes that have only 1 available option
-  useEffect(() => {
-    if (!product?.variants) return;
-    const next = { ...selectedAttributes };
-    let changed = false;
-    for (const k of Object.keys(attributeDisplayMap)) {
-      if (selectedAttributes[k]) continue; // already selected
-      const available = getAvailableValuesForKey(k);
-      if (available.length === 1) {
-        next[k] = available[0];
-        changed = true;
-      }
-    }
-    if (changed) {
-      setSelectedAttributes(next);
-    }
-  }, [selectedAttributes, product, attributeDisplayMap]);
+  }, [product?.productId, selectedAttributes, uniqueImages]);
 
   return (
     <>
