@@ -205,6 +205,24 @@ export default function ProductModal({ id, isModal = true, product: initialProdu
     }
   }, [product?.productId, selectedAttributes, uniqueImages]); // bỏ selectedVariant khỏi deps để đỡ loop
 
+  // Auto-select attributes that have only 1 available option
+  useEffect(() => {
+    if (!product?.variants) return;
+    const next = { ...selectedAttributes };
+    let changed = false;
+    for (const k of Object.keys(attributeDisplayMap)) {
+      if (selectedAttributes[k]) continue; // already selected
+      const available = getAvailableValuesForKey(k);
+      if (available.length === 1) {
+        next[k] = available[0];
+        changed = true;
+      }
+    }
+    if (changed) {
+      setSelectedAttributes(next);
+    }
+  }, [selectedAttributes, product, attributeDisplayMap]);
+
   return (
     <>
       {isModal && (
