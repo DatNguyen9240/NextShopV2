@@ -276,11 +276,12 @@ export default function ProductModal({ id, isModal = true, product: initialProdu
                     return (
                       <button
                         key={value}
+                        disabled={isDisabled}
                         className={`px-3 py-1 rounded-md mr-2 ${
                           selectedAttributes[lk] === value
                             ? "bg-pink-50 border border-pink-600 text-pink-600"
                             : isDisabled
-                            ? "bg-gray-100 border border-gray-300 text-gray-400"
+                            ? "bg-gray-100 border border-gray-300 text-gray-400 cursor-not-allowed"
                             : "bg-white border border-gray-200"
                         }`}
                         onClick={() => applySelection(lk, value)}
