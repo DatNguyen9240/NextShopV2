@@ -97,6 +97,16 @@ export default function ProductModal({ id, isModal = true, product: initialProdu
       // If parent provided product, use it and skip network fetch
       if (initialProduct) {
         setProduct(initialProduct);
+        const variants: Variant[] = initialProduct.variants ?? [];
+        const initial = variants.find(v => v.isDefault) ?? variants[0] ?? null;
+
+        setSelectedVariant(initial);
+        setSelectedAttributes(initial ? normalizeAttrs(initial.attributes) : {});
+        // compute images
+        const localImages = Array.from(new Set(variants.map((v: Variant) => v.imageUrl).filter((u): u is string => typeof u === 'string' && !!u)));
+        const initImage = (initial as Variant | null)?.imageUrl;
+        const initIdx = initImage ? localImages.findIndex((u) => u === initImage) : -1;
+        setSelectedImageIndex(initIdx >= 0 ? initIdx : 0);
         setLoading(false);
         return;
       }
@@ -114,7 +124,11 @@ export default function ProductModal({ id, isModal = true, product: initialProdu
           const initial = defaultVariant ?? (variants.length > 0 ? variants[0] : null);
 
           setSelectedVariant(initial ?? null);
-          setSelectedAttributes({});
+          if (initial) {
+            setSelectedAttributes(normalizeAttrs(initial.attributes));
+          } else {
+            setSelectedAttributes({});
+          }
           // compute images local to avoid referencing outer uniqueImages (which depends on product)
           const localImages = Array.from(new Set(variants.map((v: Variant) => v.imageUrl).filter((u): u is string => typeof u === 'string' && !!u)));
           const initImage = (initial as Variant | null)?.imageUrl;
@@ -198,6 +212,14 @@ export default function ProductModal({ id, isModal = true, product: initialProdu
 
       const imgIdx = newVariant.imageUrl ? uniqueImages.findIndex((u) => u === newVariant.imageUrl) : -1;
       setSelectedImageIndex(imgIdx >= 0 ? imgIdx : 0);
+
+      // Sync selectedAttributes to keep highlight if partial selection
+      const nv = normalizeAttrs(newVariant.attributes);
+      setSelectedAttributes((prev) => {
+        // nếu user chưa chọn gì, hoặc chọn chưa đủ, đồng bộ theo variant
+        if (!prev || Object.values(prev).every(v => !v)) return nv;
+        return prev;
+      });
     }
   }, [product?.productId, selectedAttributes, uniqueImages]);
 
@@ -239,21 +261,29 @@ export default function ProductModal({ id, isModal = true, product: initialProdu
               {attributeKeysOrder.map((lk) => (
                 <div key={lk} className="mb-4 flex items-center">
                   <span className="mr-2 text-black">{attributeDisplayMap[lk]}:</span>
-                  {getAvailableValuesForKey(lk).map((value) => (
-                    <button
-                      key={value}
-                      className={`px-3 py-1 rounded-md mr-2 ${
-                        selectedAttributes[lk] === value
-                          ? "bg-pink-50 border border-pink-600 text-pink-600"
-                          : "bg-white border border-gray-200"
-                      }`}
-                      onClick={() => {
-                        setSelectedAttributes((prev) => ({ ...(prev ?? {}), [lk]: String(value) }));
-                      }}
-                    >
-                      {value}
-                    </button>
-                  ))}
+                  {attributeValuesMap[lk].map((value) => {
+                    const available = getAvailableValuesForKey(lk).includes(value);
+                    return (
+                      <button
+                        key={value}
+                        disabled={!available}
+                        className={`px-3 py-1 rounded-md mr-2 ${
+                          selectedAttributes[lk] === value
+                            ? "bg-pink-50 border border-pink-600 text-pink-600"
+                            : available
+                            ? "bg-white border border-gray-200"
+                            : "bg-gray-100 border border-gray-300 text-gray-500 cursor-not-allowed"
+                        }`}
+                        onClick={() => {
+                          if (available) {
+                            setSelectedAttributes((prev) => ({ ...(prev ?? {}), [lk]: String(value) }));
+                          }
+                        }}
+                      >
+                        {value}
+                      </button>
+                    );
+                  })}
                 </div>
               ))}
 
