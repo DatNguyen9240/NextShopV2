@@ -114,7 +114,18 @@ export default function ProductModal({ id, isModal = true, product: initialProdu
           const initial = defaultVariant ?? (variants.length > 0 ? variants[0] : null);
 
           setSelectedVariant(initial ?? null);
-          setSelectedAttributes({});
+          if (initial) {
+            const attrs: Record<string, string | null> = {};
+            for (const k in initial.attributes ?? {}) {
+              const v = initial.attributes?.[k];
+              if (v !== undefined && v !== null && String(v).trim() !== '') {
+                attrs[k.toLowerCase()] = v;
+              }
+            }
+            setSelectedAttributes(attrs);
+          } else {
+            setSelectedAttributes({});
+          }
           // compute images local to avoid referencing outer uniqueImages (which depends on product)
           const localImages = Array.from(new Set(variants.map((v: Variant) => v.imageUrl).filter((u): u is string => typeof u === 'string' && !!u)));
           const initImage = (initial as Variant | null)?.imageUrl;
