@@ -182,10 +182,41 @@ export default function ProductModal({ id, isModal = true, product: initialProdu
     return Array.from(possible);
   }
 
-  function resolveVariantBySelection(nextSelected: Record<string, string | null>) {
-    // ưu tiên match tất cả các key đang có value
-    const idx = variants.findIndex((_, i) => isMatchAllKeys(normalizedVariantAttrs[i], nextSelected));
-    if (idx >= 0) return variants[idx];
+  function resolveVariantBySelection(
+    nextSelected: Record<string, string | null>,
+    forcedKey?: string,
+    forcedValue?: string
+  ) {
+    // 1) match full theo các key đang chọn
+    const fullIdx = variants.findIndex((_, i) => isMatchAllKeys(normalizedVariantAttrs[i], nextSelected));
+    if (fullIdx >= 0) return variants[fullIdx];
+
+    // 2) nếu user vừa click 1 key => ưu tiên forcedKey/forcedValue
+    if (forcedKey && forcedValue) {
+      let bestIdx = -1;
+      let bestScore = -1;
+
+      for (let i = 0; i < variants.length; i++) {
+        const attrs = normalizedVariantAttrs[i];
+        if (attrs[forcedKey] !== forcedValue) continue;
+
+        // score: số key khác (đang chọn) match được
+        let score = 0;
+        for (const k in nextSelected) {
+          if (!nextSelected[k] || k === forcedKey) continue;
+          if (attrs[k] === nextSelected[k]) score++;
+        }
+
+        if (score > bestScore) {
+          bestScore = score;
+          bestIdx = i;
+        }
+      }
+
+      if (bestIdx >= 0) return variants[bestIdx];
+    }
+
+    // 3) fallback: default hoặc first
     return variants.find(v => v.isDefault) ?? variants[0] ?? null;
   }
 
@@ -194,17 +225,11 @@ export default function ProductModal({ id, isModal = true, product: initialProdu
       const next = { ...(prev ?? {}) };
       next[key] = value;
 
-      // tìm variant phù hợp nhất với lựa chọn mới
-      const v = resolveVariantBySelection(next);
+      const v = resolveVariantBySelection(next, key, value);
       if (!v) return next;
 
-      // auto-sync toàn bộ attributes theo variant v (để combo luôn hợp lệ)
-      const synced = normalizeAttrs(v.attributes);
-
-      // đảm bảo vẫn giữ key vừa chọn (phòng trường hợp dữ liệu lỗi)
-      synced[key] = value;
-
-      return synced;
+      // Sync toàn bộ attributes theo variant đã chọn (combo luôn hợp lệ)
+      return normalizeAttrs(v.attributes);
     });
   }
 
@@ -267,31 +292,38 @@ export default function ProductModal({ id, isModal = true, product: initialProdu
 
               <p className="text-gray-700 mb-12">{product?.description}</p>
 
-              {attributeKeysOrder.map((lk) => (
-                <div key={lk} className="mb-4 flex items-center">
-                  <span className="mr-2 text-black">{attributeDisplayMap[lk]}:</span>
-                  {attributeValuesMap[lk]?.map((value) => {
-                    const available = new Set(getAvailableValuesForKey(lk));
-                    const isDisabled = !available.has(value);
-                    return (
-                      <button
-                        key={value}
-                        disabled={isDisabled}
-                        className={`px-3 py-1 rounded-md mr-2 ${
-                          selectedAttributes[lk] === value
-                            ? "bg-pink-50 border border-pink-600 text-pink-600"
-                            : isDisabled
-                            ? "bg-gray-100 border border-gray-300 text-gray-400 cursor-not-allowed"
-                            : "bg-white border border-gray-200"
-                        }`}
-                        onClick={() => applySelection(lk, value)}
-                      >
-                        {value}
-                      </button>
-                    );
-                  })}
-                </div>
-              ))}
+              {attributeKeysOrder.map((lk) => {
+                const availableSet = new Set(getAvailableValuesForKey(lk));
+
+                return (
+                  <div key={lk} className="mb-4 flex items-center">
+                    <span className="mr-2 text-black">{attributeDisplayMap[lk]}:</span>
+
+                    {attributeValuesMap[lk]?.map((value) => {
+                      const isDisabledLook = !availableSet.has(value);
+
+                      return (
+                        <button
+                          key={value}
+                          className={`px-3 py-1 rounded-md mr-2 ${
+                            selectedAttributes[lk] === value
+                              ? "bg-pink-50 border border-pink-600 text-pink-600"
+                              : isDisabledLook
+                              ? "bg-gray-100 border border-gray-300 text-gray-400"
+                              : "bg-white border border-gray-200"
+                          }`}
+                          onClick={() => {
+                            if (selectedAttributes[lk] === value) return;
+                            applySelection(lk, value);
+                          }}
+                        >
+                          {value}
+                        </button>
+                      );
+                    })}
+                  </div>
+                );
+              })}
 
               <div className="flex items-center gap-4 my-6">
                 <ButtonMinus onClick={() => setQuantity((q) => Math.max(1, q - 1))} />
