@@ -90,6 +90,7 @@ export default function ProductModal({ id, isModal = true, product: initialProdu
   const [product, setProduct] = useState<ProductDto | null>(initialProduct ?? null);
   const [loading, setLoading] = useState(true);
   const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   useEffect(() => {
     let mounted = true;
@@ -144,9 +145,6 @@ export default function ProductModal({ id, isModal = true, product: initialProdu
   const uniqueImages = Array.from(new Set(allVariantImages));
   const imagesProp = loading ? undefined : (uniqueImages.length > 0 ? uniqueImages : []);
 
-  // Keep thumbnails positions fixed — track which image index is selected for main view
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-
   // Build attribute metadata (preserve first-seen key casing for display)
   const attributeDisplayMap: Record<string, string> = {};
   const attributeValuesMap: Record<string, string[]> = {};
@@ -198,13 +196,13 @@ export default function ProductModal({ id, isModal = true, product: initialProdu
       const v = resolveVariantBySelection(next);
       if (!v) return next;
 
-      // auto-sync toàn bộ attributes theo variant v (để combo luôn hợp lệ)
+      // auto-sync các key chưa chọn theo variant v
       const synced = normalizeAttrs(v.attributes);
-
-      // đảm bảo vẫn giữ key vừa chọn (phòng trường hợp dữ liệu lỗi)
-      synced[key] = value;
-
-      return synced;
+      const result = { ...next };
+      for (const k in synced) {
+        if (!(k in result) || !result[k]) result[k] = synced[k];
+      }
+      return result;
     });
   }
 
