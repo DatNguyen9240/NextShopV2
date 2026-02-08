@@ -7,6 +7,7 @@ import { getVariantsByProductIdAdmin, updateVariant, createVariant, deleteVarian
 import { getAttributesByProductId, getVariantAttributeValueIds, assignVariantAttributeValue, removeVariantAttributeValue, ProductAttribute } from '../../../../../services/attributeService';
 import ImageUploader from '@/app/components/ImageUploader';
 import { formatVND } from '@/app/utils/priceUtils';
+import ConfirmModal from '@/app/components/ConfirmModal';
 
 interface Variant {
   productVariantId: string;
@@ -571,28 +572,15 @@ export default function ProductVariants() {
       </div>
 
       {/* Delete Confirmation Modal */}
-      {deletingId && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
-            <h3 className="text-lg font-semibold mb-4">Confirm Delete</h3>
-            <p className="mb-4">Are you sure you want to delete this variant? This action cannot be undone.</p>
-            <div className="flex justify-end space-x-2">
-              <button
-                onClick={() => setDeletingId(null)}
-                className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDelete}
-                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmModal
+        show={!!deletingId}
+        title="Xác nhận xóa variant"
+        message="Bạn có chắc chắn muốn xóa variant này? Hành động này không thể hoàn tác."
+        confirmText="Xóa"
+        cancelText="Hủy"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeletingId(null)}
+      />
     </div>
   );
 }
