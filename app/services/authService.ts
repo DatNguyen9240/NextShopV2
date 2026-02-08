@@ -98,3 +98,13 @@ export const disableEmailMfa = async () => {
   const res = await axiosClient.post('/api/auth/mfa/disable');
   return res.data;
 };
+
+export const forgotPassword = async (email: string) => {
+  const res = await axiosClient.post('/api/auth/forgot-password', { email });
+  return res.data;
+};
+
+export const resetPassword = async (token: string, newPassword: string) => {
+  const res = await axiosClient.post('/api/auth/reset-password', { token, newPassword });
+  return res.data;
+};

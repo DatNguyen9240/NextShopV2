@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { setCookie } from "@/app/lib/axiosClient";
 import { preformatGetAssertReq, publicKeyCredentialToJSON } from "@/utils/webauthn";
@@ -373,6 +374,11 @@ export default function LoginPage() {
             className="w-full border px-3 py-2 rounded"
             required
           />
+          <div className="text-right mt-1">
+            <Link href="/forgot-password" className="text-xs text-blue-600 hover:text-blue-700 hover:underline">
+              Quên mật khẩu?
+            </Link>
+          </div>
         </div>
         <div>
           <button
