@@ -137,7 +137,7 @@ export default function AdminProducts() {
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="h-12 w-12 relative rounded overflow-hidden">
                     <Image
-                      src={product.variants?.[0]?.imageUrl || '/placeholder.svg'}
+                      src={product.variants?.[0]?.imageUrl || '/images/placeholder.svg'}
                       alt={product.name}
                       fill
                       sizes="48px"
