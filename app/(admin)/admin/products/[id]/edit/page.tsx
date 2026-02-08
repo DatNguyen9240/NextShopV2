@@ -22,6 +22,7 @@ export default function EditProductPage() {
     isActive: true,
     tags: '',
     additionalInfo: '',
+    taxRate: '',
     categoryIds: [] as string[]
   });
 
@@ -44,6 +45,7 @@ export default function EditProductPage() {
           isActive: productRes.isActive ?? true,
           tags: (productRes.tags || []).join(', '),
           additionalInfo: productRes.additionalInfo || '',
+          taxRate: productRes.taxRate !== null && productRes.taxRate !== undefined ? productRes.taxRate.toString() : '',
           categoryIds: currentCategoryIds
         });
 
@@ -76,6 +78,7 @@ export default function EditProductPage() {
         isActive: formData.isActive,
         tags: formData.tags.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag),
         additionalInfo: formData.additionalInfo,
+        taxRate: formData.taxRate ? parseFloat(formData.taxRate) : null,
         categoryIds: formData.categoryIds
       };
       await updateProduct(id as string, updateData);
@@ -175,6 +178,21 @@ export default function EditProductPage() {
             onChange={handleChange}
             className="mt-1"
           />
+        </div>
+        <div>
+          <label className="block text-sm font-medium">Tax Rate (optional)</label>
+          <input
+            type="number"
+            name="taxRate"
+            value={formData.taxRate}
+            onChange={handleChange}
+            step="0.01"
+            min="0"
+            max="1"
+            className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+            placeholder="e.g., 0.10 for 10%"
+          />
+          <div className="text-sm text-gray-500 mt-1">Leave empty to use category or system default. Example: 0.10 = 10%</div>
         </div>
         <div>
           <label className="block text-sm font-medium">Tags (comma separated)</label>

@@ -92,6 +92,7 @@ export interface OrderItemDto {
   quantity: number;
   unitPrice: number;
   discountAmount?: number;
+  taxRate?: number;
   taxAmount?: number;
   totalAmount?: number;
   variant?: {
@@ -118,6 +119,7 @@ export interface OrderDto {
   orderDate: string;
   status: string;
   subTotal?: number;
+  taxAmount?: number;
   discountAmount?: number;
   totalAmount: number;
   buyerName?: string | null;

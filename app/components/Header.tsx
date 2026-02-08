@@ -151,10 +151,12 @@ const Header = () => {
                   onClick={() => setShowNotifications(false)}
                 />
                 <div 
-                  className="fixed w-80 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-[9999]"
+                  className="fixed w-full md:w-80 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-[9999] overflow-y-auto md:max-h-64"
                   style={{
                     top: `${notifPosition.top}px`,
                     right: `${notifPosition.right}px`,
+                    left: window.innerWidth < 768 ? '16px' : 'auto', // On mobile, add left margin
+                    maxWidth: window.innerWidth < 768 ? `${window.innerWidth - 32}px` : 'auto', // On mobile, max width screen - padding
                   }}
                 >
                   <div className="flex items-center justify-between px-4 py-2 border-b border-gray-100">

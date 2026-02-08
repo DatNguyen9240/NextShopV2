@@ -5,6 +5,7 @@ export type VariantInfo = {
   imageUrl?: string;
   sku?: string;
   stockQuantity?: number;
+  taxRate?: number;
 };
 
 export type CartItemDto = {
@@ -14,6 +15,9 @@ export type CartItemDto = {
   unitPrice: number;
   totalPrice: number;
   variantInfo?: VariantInfo;
+  taxRate?: number;
+  priceBeforeTax?: number;
+  taxAmount?: number;
 };
 
 export type CartDto = {
@@ -23,6 +27,8 @@ export type CartDto = {
   items: CartItemDto[];
   totalAmount: number;
   totalItems: number;
+  subtotalBeforeTax?: number;
+  taxAmount?: number;
 };
 
 export type AddCartItemDto = {

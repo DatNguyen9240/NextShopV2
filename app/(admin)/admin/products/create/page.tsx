@@ -18,6 +18,7 @@ export default function CreateProductPage() {
     tags: '',
     // New: additional info field to capture extra product details
     additionalInfo: '',
+    taxRate: '',
     categoryIds: [] as string[]
   });
 
@@ -46,6 +47,7 @@ export default function CreateProductPage() {
         isActive: formData.isActive,
         tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
         additionalInfo: formData.additionalInfo,
+        taxRate: formData.taxRate ? parseFloat(formData.taxRate) : null,
         categoryIds: formData.categoryIds
       };
       await createProduct(data);
@@ -179,6 +181,21 @@ export default function CreateProductPage() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                     placeholder="Enter tags separated by commas"
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Tax Rate (optional)</label>
+                  <input
+                    type="number"
+                    name="taxRate"
+                    value={formData.taxRate}
+                    onChange={handleChange}
+                    step="0.01"
+                    min="0"
+                    max="1"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    placeholder="e.g., 0.10 for 10%"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">Leave empty to use category or system default. Example: 0.10 = 10%</p>
                 </div>
                 <div className="flex items-center">
                   <input

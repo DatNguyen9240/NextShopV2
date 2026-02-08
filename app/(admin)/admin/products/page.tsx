@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { getProductsAdmin, deleteProduct } from '../../../services/productService';
+import { getCategories, type Category } from '../../../services/categoryService';
 import ConfirmModal from '@/app/components/ConfirmModal';
 
 interface Product {
@@ -20,16 +21,25 @@ interface Product {
 
 export default function AdminProducts() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [confirmShow, setConfirmShow] = useState(false);
   const [confirmTargetId, setConfirmTargetId] = useState<string | null>(null);
 
-  const fetchProducts = async () => {
+  const fetchProducts = async (categoryId?: string) => {
     setLoading(true);
     try {
-      const data = await getProductsAdmin({ page: 1, pageSize: 100 });
+      const params: { page: number; pageSize: number; categoryId?: string } = { 
+        page: 1, 
+        pageSize: 100 
+      };
+      if (categoryId) {
+        params.categoryId = categoryId;
+      }
+      const data = await getProductsAdmin(params);
       // API may return either a flat array or a paged object { items: [], totalPages, ... }
       const items = Array.isArray(data) ? data : (data?.items || data?.Items || []);
       setProducts(items);
@@ -40,9 +50,24 @@ export default function AdminProducts() {
     }
   };
 
+  const fetchCategories = async () => {
+    try {
+      const data = await getCategories();
+      setCategories(data);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  };
+
   useEffect(() => {
+    void fetchCategories();
     void fetchProducts();
   }, []);
+
+  const handleCategoryChange = (categoryId: string) => {
+    setSelectedCategoryId(categoryId);
+    void fetchProducts(categoryId || undefined);
+  };
 
   const handleDelete = (productId: string) => {
     setConfirmTargetId(productId);
@@ -56,7 +81,7 @@ export default function AdminProducts() {
     setDeletingId(productId);
     try {
       await deleteProduct(productId);
-      await fetchProducts();
+      await fetchProducts(selectedCategoryId || undefined);
     } catch (err) {
       console.error('Error deleting product:', err);
     } finally {
@@ -71,12 +96,26 @@ export default function AdminProducts() {
     <div>
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Products</h2>
-        <Link
-          href="/admin/products/create"
-          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
-        >
-          Create New Product
-        </Link>
+        <div className="flex items-center gap-4">
+          <select
+            value={selectedCategoryId}
+            onChange={(e) => handleCategoryChange(e.target.value)}
+            className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">Tất cả danh mục</option>
+            {categories.map((cat) => (
+              <option key={cat.categoryId} value={cat.categoryId}>
+                {cat.name}
+              </option>
+            ))}
+          </select>
+          <Link
+            href="/admin/products/create"
+            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+          >
+            Create New Product
+          </Link>
+        </div>
       </div>
       <div className="bg-white shadow-md rounded-lg overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">

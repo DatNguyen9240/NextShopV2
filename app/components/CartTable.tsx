@@ -23,10 +23,12 @@ const TableHeader: React.FC<TableHeaderProps> = ({ columns }) => (
       {columns.map((col, idx) => (
         <th
           key={col}
-          className={`py-3 px-4 font-semibold ${
+          className={`py-2 md:py-3 px-1 md:px-4 font-semibold text-[11px] md:text-base ${
             idx === 0
-              ? "text-black rounded-tl-xl rounded-bl-xl min-w-[240px] text-left"
-              : idx === 1 || idx === 2 || idx === 3
+              ? "text-black rounded-tl-xl rounded-bl-xl text-left"
+              : idx === 1
+              ? "text-black text-center hidden md:table-cell"
+              : idx === 2 || idx === 3
               ? "text-black text-center"
               : idx === columns.length - 1
               ? "text-black rounded-tr-xl rounded-br-xl text-center"
@@ -42,19 +44,19 @@ const TableHeader: React.FC<TableHeaderProps> = ({ columns }) => (
 
 const CartTableRow: React.FC<{ item: CartItemType; onChangeQty: (id: string, qty: number) => void; onRemove: (id: string) => void }> = ({ item, onChangeQty, onRemove }) => (
   <tr className="border-b">
-    <td className="py-2 flex items-center gap-6 min-w-[300px]">
+    <td className="py-2 flex items-center gap-2 md:gap-6 min-w-[140px] md:min-w-[300px]">
       <Image
         src={item.variantInfo?.imageUrl || '/sell_off/01.jpg'}
         alt={item.variantInfo?.productName || 'Product'}
         width={100}
         height={100}
-        className="rounded"
+        className="rounded w-[45px] h-[45px] md:w-[100px] md:h-[100px] flex-shrink-0"
         style={{ width: 'auto', height: 'auto' }}
         priority
       />
-      <div>
+      <div className="flex-1 min-w-0">
         <div
-          className="font-bold text-black max-w-[240px] overflow-hidden"
+          className="font-bold text-black text-[11px] md:text-base overflow-hidden"
           style={{
             display: "-webkit-box",
             WebkitLineClamp: 2,
@@ -67,30 +69,36 @@ const CartTableRow: React.FC<{ item: CartItemType; onChangeQty: (id: string, qty
           {item.variantInfo?.productName || 'Unknown Product'}
         </div>
         {/* Rating not available from cart items; keep space for future */}
-        <div className="flex mt-1">
+        <div className="flex mt-0.5 md:mt-1">
           {(() => {
             const color = item.variantInfo?.attributes?.['Color'] ?? item.variantInfo?.attributes?.['color'] ?? '';
             const size = item.variantInfo?.attributes?.['Size'] ?? item.variantInfo?.attributes?.['size'] ?? '';
-            return <span className="text-sm text-gray-500">{color ? `${color}${size ? ' • ' + size : ''}` : size}</span>;
+            return <span className="text-[9px] md:text-sm text-gray-500 truncate">{color ? `${color}${size ? ' • ' + size : ''}` : size}</span>;
           })()}
         </div>
       </div>
     </td>
-    <td className="py-2 px-4 text-center">
-      <MoneyVND value={item.unitPrice} color="text-pink-600" />
+    <td className="py-2 px-2 md:px-4 text-center hidden md:table-cell">
+      <div className="text-sm md:text-base">
+        <MoneyVND value={item.unitPrice} color="text-pink-600" />
+      </div>
     </td>
-    <td className="py-2 px-4 text-center text-black">
-      <div className="flex items-center gap-2 justify-center">
+    <td className="py-2 px-0.5 md:px-4 text-center text-black">
+      <div className="flex items-center gap-0 md:gap-2 justify-center scale-75 md:scale-100">
         <ButtonMinus onClick={async () => { const newQty = Math.max(1, item.quantity - 1); onChangeQty(item.cartItemId, newQty); }} />
-        <span className="px-2">{item.quantity}</span>
+        <span className="px-1 md:px-2 text-xs md:text-base min-w-[16px] md:min-w-[20px] text-center">{item.quantity}</span>
         <ButtonPlus onClick={async () => { const newQty = item.quantity + 1; onChangeQty(item.cartItemId, newQty); }} />
       </div>
     </td>
-    <td className="py-2 px-4 text-center">
-      <MoneyVND value={item.totalPrice} color="text-pink-600" />
+    <td className="py-2 px-0.5 md:px-4 text-center">
+      <div className="text-[11px] md:text-base">
+        <MoneyVND value={item.totalPrice} color="text-pink-600" />
+      </div>
     </td>
-    <td className="py-2 px-4 text-center">
-      <ButtonClose onClick={async () => onRemove(item.cartItemId)} />
+    <td className="py-2 px-0.5 md:px-4 text-center">
+      <div className="scale-75 md:scale-100">
+        <ButtonClose onClick={async () => onRemove(item.cartItemId)} />
+      </div>
     </td>
   </tr>
 );
@@ -157,9 +165,9 @@ const CartTable: React.FC = () => {
   const items = cart?.items ?? [];
 
   return (
-    <div className="w-full mx-auto mt-8 rounded-lg ">
+    <div className="w-full mx-auto mt-8 rounded-lg">
       <ProductsTitle title="GIỎ HÀNG CỦA BẠN" />
-      <div className="text-gray-700 mb-2 ml-1">
+      <div className="text-gray-700 mb-2 ml-1 text-sm md:text-base">
         Có <span className="text-pink-600 font-bold">{items.length}</span> sản
         phẩm trong giỏ hàng của bạn
       </div>
@@ -171,7 +179,8 @@ const CartTable: React.FC = () => {
           {loading ? (
             <tbody>
               <tr>
-                <td colSpan={5} className="py-6 text-center">Đang tải giỏ hàng...</td>
+                <td colSpan={4} className="py-6 text-center text-sm md:text-base md:hidden">Đang tải giỏ hàng...</td>
+                <td colSpan={5} className="py-6 text-center text-sm md:text-base hidden md:table-cell">Đang tải giỏ hàng...</td>
               </tr>
             </tbody>
           ) : (

@@ -255,7 +255,7 @@ export default function ProductModal({ id, isModal = true, product: initialProdu
       const imgIdx = newVariant.imageUrl ? uniqueImages.findIndex((u) => u === newVariant.imageUrl) : -1;
       setSelectedImageIndex(imgIdx >= 0 ? imgIdx : 0);
     }
-  }, [product?.productId, selectedAttributes, uniqueImages]);
+  }, [product?.productId, product?.variants, selectedAttributes, uniqueImages, selectedVariant]);
 
   return (
     <>
@@ -269,14 +269,16 @@ export default function ProductModal({ id, isModal = true, product: initialProdu
       )}
       {isModal && <hr className="mb-4" />}
 
-      <div className="flex md:gap-4 xl:gap-18 flex-wrap">
-        <ProductImages
-          images={imagesProp}
-          selectedIndex={selectedImageIndex}
-          onSelect={(idx) => setSelectedImageIndex(idx)}
-          badgePercent={selectedVariant && selectedVariant.discountPercent && selectedVariant.discountPercent > 0 ? `${selectedVariant.discountPercent}%` : undefined}
-        />
-        <div className="flex-1 min-w-[250px] overflow-hidden">
+      <div className="flex flex-col md:flex-row gap-4 xl:gap-18 mt-4 md:mt-0">
+        <div className="w-full max-w-[350px] md:w-auto md:max-w-none">
+          <ProductImages
+            images={imagesProp}
+            selectedIndex={selectedImageIndex}
+            onSelect={(idx) => setSelectedImageIndex(idx)}
+            badgePercent={selectedVariant && selectedVariant.discountPercent && selectedVariant.discountPercent > 0 ? `${selectedVariant.discountPercent}%` : undefined}
+          />
+        </div>
+        <div className="flex-1 min-w-0 md:min-w-[250px] overflow-hidden">
           {!isModal && <ProductInfo product={product} />}
 
           {loading ? (

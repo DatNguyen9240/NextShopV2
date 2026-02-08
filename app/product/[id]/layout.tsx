@@ -4,6 +4,6 @@ export default function ProductLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="max-w-[1240px] mx-auto sm:px-6 lg:py-8">{children}</div>
+    <div className="max-w-[1300px] mx-auto px-2 sm:px-6 lg:py-8">{children}</div>
   );
 }

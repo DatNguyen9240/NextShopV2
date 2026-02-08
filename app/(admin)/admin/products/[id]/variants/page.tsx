@@ -252,7 +252,7 @@ export default function ProductVariants() {
       {showAddForm && (
         <div className="bg-white shadow-md rounded-lg p-6 mb-6">
           <h3 className="text-lg font-semibold mb-4">Add New Variant</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">SKU</label>
               <input
@@ -296,8 +296,8 @@ export default function ProductVariants() {
                 className="border border-gray-300 rounded px-3 py-2"
               />
             </div>
-            <div className="flex space-x-4">
-              <div>
+            <div className="col-span-full flex space-x-4 items-start mb-6">
+              <div className="mr-4 mb-1">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Image</label>
                 <ImageUploader
                   value={newVariant.imageUrl}
@@ -305,7 +305,7 @@ export default function ProductVariants() {
                   previewSize="h-8 w-8"
                 />
               </div>
-              <div>
+              <div className="mb-1">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Hover image</label>
                 <ImageUploader
                   value={newVariant.imgHover}
@@ -317,7 +317,7 @@ export default function ProductVariants() {
 
             {/* Attribute selects for Add New Variant */}
             {attributes.map((a) => (
-              <div key={a.attributeId}>
+              <div key={a.attributeId} className="mb-2 pr-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">{a.name}</label>
                 <select
                   value={newVariantAttributes[a.attributeId] ?? ''}
@@ -330,7 +330,7 @@ export default function ProductVariants() {
                   ))}
                 </select>
               </div>
-            ))}
+            ))} 
 
             <div className="col-span-full flex items-center space-x-6">
               <div className="flex items-center">
@@ -363,7 +363,7 @@ export default function ProductVariants() {
       )}
       <div className="bg-white shadow-md rounded-lg overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="min-w-[1500px] divide-y divide-gray-200 whitespace-nowrap">
+          <table className="min-w-[1500px] divide-y divide-gray-200 whitespace-nowrap border-separate" style={{ borderSpacing: '0 0.25rem' }}> 
           <thead className="bg-gray-50">
             <tr>
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SKU</th>
@@ -375,8 +375,8 @@ export default function ProductVariants() {
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Active</th>
               {/* Attribute columns */}
               {attributes.map((a) => (
-                <th key={a.attributeId} className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[140px]">{a.name}</th>
-              ))}
+                <th key={a.attributeId} className="px-8 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[160px]">{a.name}</th>
+              ))} 
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th> 
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hover Image</th>
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -467,7 +467,7 @@ export default function ProductVariants() {
                 {attributes.map((a) => {
                   const selected = variantAttrMap[variant.productVariantId]?.[a.attributeId] ?? '';
                   return (
-                    <td key={a.attributeId} className="px-6 py-2 whitespace-nowrap text-sm text-gray-500 min-w-[140px]">
+                    <td key={a.attributeId} className="px-8 py-3 whitespace-nowrap text-sm text-gray-500 min-w-[160px] align-top">
                       <select
                         value={selected ?? ''}
                         disabled={Boolean(savingAttr[variant.productVariantId + '|' + a.attributeId])}
@@ -504,7 +504,7 @@ export default function ProductVariants() {
                             setSavingAttr(prev => ({ ...prev, [variant.productVariantId + '|' + a.attributeId]: false }));
                           }
                         }}
-                        className="w-full border border-gray-300 rounded px-2 py-1 bg-white"
+                        className="w-full max-w-[220px] border border-gray-300 rounded px-2 py-2 bg-white"
                       >
                         <option value="">-</option>
                         {(a.values ?? []).map(v => (

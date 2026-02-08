@@ -10,6 +10,7 @@ interface CategoryModalProps {
     parentId?: string;
     imageUrl?: string;
     icon?: string;
+    taxRate?: number | null;
   }) => Promise<void>;
   category?: Category | null;
   title: string;
@@ -28,7 +29,8 @@ export default function CategoryModal({
     name: '',
     parentId: '',
     imageUrl: '',
-    icon: ''
+    icon: '',
+    taxRate: ''
   });
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
@@ -41,14 +43,16 @@ export default function CategoryModal({
           name: category.name,
           parentId: category.parentId || '',
           imageUrl: category.imageUrl || '',
-          icon: category.icon || ''
+          icon: category.icon || '',
+          taxRate: category.taxRate !== null && category.taxRate !== undefined ? category.taxRate.toString() : ''
         });
       } else {
         setFormData({
           name: '',
           parentId: parentId || '',
           imageUrl: '',
-          icon: ''
+          icon: '',
+          taxRate: ''
         });
       }
     }
@@ -73,7 +77,8 @@ export default function CategoryModal({
         name: formData.name.trim(),
         parentId: formData.parentId || undefined,
         imageUrl: formData.imageUrl || undefined,
-        icon: formData.icon || undefined
+        icon: formData.icon || undefined,
+        taxRate: formData.taxRate ? parseFloat(formData.taxRate) : null
       });
       onClose();
     } catch (error) {
@@ -159,6 +164,24 @@ export default function CategoryModal({
                 className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="e.g., 📱, 🚀, 💻"
               />
+            </div>
+
+            {/* Tax Rate */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Tax Rate (optional)
+              </label>
+              <input
+                type="number"
+                value={formData.taxRate}
+                onChange={(e) => setFormData(prev => ({ ...prev, taxRate: e.target.value }))}
+                step="0.01"
+                min="0"
+                max="1"
+                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="e.g., 0.10 for 10%"
+              />
+              <p className="mt-1 text-xs text-gray-500">Leave empty to use system default. Example: 0.10 = 10%</p>
             </div>
 
             {/* Image */}

@@ -6,6 +6,7 @@ export interface Category {
   parentId?: string;
   imageUrl?: string;
   icon?: string;
+  taxRate?: number | null;
   createdAt: string;
   parentName?: string;
   children: Category[];
@@ -140,6 +141,7 @@ export async function createCategory(data: {
   parentId?: string;
   imageUrl?: string;
   icon?: string;
+  taxRate?: number | null;
 }): Promise<Category> {
   try {
     const res = await axiosClient.post('/api/Category', data);
@@ -154,6 +156,7 @@ export async function updateCategory(id: string, data: {
   parentId?: string;
   imageUrl?: string;
   icon?: string;
+  taxRate?: number | null;
 }): Promise<Category> {
   try {
     const res = await axiosClient.put(`/api/Category/${id}`, data);

@@ -35,6 +35,9 @@ interface OrderItem {
 interface Order {
   orderId: string;
   status: string;
+  subTotal?: number;
+  taxAmount?: number;
+  discountAmount?: number;
   totalAmount: number;
   buyerName?: string | null;
   buyerPhone?: string | null;
@@ -80,6 +83,9 @@ export default function PaymentSuccessPage() {
         setOrder({
           orderId: payload.orderId ?? payload.OrderId,
           status: payload.status ?? payload.Status,
+          subTotal: payload.subTotal ?? payload.SubTotal ?? undefined,
+          taxAmount: payload.taxAmount ?? payload.TaxAmount ?? undefined,
+          discountAmount: payload.discountAmount ?? payload.DiscountAmount ?? undefined,
           totalAmount: payload.totalAmount ?? payload.TotalAmount ?? 0,
           buyerName: payload.buyerName ?? payload.BuyerName ?? null,
           buyerPhone: payload.buyerPhone ?? payload.BuyerPhone ?? null,
@@ -371,9 +377,40 @@ export default function PaymentSuccessPage() {
                       </div>
                     ))}
 
-                    <div className="p-5 flex items-center justify-between border-t">
-                      <div className="text-sm text-gray-700">Tổng</div>
-                      <div className="text-2xl font-extrabold text-pink-600"><MoneyVND value={order.totalAmount} /></div>
+                    <div className="p-5 border-t space-y-2">
+                      {order.subTotal !== undefined && (
+                        <div className="flex items-center justify-between text-sm text-gray-700">
+                          <span>Tạm tính (chưa thuế):</span>
+                          <MoneyVND value={order.subTotal ?? 0} />
+                        </div>
+                      )}
+                      {(order.taxAmount ?? 0) > 0 && (
+                        <div className="flex items-center justify-between text-sm text-gray-700">
+                          <span className="flex items-center gap-1">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                            </svg>
+                            Thuế VAT:
+                          </span>
+                          <MoneyVND value={order.taxAmount ?? 0} />
+                        </div>
+                      )}
+                      {(order.discountAmount ?? 0) > 0 && (
+                        <div className="flex items-center justify-between text-sm text-green-600 font-medium">
+                          <span className="flex items-center gap-1">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                            </svg>
+                            Giảm giá:
+                          </span>
+                          <span>- <MoneyVND value={order.discountAmount ?? 0} /></span>
+                        </div>
+                      )}
+                      <hr className="border-gray-300" />
+                      <div className="flex items-center justify-between pt-2">
+                        <div className="text-lg font-bold text-gray-900">Tổng cộng</div>
+                        <div className="text-2xl font-extrabold text-pink-600"><MoneyVND value={order.totalAmount} /></div>
+                      </div>
                     </div>
                   </div>
                 </div>

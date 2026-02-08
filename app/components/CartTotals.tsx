@@ -10,6 +10,8 @@ const CartTotals: React.FC = () => {
   const router = useRouter();
   const { cart, loading } = useCart();
 
+  const subtotalBeforeTax = cart?.subtotalBeforeTax ?? 0;
+  const taxAmount = cart?.taxAmount ?? 0;
   const total = cart?.totalAmount ?? 0;
 
   if (loading) {
@@ -26,8 +28,12 @@ const CartTotals: React.FC = () => {
       <h3 className="text-lg font-bold text-gray-800 mb-2">TỔNG GIỎ HÀNG</h3>
       <hr className="mb-2" />
       <div className="flex justify-between items-center mb-1">
-        <span className="text-gray-700">Tạm tính</span>
-        <MoneyVND value={total} color="text-pink-600" className="text-lg" />
+        <span className="text-gray-700">Tạm tính (chưa thuế)</span>
+        <MoneyVND value={subtotalBeforeTax} color="text-gray-800" className="text-base" />
+      </div>
+      <div className="flex justify-between items-center mb-1">
+        <span className="text-gray-700">Thuế VAT</span>
+        <MoneyVND value={taxAmount} color="text-gray-800" className="text-base" />
       </div>
       <div className="flex justify-between items-center mb-1">
         <span className="text-gray-700">Phí vận chuyển</span>

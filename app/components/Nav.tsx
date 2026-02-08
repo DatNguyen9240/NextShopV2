@@ -35,12 +35,12 @@ const Nav = React.memo(function Nav({ categories }: NavProps) {
   // NOTE: we intentionally do NOT auto-open submenus based on route. Dropdown visibility is purely on hover.
 
   return (
-    <nav className="w-full bg-white border-b border-gray-200 flex justify-center hidden lg:flex">
-      <div className="flex items-center gap-12 py-4 z-99">
+    <nav className="w-full bg-white border-b border-gray-200 flex justify-center">
+      <div className="flex items-center gap-12 py-4 z-10 overflow-x-auto lg:overflow-visible lg:gap-12 px-4 lg:px-0">
         {menu.map((item) => (
           <div
             key={item.label}
-            className="relative group"
+            className="relative group flex-shrink-0"
           >
             <Link
               href={item.href}
@@ -51,7 +51,7 @@ const Nav = React.memo(function Nav({ categories }: NavProps) {
               }`}
               aria-current={pathname === item.href ? "page" : undefined}
             >
-              <span className="text-2xl mr-2 transition-colors duration-200 ease-in-out group-hover:text-green-500">
+              <span className="text-2xl mr-2 transition-colors duration-200 ease-in-out group-hover:text-green-500 lg:block hidden">
                 {item.icon}
               </span>
               <span className={`text-sm font-bold tracking-wide uppercase transition-colors duration-200 ease-in-out ${
@@ -63,7 +63,7 @@ const Nav = React.memo(function Nav({ categories }: NavProps) {
               </span>
               {item.subMenu && (
                 <svg
-                  className="ml-1 w-3 h-3 text-gray-400 transition-transform duration-200 ease-in-out group-hover:text-green-500 group-hover:-rotate-180"
+                  className="ml-1 w-3 h-3 text-gray-400 transition-transform duration-200 ease-in-out group-hover:text-green-500 group-hover:-rotate-180 lg:block hidden"
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="2"
@@ -75,7 +75,7 @@ const Nav = React.memo(function Nav({ categories }: NavProps) {
             </Link>
             {item.subMenu && (
               <div
-                className="absolute left-0 top-full mt-2 bg-white shadow-lg rounded z-10 min-w-[160px] overflow-hidden transition-all duration-200 ease-in-out opacity-0 invisible transform scale-95 group-hover:opacity-100 group-hover:visible group-hover:scale-100"
+                className="absolute left-0 top-full mt-2 bg-white shadow-lg rounded z-10 min-w-[160px] overflow-hidden transition-all duration-200 ease-in-out opacity-0 invisible transform scale-95 group-hover:opacity-100 group-hover:visible group-hover:scale-100 lg:block hidden"
               >
                 {item.subMenu.map((sub) => (
                   <Link
