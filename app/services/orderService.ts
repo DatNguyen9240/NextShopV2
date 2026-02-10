@@ -113,6 +113,22 @@ export interface OrderItemDto {
   variantOptionsJson?: string | null;
 }
 
+export interface OrderCouponDto {
+  couponId: string;
+  code: string;
+  discountAmount: number;
+  appliedAt?: string;
+}
+
+export interface ShipmentDto {
+  shipmentId: string;
+  orderId: string;
+  carrier: string;
+  trackingNumber: string;
+  status: string;
+  createdAt: string;
+}
+
 export interface OrderDto {
   orderId: string;
   userId?: string;
@@ -123,9 +139,14 @@ export interface OrderDto {
   discountAmount?: number;
   totalAmount: number;
   buyerName?: string | null;
+  buyerEmail?: string | null;
   buyerPhone?: string | null;
-  coupons?: unknown[];
+  buyerGender?: string | null;
   shippingAddress?: string | null;
+  shippingLat?: number | null;
+  shippingLng?: number | null;
+  coupons?: OrderCouponDto[];
+  shipment?: ShipmentDto;
   items: OrderItemDto[];
   cancelReason?: string | null;
   adminCancelReason?: string | null;

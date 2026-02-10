@@ -3,6 +3,7 @@ import axiosClient from '../lib/axiosClient';
 export interface CouponDto {
   couponId: string;
   code: string;
+  couponType?: string;
   discountPercent: number;
   minOrderAmount?: number | null;
   maxDiscountAmount?: number | null;
@@ -54,4 +55,34 @@ export async function updateCoupon(id: string, payload: Record<string, unknown>)
 export async function deleteCoupon(id: string) {
   const res = await axiosClient.delete(`/api/Coupon/${id}`);
   return res.data?.success ?? true;
+}
+
+// Welcome coupon settings
+export interface WelcomeSettingsDto {
+  discountPercent: number;
+  minOrderAmount: number;
+  maxDiscountAmount: number;
+  usageLimit: number;
+  validityMonths: number;
+  isEnabled: boolean;
+}
+
+export async function getWelcomeSettings(): Promise<WelcomeSettingsDto | null> {
+  try {
+    const res = await axiosClient.get('/api/Coupon/welcome-settings');
+    return res.data?.data ?? null;
+  } catch (err) {
+    console.error('[getWelcomeSettings] error', err);
+    return null;
+  }
+}
+
+export async function saveWelcomeSettings(settings: WelcomeSettingsDto): Promise<boolean> {
+  try {
+    const res = await axiosClient.put('/api/Coupon/welcome-settings', settings);
+    return res.data?.success ?? true;
+  } catch (err) {
+    console.error('[saveWelcomeSettings] error', err);
+    return false;
+  }
 }

@@ -21,6 +21,7 @@ type ButtonProps = {
   children?: React.ReactNode;
   hidden?: boolean;
   disabled?: boolean;
+  type?: "button" | "submit" | "reset";
 };
 
 const sizeMap: Record<string, string> = {
@@ -51,6 +52,7 @@ const Button: React.FC<ButtonProps> = ({
   children,
   hidden = false,
   disabled = false,
+  type = "button",
 }) => {
   let sizeClass = "";
   if (shape === "circle" || shape === "square") {
@@ -68,6 +70,7 @@ const Button: React.FC<ButtonProps> = ({
 
   return (
     <button
+      type={type}
       onClick={onClick}
       className={`${sizeClass} ${shapeClass} ${
         hidden ? "invisible" : ""

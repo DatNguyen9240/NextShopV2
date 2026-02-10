@@ -17,7 +17,7 @@ export default function TaxPage() {
   const fetchTaxRate = async () => {
     setLoading(true);
     try {
-      const response = await axiosClient.get('/api/TaxSettings/TaxRate');
+      const response = await axiosClient.get('/api/TaxSettings/tax-rate');
       const data = response.data?.data ?? response.data;
       if (data) {
         setTaxRate(data.value || '0.10');

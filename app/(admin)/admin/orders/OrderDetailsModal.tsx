@@ -22,12 +22,12 @@ const OrderDetailsModal: React.FC<{ order: OrderDto; onClose: () => void }> = ({
             <div className="font-medium">{order.buyerName ?? '—'}</div>
           </div>
           <div>
-            <div className="text-sm text-gray-500">Số điện thoại</div>
-            <div className="font-medium">{order.buyerPhone ?? '—'}</div>
+            <div className="text-sm text-gray-500">Email</div>
+            <div className="font-medium">{order.buyerEmail ?? '—'}</div>
           </div>
           <div>
-            <div className="text-sm text-gray-500">Trạng thái</div>
-            <div className="font-medium">{order.status}</div>
+            <div className="text-sm text-gray-500">Giới tính</div>
+            <div className="font-medium">{order.buyerGender ?? '—'}</div>
           </div>
           <div>
             <div className="text-sm text-gray-500">Đã hủy bởi</div>
@@ -50,6 +50,57 @@ const OrderDetailsModal: React.FC<{ order: OrderDto; onClose: () => void }> = ({
             <div className="font-medium">{order.shippingAddress ?? '—'}</div>
           </div>
         </div>
+
+        {/* Coupons Section */}
+        {order.coupons && order.coupons.length > 0 && (
+          <div className="mb-4">
+            <div className="text-sm text-gray-500 mb-2">Coupons áp dụng</div>
+            <div className="space-y-2">
+              {order.coupons.map((coupon, index) => (
+                <div key={index} className="flex items-center justify-between bg-green-50 p-3 rounded">
+                  <div>
+                    <div className="font-medium text-green-800">{coupon.code}</div>
+                    <div className="text-sm text-green-600">Áp dụng lúc: {coupon.appliedAt ? new Date(coupon.appliedAt).toLocaleString('vi-VN') : 'N/A'}</div>
+                  </div>
+                  <div className="text-green-800 font-semibold">
+                    -<MoneyVND value={coupon.discountAmount} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Shipment Section */}
+        {order.shipment && (
+          <div className="mb-4">
+            <div className="text-sm text-gray-500 mb-2">Thông tin giao hàng</div>
+            <div className="bg-blue-50 p-3 rounded">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <div className="text-sm text-blue-600">Mã shipment</div>
+                  <div className="font-medium">{order.shipment.shipmentId}</div>
+                </div>
+                <div>
+                  <div className="text-sm text-blue-600">Nhà vận chuyển</div>
+                  <div className="font-medium">{order.shipment.carrier}</div>
+                </div>
+                <div>
+                  <div className="text-sm text-blue-600">Mã tracking</div>
+                  <div className="font-medium">{order.shipment.trackingNumber}</div>
+                </div>
+                <div>
+                  <div className="text-sm text-blue-600">Trạng thái</div>
+                  <div className="font-medium">{order.shipment.status}</div>
+                </div>
+                <div className="col-span-2">
+                  <div className="text-sm text-blue-600">Ngày tạo</div>
+                  <div className="font-medium">{new Date(order.shipment.createdAt).toLocaleString('vi-VN')}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div>
           <div className="text-sm text-gray-500 mb-2">Sản phẩm</div>
@@ -105,8 +156,15 @@ const OrderDetailsModal: React.FC<{ order: OrderDto; onClose: () => void }> = ({
                       <div className="text-xs text-gray-500">Variant ID: <span className="text-gray-700">{v?.productVariantId ?? item.variantId ?? '—'}</span></div>
                       {attrPairs.length > 0 && <div className="text-xs text-gray-500 mt-1">{attrPairs.join(' • ')}</div>}
 
-                      <div className="flex items-center gap-6 mt-2">
+                    <div className="flex items-center gap-6 mt-2">
                         <div className="text-sm text-gray-500">Số lượng: {item.quantity}</div>
+                        <div className="text-sm text-gray-500">Đơn giá: <MoneyVND value={item.unitPrice} /></div>
+                        {item.discountAmount && item.discountAmount > 0 && (
+                          <div className="text-sm text-red-600">Giảm: <MoneyVND value={item.discountAmount} /></div>
+                        )}
+                        {item.taxRate && item.taxRate > 0 && (
+                          <div className="text-sm text-blue-600">Thuế ({(item.taxRate * 100).toFixed(1)}%): <MoneyVND value={item.taxAmount || 0} /></div>
+                        )}
                       </div>
                     </div>
 
@@ -129,19 +187,19 @@ const OrderDetailsModal: React.FC<{ order: OrderDto; onClose: () => void }> = ({
         <div className="mt-6 border-t pt-4">
           <div className="max-w-xs ml-auto space-y-2 text-right">
             <div className="flex justify-between text-sm text-gray-500">
-              <div>Tạm tính</div>
-              <div><MoneyVND value={order.subTotal ?? (order.items?.reduce((s, it) => s + ((it.unitPrice ?? 0) * (it.quantity ?? 1)), 0) ?? 0)} /></div>
+              <div>Tạm tính (trước thuế)</div>
+              <div><MoneyVND value={order.subTotal} /></div>
             </div>
-            <div className="flex justify-between text-sm text-gray-500">
-              <div>Chiết khấu</div>
-              <div><MoneyVND value={order.discountAmount ?? 0} /></div>
+            <div className="flex justify-between text-sm text-red-600">
+              <div>Giảm giá từ coupons</div>
+              <div>-<MoneyVND value={order.discountAmount} /></div>
             </div>
-            <div className="flex justify-between text-sm text-gray-500">
-              <div>Thuế</div>
-              <div><MoneyVND value={order.items?.reduce((s, it) => s + ((it.taxAmount ?? 0)), 0) ?? 0} /></div>
+            <div className="flex justify-between text-sm text-blue-600">
+              <div>Thuế VAT</div>
+              <div><MoneyVND value={order.taxAmount} /></div>
             </div>
-            <div className="flex justify-between text-lg font-semibold">
-              <div>Tổng</div>
+            <div className="flex justify-between text-lg font-semibold border-t pt-2">
+              <div>Tổng cộng</div>
               <div><MoneyVND value={order.totalAmount} /></div>
             </div>
           </div>

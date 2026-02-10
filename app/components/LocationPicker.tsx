@@ -62,7 +62,7 @@ export default function LocationPicker({ onLocationSelect, initialLat, initialLn
     onLocationSelect(lat, lng);
   }, [onLocationSelect]);
 
-  const center: [number, number] = markerPosition || [105.8542, 21.0285]; // Hanoi as default
+  const center: [number, number] = markerPosition || [106.6, 11.65]; // Bình Long as default
 
   return (
     <div className="h-64 w-full">
