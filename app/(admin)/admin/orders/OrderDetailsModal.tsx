@@ -188,15 +188,15 @@ const OrderDetailsModal: React.FC<{ order: OrderDto; onClose: () => void }> = ({
           <div className="max-w-xs ml-auto space-y-2 text-right">
             <div className="flex justify-between text-sm text-gray-500">
               <div>Tạm tính (trước thuế)</div>
-              <div><MoneyVND value={order.subTotal} /></div>
+              <div><MoneyVND value={order.subTotal ?? 0} /></div>
             </div>
             <div className="flex justify-between text-sm text-red-600">
               <div>Giảm giá từ coupons</div>
-              <div>-<MoneyVND value={order.discountAmount} /></div>
+              <div>-<MoneyVND value={order.discountAmount ?? 0} /></div>
             </div>
             <div className="flex justify-between text-sm text-blue-600">
               <div>Thuế VAT</div>
-              <div><MoneyVND value={order.taxAmount} /></div>
+              <div><MoneyVND value={order.taxAmount ?? 0} /></div>
             </div>
             <div className="flex justify-between text-lg font-semibold border-t pt-2">
               <div>Tổng cộng</div>
