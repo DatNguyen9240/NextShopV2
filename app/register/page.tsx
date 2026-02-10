@@ -27,9 +27,14 @@ export default function RegisterPage() {
       if (!res.ok) {
         setMessage(data?.message || "Registration failed");
       } else {
-        setMessage(data?.message || "Registered successfully");
-        // redirect to login after short delay
-        setTimeout(() => router.push("/login"), 1000);
+        // Check if email was sent successfully
+        if (data?.data?.emailSent !== false) {
+          // Redirect to login with message
+          router.push("/login?registered=true");
+        } else {
+          setMessage(data?.message || "Registered successfully");
+          setTimeout(() => router.push("/login"), 2000);
+        }
       }
     } catch (err: unknown) {
       setMessage(err instanceof Error ? err.message : "Network error");

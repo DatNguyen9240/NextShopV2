@@ -13,14 +13,27 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [messageType, setMessageType] = useState<'error' | 'success'>('error');
   const [mfaRequestId, setMfaRequestId] = useState<string | null>(null);
   const [mfaCode, setMfaCode] = useState("");
   const [mfaLoading, setMfaLoading] = useState(false);
+
+  // Check for registration success message
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    if (searchParams.get('registered') === 'true') {
+      setMessage('Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản trước khi đăng nhập.');
+      setMessageType('success');
+      // Clean up URL
+      window.history.replaceState({}, '', '/login');
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setMessage(null);
+    setMessageType('error');
     try {
       // Call service directly so we can handle MFA response shape
       const res = await (await import('@/app/services/authService')).login({ email, password } as { email: string; password: string });
@@ -353,7 +366,15 @@ export default function LoginPage() {
   return (
     <main className="max-w-md mx-auto mt-12 p-6 bg-white rounded-md shadow">
       <h1 className="text-2xl font-semibold mb-4">Đăng nhập</h1>
-      {message && <div className="mb-4 text-sm text-red-600">{message}</div>}
+      {message && (
+        <div className={`mb-4 text-sm p-3 rounded ${
+          messageType === 'success' 
+            ? 'bg-green-50 text-green-700 border border-green-200' 
+            : 'text-red-600'
+        }`}>
+          {message}
+        </div>
+      )}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-sm mb-1">Email</label>
