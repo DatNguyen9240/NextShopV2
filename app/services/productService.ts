@@ -9,6 +9,7 @@ export type GetProductsParams = {
   minPrice?: number;
   maxPrice?: number;
   rating?: number;
+  search?: string;
 };
 
 const pendingGetProducts = new Map<string, Promise<unknown>>();

@@ -176,6 +176,13 @@ export default function RegisterPage() {
         <div id="g_id_signin_register" />
       </div>
 
+      <div className="mt-6 text-center text-sm text-gray-600">
+        Đã có tài khoản?{" "}
+        <a href="/login" className="text-blue-600 hover:text-blue-700 hover:underline font-medium">
+          Đăng nhập ngay
+        </a>
+      </div>
+
     </main>
   );
 }

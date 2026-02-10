@@ -8,7 +8,7 @@ import CartIcon from "./CartIcon";
 import Badge from "./Badge";
 import Hotline from "./Hotline";
 import { SignUpButton, LoginButton } from "./Button";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { User, Settings, LogOut, ChevronDown, History, Heart, Bell } from "lucide-react";
 import { getNotifications, markNotificationAsRead, markAllNotificationsAsRead, startNotificationConnection, stopNotificationConnection } from '@/app/services/notificationService';
@@ -27,7 +27,13 @@ const Header = () => {
 
   const [cartCount, setCartCount] = useState(0);
   const router = useRouter();
+  const pathname = usePathname();
   const { user, isAuthenticated, logout } = useAuth();
+
+  // Đóng sidebar khi chuyển trang
+  useEffect(() => {
+    setOpenModal(false);
+  }, [pathname]);
 
   useEffect(() => {
     let mounted = true;
@@ -316,22 +322,30 @@ const Header = () => {
             onClick={() => setOpenModal(false)}
           />
           <div className="fixed top-0 left-0 h-full w-3/4 max-w-xs bg-white shadow-lg z-50 flex flex-col p-5 animate-slide-in-left">
-            <button
-              className="self-end mb-4 p-2 rounded hover:bg-gray-100"
-              onClick={() => setOpenModal(false)}
-              aria-label="Đóng menu"
-            >
-              <svg
-                width="24"
-                height="24"
-                fill="none"
-                stroke="#222"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
+            <div className="flex items-center justify-between mb-4">
+              <div onClick={() => {
+                setOpenModal(false);
+                router.push('/');
+              }} className="cursor-pointer">
+                <Logo />
+              </div>
+              <button
+                className="p-2 rounded hover:bg-gray-100"
+                onClick={() => setOpenModal(false)}
+                aria-label="Đóng menu"
               >
-                <path d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+                <svg
+                  width="24"
+                  height="24"
+                  fill="none"
+                  stroke="#222"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
             <div className="flex flex-col gap-4">
               <Hotline phone="0975324568" />
               {isAuthenticated ? (

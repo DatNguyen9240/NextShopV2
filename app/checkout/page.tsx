@@ -162,7 +162,7 @@ const CheckoutPage: React.FC = () => {
 
                   <div className="text-right flex-shrink-0">
                     <div className="text-sm md:text-base font-bold text-pink-600"><MoneyVND value={item.totalPrice} /></div>
-                    <div className="text-xs text-gray-500 mt-0.5">({item.unitPrice} x {item.quantity})</div>
+                    <div className="text-[11px] text-gray-400 mt-0.5">(<span className="opacity-60"><MoneyVND value={item.unitPrice} /></span> x {item.quantity})</div>
                   </div>
                 </div>
               ))}

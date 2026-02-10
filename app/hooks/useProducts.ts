@@ -15,6 +15,7 @@ export default function useProducts({
   minPrice,
   maxPrice,
   rating,
+  search,
   initialPage = 1,
   pageSize = 12,
   autoFetch = true,
@@ -25,7 +26,7 @@ export default function useProducts({
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   // keep current filter ref to avoid race conditions where older fetches overwrite newer filtered results
-  const filterRef = useRef<{ categoryId?: string | undefined; minPrice?: number; maxPrice?: number; sort?: string; rating?: number | null }>({ categoryId, minPrice, maxPrice, sort, rating });
+  const filterRef = useRef<{ categoryId?: string | undefined; minPrice?: number; maxPrice?: number; sort?: string; rating?: number | null; search?: string }>({ categoryId, minPrice, maxPrice, sort, rating, search });
 
   type ApiVariant = { isDefault?: boolean; basePrice?: number; priceAfterDiscount?: number; discountPercent?: number; stockQuantity?: number; imageUrl?: string; imgHover?: string };
   type ApiProduct = { productId?: string | number; id?: string | number; name?: string; label?: string; variants?: ApiVariant[]; image?: string; imageHover?: string; averageRating?: number };
@@ -74,8 +75,9 @@ export default function useProducts({
     const usedMaxPrice = maxPrice;
     const usedSort = sort;
     const usedRating = rating;
+    const usedSearch = search;
 
-    const keyObj = { categoryId: usedCategory, page: pageNumber, pageSize } as GetProductsParams;
+    const keyObj = { categoryId: usedCategory, page: pageNumber, pageSize, search: usedSearch } as GetProductsParams;
     const key = JSON.stringify(keyObj);
 
     // If we already completed the exact same request recently, skip refetching
@@ -104,6 +106,7 @@ export default function useProducts({
       if (usedMinPrice !== undefined) params.minPrice = usedMinPrice;
       if (usedMaxPrice !== undefined) params.maxPrice = usedMaxPrice;
       if (usedRating !== undefined && usedRating !== null) params.rating = usedRating;
+      if (usedSearch) params.search = usedSearch;
 
       const data = await getProducts(params);
 
@@ -113,7 +116,8 @@ export default function useProducts({
         filterRef.current.minPrice !== usedMinPrice ||
         filterRef.current.maxPrice !== usedMaxPrice ||
         filterRef.current.sort !== usedSort ||
-        filterRef.current.rating !== usedRating
+        filterRef.current.rating !== usedRating ||
+        filterRef.current.search !== usedSearch
       ) {
         // discard stale response
         return;
@@ -144,10 +148,10 @@ export default function useProducts({
       if (lastCompletedTimerRef.current) clearTimeout(lastCompletedTimerRef.current);
       lastCompletedTimerRef.current = window.setTimeout(() => { lastCompletedKeyRef.current = null; lastCompletedTimerRef.current = null; }, 250);
     }
-  }, [categoryId, limit, sort, pageSize, minPrice, maxPrice, rating, mapProducts]);
+  }, [categoryId, limit, sort, pageSize, minPrice, maxPrice, rating, search, mapProducts]);
 
   // track current filters and avoid duplicate fetches when filters change
-  const prevFiltersRef = useRef<{ categoryId?: string | undefined; minPrice?: number; maxPrice?: number; sort?: string; rating?: number | null }>({ categoryId, minPrice, maxPrice, sort, rating });
+  const prevFiltersRef = useRef<{ categoryId?: string | undefined; minPrice?: number; maxPrice?: number; sort?: string; rating?: number | null; search?: string }>({ categoryId, minPrice, maxPrice, sort, rating, search });
 
   useEffect(() => {
     const filtersChanged =
@@ -155,11 +159,12 @@ export default function useProducts({
       prevFiltersRef.current.minPrice !== minPrice ||
       prevFiltersRef.current.maxPrice !== maxPrice ||
       prevFiltersRef.current.sort !== sort ||
-      prevFiltersRef.current.rating !== rating;
+      prevFiltersRef.current.rating !== rating ||
+      prevFiltersRef.current.search !== search;
 
     // update previous snapshot and current filter ref
-    prevFiltersRef.current = { categoryId, minPrice, maxPrice, sort, rating };
-    filterRef.current = { categoryId, minPrice, maxPrice, sort, rating };
+    prevFiltersRef.current = { categoryId, minPrice, maxPrice, sort, rating, search };
+    filterRef.current = { categoryId, minPrice, maxPrice, sort, rating, search };
 
     if (!autoFetch) return;
 
@@ -179,7 +184,7 @@ export default function useProducts({
       fetchPage(page);
       fetchTimerRef.current = null;
     }, 80);
-  }, [page, fetchPage, autoFetch, categoryId, minPrice, maxPrice, sort, rating]);
+  }, [page, fetchPage, autoFetch, categoryId, minPrice, maxPrice, sort, rating, search]);
 
   const refresh = useCallback(() => fetchPage(page), [fetchPage, page]);
 

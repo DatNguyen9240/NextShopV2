@@ -405,6 +405,13 @@ export default function LoginPage() {
         <div id="g_id_signin" />
       </div>
 
+      <div className="mt-6 text-center text-sm text-gray-600">
+        Chưa có tài khoản?{" "}
+        <Link href="/register" className="text-blue-600 hover:text-blue-700 hover:underline font-medium">
+          Đăng ký ngay
+        </Link>
+      </div>
+
       {mfaRequestId && (
         <div className="mt-4 p-4 bg-gray-50 border rounded">
           <h3 className="font-medium mb-2">Xác thực 2 bước</h3>

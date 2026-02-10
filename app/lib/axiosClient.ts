@@ -1,5 +1,6 @@
 import axios, { AxiosError } from 'axios';
 import type { InternalAxiosRequestConfig } from 'axios';
+import toast from 'react-hot-toast';
 
 const baseURL = process.env.NEXT_PUBLIC_API_URL || '';
 
@@ -90,6 +91,10 @@ instance.interceptors.response.use(
         eraseCookie('accessToken');
         eraseCookie('refreshToken');
         eraseCookie('userId');
+        if (typeof window !== 'undefined' && !originalRequest.url?.includes('/api/auth/login')) {
+          toast.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!', { id: 'auth-401' });
+          setTimeout(() => window.location.href = '/login', 1500);
+        }
         return Promise.reject(error);
       }
 
@@ -119,6 +124,8 @@ instance.interceptors.response.use(
               eraseCookie('accessToken');
               eraseCookie('refreshToken');
               eraseCookie('userId');
+              toast.error('Vui lòng đăng nhập để thực hiện thao tác này!', { id: 'auth-401' });
+              setTimeout(() => window.location.href = '/login', 1500);
             }
             isRefreshing = false;
             return reject(error);
@@ -165,6 +172,8 @@ instance.interceptors.response.use(
             eraseCookie('accessToken');
             eraseCookie('refreshToken');
             eraseCookie('userId');
+            toast.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!', { id: 'auth-401' });
+            setTimeout(() => window.location.href = '/login', 1500);
           }
           reject(err);
         } finally {

@@ -284,13 +284,13 @@ export default function PaymentSuccessPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-2xl w-full bg-white rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)] p-8 text-center">
-        <div className="mb-6">
-          <div className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 ${isPaid ? 'bg-green-100' : 'bg-yellow-100'}`}>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-3 sm:p-6">
+      <div className="max-w-2xl w-full bg-white rounded-2xl sm:rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)] p-4 sm:p-8 text-center">
+        <div className="mb-4 sm:mb-6">
+          <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 ${isPaid ? 'bg-green-100' : 'bg-yellow-100'}`}>
             {isPaid ? (
               <svg
-                className="w-6 h-6 text-green-600"
+                className="w-5 h-5 sm:w-6 sm:h-6 text-green-600"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -304,7 +304,7 @@ export default function PaymentSuccessPage() {
               </svg>
             ) : (
               <svg
-                className="w-6 h-6 text-yellow-600"
+                className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -318,23 +318,23 @@ export default function PaymentSuccessPage() {
               </svg>
             )}
           </div>
-          <h1 className={`text-2xl font-bold mb-2 ${isPaid ? 'text-gray-900' : 'text-yellow-900'}`}>
+          <h1 className={`text-lg sm:text-2xl font-bold mb-1.5 sm:mb-2 ${isPaid ? 'text-gray-900' : 'text-yellow-900'}`}>
             {isPaid ? "Thanh toán thành công!" : "Thanh toán đang chờ"}
           </h1>
-          <p className="text-gray-600">
+          <p className="text-sm sm:text-base text-gray-600">
             {isPaid ? "Cảm ơn bạn đã mua hàng. Đơn hàng của bạn đã được xác nhận." : "Thanh toán của bạn đang được xử lý. Vui lòng chờ hoặc kiểm tra lại sau."}
           </p>
         </div>
 
         {orderId && (
-          <div className="mb-6">
+          <div className="mb-4 sm:mb-6">
             <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-              <div className="p-5 text-left">
+              <div className="p-3 sm:p-5 text-left">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
-                  <div className="text-sm text-gray-500">Mã đơn hàng</div>
-                  <div className="font-mono font-bold text-base text-gray-900 sm:ml-2">{orderId}</div>
+                  <div className="text-xs sm:text-sm text-gray-500">Mã đơn hàng</div>
+                  <div className="font-mono font-bold text-sm sm:text-base text-gray-900 sm:ml-2">{orderId}</div>
                 </div>
-                <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3 text-sm text-gray-700">
+                <div className="mt-2 sm:mt-3 space-y-1 sm:grid sm:grid-cols-1 md:grid-cols-3 sm:gap-3 text-xs sm:text-sm text-gray-700">
                   <div>Khách hàng: <span className="font-medium text-gray-800">{order?.buyerName ?? '—'}</span></div>
                   <div>Điện thoại: <span className="font-medium text-gray-800">{order?.buyerPhone ?? '—'}</span></div>
                   <div>Địa chỉ giao hàng: <span className="font-medium text-gray-800">{order?.shippingAddress ?? '—'}</span></div>
@@ -343,51 +343,52 @@ export default function PaymentSuccessPage() {
 
               {order && (
                 <div className="border-t">
-                  <div className="bg-gray-50 px-4 py-3 font-semibold">Sản phẩm</div>
+                  <div className="bg-gray-50 px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base font-semibold">Sản phẩm</div>
 
                   <div className="divide-y">
                     {order.items.map(item => (
-                      <div key={item.orderItemId} className="p-4 grid grid-cols-12 items-center gap-4">
-                        <div className="col-span-2">
+                      <div key={item.orderItemId} className="p-3 sm:p-4 flex gap-3 sm:gap-4">
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0">
                           {item.variant?.imageUrl ? (
                             // eslint-disable-next-line @next/next/no-img-element
-                            <img src={item.variant.imageUrl} alt="" className="w-20 h-20 object-cover rounded-lg" />
+                            <img src={item.variant.imageUrl} alt="" className="w-full h-full object-contain rounded-lg border border-gray-100" />
                           ) : (
-                            <div className="w-20 h-20 bg-gray-100 rounded-lg" />
+                            <div className="w-full h-full bg-gray-100 rounded-lg" />
                           )}
                         </div>
 
-                        <div className="col-span-7">
-                          <div className="font-medium text-gray-800">
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm sm:text-base font-medium text-gray-800 leading-snug">
                             {item.productId ? (
                               <Link href={`/product/${item.productId}`} className="hover:underline">{item.productName ?? 'Sản phẩm'}</Link>
                             ) : (
                               item.productName ?? 'Sản phẩm'
                             )}
                           </div>
-                          <div className="text-sm text-gray-500 mt-1">{item.variant?.attributesDisplay ? item.variant.attributesDisplay : (item.variant?.color ? (`${item.variant.color}${item.variant.size ? ` · ${item.variant.size}` : ''}`) : (item.variant?.size ?? ''))}</div>
-                          {item.variant?.sku && <div className="text-xs text-gray-400 mt-1">SKU: {item.variant.sku}</div>}
-                        </div>
-
-                        <div className="col-span-3 text-right">
-                          <div className="text-sm text-gray-600">{item.quantity} x</div>
-                          <div className="font-semibold text-gray-900"><MoneyVND value={item.unitPrice} /></div>
-                          <div className="text-sm text-gray-600 mt-1">Thành tiền: <span className="font-medium text-gray-900"><MoneyVND value={item.totalPrice} /></span></div>
+                          <div className="text-xs sm:text-sm text-gray-500 mt-0.5">{item.variant?.attributesDisplay ? item.variant.attributesDisplay : (item.variant?.color ? (`${item.variant.color}${item.variant.size ? ` · ${item.variant.size}` : ''}`) : (item.variant?.size ?? ''))}</div>
+                          {item.variant?.sku && <div className="text-xs text-gray-400 mt-0.5 hidden sm:block">SKU: {item.variant.sku}</div>}
+                          
+                          <div className="flex items-center justify-between mt-1.5 sm:mt-2">
+                            <div className="text-xs sm:text-sm text-gray-600">
+                              <span className="font-medium">{item.quantity}</span> x <span className="font-semibold text-gray-900"><MoneyVND value={item.unitPrice} /></span>
+                            </div>
+                            <div className="text-sm sm:text-base font-bold text-gray-900"><MoneyVND value={item.totalPrice} /></div>
+                          </div>
                         </div>
                       </div>
                     ))}
 
-                    <div className="p-5 border-t space-y-2">
+                    <div className="p-3 sm:p-5 border-t space-y-1.5 sm:space-y-2">
                       {order.subTotal !== undefined && (
-                        <div className="flex items-center justify-between text-sm text-gray-700">
+                        <div className="flex items-center justify-between text-xs sm:text-sm text-gray-700">
                           <span>Tạm tính (chưa thuế):</span>
                           <MoneyVND value={order.subTotal ?? 0} />
                         </div>
                       )}
                       {(order.taxAmount ?? 0) > 0 && (
-                        <div className="flex items-center justify-between text-sm text-gray-700">
+                        <div className="flex items-center justify-between text-xs sm:text-sm text-gray-700">
                           <span className="flex items-center gap-1">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                             </svg>
                             Thuế VAT:
@@ -396,9 +397,9 @@ export default function PaymentSuccessPage() {
                         </div>
                       )}
                       {(order.discountAmount ?? 0) > 0 && (
-                        <div className="flex items-center justify-between text-sm text-green-600 font-medium">
+                        <div className="flex items-center justify-between text-xs sm:text-sm text-green-600 font-medium">
                           <span className="flex items-center gap-1">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                             </svg>
                             Giảm giá:
@@ -407,9 +408,9 @@ export default function PaymentSuccessPage() {
                         </div>
                       )}
                       <hr className="border-gray-300" />
-                      <div className="flex items-center justify-between pt-2">
-                        <div className="text-lg font-bold text-gray-900">Tổng cộng</div>
-                        <div className="text-2xl font-extrabold text-pink-600"><MoneyVND value={order.totalAmount} /></div>
+                      <div className="flex items-center justify-between pt-1.5 sm:pt-2">
+                        <div className="text-base sm:text-lg font-bold text-gray-900">Tổng cộng</div>
+                        <div className="text-lg sm:text-2xl font-extrabold text-pink-600"><MoneyVND value={order.totalAmount} /></div>
                       </div>
                     </div>
                   </div>
@@ -426,10 +427,10 @@ export default function PaymentSuccessPage() {
           </div>
         )}
 
-        <div className="space-y-3">
+        <div className="space-y-2 sm:space-y-3">
           <Button
             onClick={() => router.push("/")}
-            className="w-full rounded-full px-7 py-3 text-base font-semibold bg-gray-100 hover:bg-gray-200 text-gray-800 shadow-sm hover:shadow focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-gray-200"
+            className="w-full rounded-full px-6 sm:px-7 py-2.5 sm:py-3 text-sm sm:text-base font-semibold bg-gray-100 hover:bg-gray-200 text-gray-800 shadow-sm hover:shadow focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-gray-200"
           >
             🛒 Tiếp tục mua sắm
           </Button>
@@ -438,7 +439,7 @@ export default function PaymentSuccessPage() {
             <Button
               onClick={handleBuyAgain}
               disabled={reordering}
-              className={`w-full rounded-full px-7 py-3 text-base font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-200 ${reordering ? 'opacity-75 cursor-wait' : ''}`}
+              className={`w-full rounded-full px-6 sm:px-7 py-2.5 sm:py-3 text-sm sm:text-base font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-200 ${reordering ? 'opacity-75 cursor-wait' : ''}`}
             >
               {reordering ? 'Đang thêm vào giỏ…' : '🔁 Mua lại'}
             </Button>
@@ -446,7 +447,7 @@ export default function PaymentSuccessPage() {
 
           <Button
             onClick={() => router.push("/account/orders")}
-            className="w-full rounded-full px-7 py-3 text-base font-semibold bg-gradient-to-r from-pink-500 to-pink-600 text-white shadow-sm hover:shadow focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-pink-200"
+            className="w-full rounded-full px-6 sm:px-7 py-2.5 sm:py-3 text-sm sm:text-base font-semibold bg-gradient-to-r from-pink-500 to-pink-600 text-white shadow-sm hover:shadow focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-pink-200"
           >
             📄 Xem đơn hàng
           </Button>
