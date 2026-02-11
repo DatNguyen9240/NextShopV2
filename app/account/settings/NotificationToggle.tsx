@@ -40,20 +40,20 @@ export default function NotificationToggle({ userId }: { userId?: string }) {
   }
 
   if (!supported) {
-    return <div>Notifications not supported in this browser.</div>;
+    return <div>Trình duyệt này không hỗ trợ thông báo.</div>;
   }
 
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-      <label style={{ fontWeight: 600 }}>Browser notifications</label>
+      <label style={{ fontWeight: 600 }}>Thông báo trình duyệt</label>
       <div>
         {enabled ? (
           <button onClick={handleDisable} disabled={loading} style={{ background: "#eee", padding: "6px 10px" }}>
-            Turn off
+            Tắt thông báo
           </button>
         ) : (
           <button onClick={handleEnable} disabled={loading} style={{ background: "#0070f3", color: "white", padding: "6px 10px" }}>
-            Turn on
+            Bật thông báo
           </button>
         )}
       </div>
