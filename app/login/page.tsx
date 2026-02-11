@@ -22,7 +22,7 @@ export default function LoginPage() {
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
     if (searchParams.get('registered') === 'true') {
-      setMessage('Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản trước khi đăng nhập.');
+      setMessage('Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản trước khi đăng nhập. Nếu không thấy trong hộp thư chính, vui lòng kiểm tra thư mục Spam hoặc liên hệ 0787358358 để được hỗ trợ.');
       setMessageType('success');
       // Clean up URL
       window.history.replaceState({}, '', '/login');
