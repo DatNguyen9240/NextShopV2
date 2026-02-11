@@ -14,7 +14,7 @@ export default function AdminCouponsPage() {
   const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState<CouponDto | null>(null);
   const [showCreate, setShowCreate] = useState(false);
-  const [confirm, setConfirm] = useState<{ id: string; code?: string } | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; code?: string } | null>(null);
   const [welcomeSettings, setWelcomeSettings] = useState<WelcomeSettingsDto | null>(null);
   const [showWelcomeSettings, setShowWelcomeSettings] = useState(false);
 
@@ -62,7 +62,7 @@ export default function AdminCouponsPage() {
     try {
       await deleteCoupon(id);
       toast.success('Xóa coupon thành công');
-      setConfirm(null);
+      setDeleteConfirm(null);
       await load();
     } catch (err: unknown) {
       type ErrWithResp = { response?: { data?: { message?: string } }; message?: string };
@@ -79,6 +79,42 @@ export default function AdminCouponsPage() {
         <div className="flex items-center gap-3">
           <Button shape="rounded" size="md" onClick={() => setShowWelcomeSettings(true)} className="bg-blue-600 text-white">Welcome Settings</Button>
           <Button shape="rounded" size="md" onClick={() => setShowCreate(true)} className="bg-pink-600 text-white">Tạo coupon</Button>
+        </div>
+      </div>
+
+      {/* Admin actions: Issue welcome vouchers */}
+      <div className="bg-white shadow rounded p-6 mb-6">
+        <h3 className="text-lg font-semibold mb-4">Admin: Issue Welcome Vouchers</h3>
+        <div className="flex items-center gap-3">
+          <input id="issueEmail" type="email" placeholder="Email người nhận" className="border px-3 py-2 rounded w-80" />
+          <Button shape="rounded" size="md" onClick={async () => {
+            const el = document.getElementById('issueEmail') as HTMLInputElement | null;
+            const email = el?.value?.trim();
+            if (!email) { toast.error('Vui lòng nhập email'); return; }
+            try {
+              await (await import('@/app/services/issueWelcome')).issueWelcomeByEmail(email);
+              toast.success('Đã cấp voucher (nếu đủ điều kiện)');
+              if (el) el.value = '';
+            } catch (err: unknown) {
+              console.error('[issueByEmail] error', err);
+              type Err = { response?: { data?: { message?: string } }; message?: string };
+              const e = err as Err;
+              toast.error(e?.response?.data?.message ?? e?.message ?? 'Issue failed');
+            }
+          }} className="bg-green-600 text-white">Issue by Email</Button>
+
+          <Button shape="rounded" size="md" onClick={async () => {
+            if (!window.confirm('Bạn có chắc muốn cấp voucher cho tất cả người dùng (nơi đủ điều kiện)?')) return;
+            try {
+              await (await import('@/app/services/issueWelcome')).issueWelcomeToAll();
+              toast.success('Đã cấp voucher cho tất cả (nơi đủ điều kiện)');
+            } catch (err: unknown) {
+              console.error('[issueToAll] error', err);
+              type Err = { response?: { data?: { message?: string } }; message?: string };
+              const e = err as Err;
+              toast.error(e?.response?.data?.message ?? e?.message ?? 'Issue failed');
+            }
+          }} className="bg-red-600 text-white">Issue to All</Button>
         </div>
       </div>
 
@@ -148,7 +184,7 @@ export default function AdminCouponsPage() {
                   <td className="px-4 py-3 text-sm">
                     <div className="flex items-center gap-2">
                       <Button shape="roundedSquare" size="md" onClick={() => setEditing(c)} className="bg-gray-100 rounded-none px-4 py-2 text-sm">Sửa</Button>
-                      <Button shape="roundedSquare" size="md" onClick={() => setConfirm({ id: c.couponId, code: c.code })} className="bg-red-600 text-white rounded-none px-4 py-2 text-sm">Xóa</Button>
+                      <Button shape="roundedSquare" size="md" onClick={() => setDeleteConfirm({ id: c.couponId, code: c.code })} className="bg-red-600 text-white rounded-none px-4 py-2 text-sm">Xóa</Button>
                     </div>
                   </td>
                 </tr>
@@ -175,8 +211,8 @@ export default function AdminCouponsPage() {
         <CouponFormModal coupon={editing} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); void load(); }} />
       )}
 
-      {confirm && (
-        <ConfirmModal show={true} title={`Xóa coupon ${confirm.code}?`} onConfirm={async () => await onDelete(confirm.id)} onCancel={() => setConfirm(null)} />
+      {deleteConfirm && (
+        <ConfirmModal show={true} title={`Xóa coupon ${deleteConfirm.code}?`} onConfirm={async () => await onDelete(deleteConfirm.id)} onCancel={() => setDeleteConfirm(null)} />
       )}
     </div>
   );
