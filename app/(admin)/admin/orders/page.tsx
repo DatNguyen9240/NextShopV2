@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { fetchAllOrders, updateOrderStatus, deleteOrder, getOrderById, cancelOrder, OrderDto } from '@/app/services/orderService';
+import { collectPaymentByOrder } from '@/app/services/paymentService';
 import { createShipment, CreateShipmentRequest } from '@/app/services/shipmentService';
 import Button from '@/app/components/Button';
 import ConfirmModal from '@/app/components/ConfirmModal';
@@ -165,7 +166,6 @@ export default function AdminOrders() {
                     <select className="border rounded px-2 py-1 text-sm" value={o.status} onChange={(e) => onChangeStatus(o.orderId, e.target.value)}>
                       <option>Pending</option>
                       <option>Processing</option>
-                      <option>Paid</option>
                       <option>Shipped</option>
                       <option>Cancelled</option>
                     </select>
@@ -202,6 +202,26 @@ export default function AdminOrders() {
                           className="bg-blue-600 text-white rounded-md px-3 py-2 text-sm"
                         >
                           Tạo Shipment
+                        </Button>
+                      )}
+
+                      {o.status !== 'Paid' && (
+                        <Button
+                          shape="roundedSquare"
+                          size="sm"
+                          onClick={async () => {
+                            try {
+                              await collectPaymentByOrder(o.orderId);
+                              setOrders(prev => prev.map(p => p.orderId === o.orderId ? { ...p, status: 'Paid' } : p));
+                              toast.success('Đã đánh dấu thanh toán thành công');
+                            } catch (e) {
+                              console.error('[markPaid] error', e);
+                              toast.error('Đánh dấu thanh toán thất bại');
+                            }
+                          }}
+                          className="bg-green-600 text-white rounded-md px-3 py-2 text-sm"
+                        >
+                          Mark Paid
                         </Button>
                       )}
                       <Button shape="roundedSquare" size="sm" onClick={() => confirmDelete(o.orderId)} className="bg-red-600 text-white rounded-md px-3 py-2 text-sm">Xóa</Button>
