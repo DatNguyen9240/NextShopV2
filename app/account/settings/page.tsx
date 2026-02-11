@@ -41,6 +41,9 @@ export default function SettingsPage() {
   const [pendingDeleteAddressId, setPendingDeleteAddressId] = useState<string | null>(null);
   // avatar delete confirm
   const [showDeleteAvatarConfirm, setShowDeleteAvatarConfirm] = useState(false);
+  // Deactivate account modal
+  const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(false);
+  const [deactivateLoading, setDeactivateLoading] = useState(false);
 
   // Profile modal
   // const [showProfileModal, setShowProfileModal] = useState(false);
@@ -296,6 +299,35 @@ export default function SettingsPage() {
     setPendingDeleteAddressId(null);
   };
 
+  // Deactivate account flow
+  const handleConfirmDeactivate = async () => {
+    try {
+      setDeactivateLoading(true);
+      setMessage(null);
+      const res = await (await import('@/app/services/authService')).deactivateAccount();
+      if (res && res.success === false) {
+        setMessage(res.message || 'Vô hiệu hóa thất bại');
+        setDeactivateLoading(false);
+        setShowDeactivateConfirm(false);
+        return;
+      }
+      // Call logout to clear cookies & tokens
+      const { logout } = await import('@/app/services/authService');
+      await logout();
+      // Redirect to login with a message
+      window.location.href = '/login?deactivated=true';
+    } catch (err: unknown) {
+      console.error(err);
+      setMessage('Vô hiệu hóa thất bại');
+    } finally {
+      setDeactivateLoading(false);
+      setShowDeactivateConfirm(false);
+    }
+  };
+
+  const cancelDeactivate = () => {
+    setShowDeactivateConfirm(false);
+  };
   if (loading) return <main className="max-w-screen-xl mx-auto mt-12 p-6 md:p-10 bg-white rounded-md shadow">Đang tải...</main>;
 
   return (
@@ -480,7 +512,25 @@ export default function SettingsPage() {
             onCancel={cancelDeleteAvatar}
           />
 
+          <ConfirmModal
+            show={showDeactivateConfirm}
+            title="Vô hiệu hóa tài khoản"
+            message="Bạn có chắc chắn muốn vô hiệu hóa tài khoản? Bạn sẽ không thể đăng nhập lại trừ khi liên hệ hỗ trợ."
+            confirmText="Vô hiệu hóa"
+            cancelText="Hủy"
+            onConfirm={handleConfirmDeactivate}
+            onCancel={cancelDeactivate}
+            confirmLoading={deactivateLoading}
+          />
 
+          {/* Deactivate account section */}
+          <div className="mt-6 p-4 border rounded bg-red-50">
+            <h3 className="font-semibold text-red-700 mb-2">Vô hiệu hóa tài khoản</h3>
+            <p className="text-sm text-gray-700 mb-3">Khi vô hiệu hóa, bạn sẽ không thể đăng nhập lại. Dữ liệu sẽ được giữ an toàn; liên hệ 0787358358 nếu cần xóa hoàn toàn.</p>
+            <div className="text-right">
+              <button type="button" onClick={() => setShowDeactivateConfirm(true)} className="px-3 py-2 bg-white border rounded text-sm text-red-600 hover:bg-red-50">Vô hiệu hóa tài khoản</button>
+            </div>
+          </div>
 
           <div className="flex justify-end">
             <button type="submit" disabled={saving} className="bg-blue-600 text-white py-2 px-6 rounded">

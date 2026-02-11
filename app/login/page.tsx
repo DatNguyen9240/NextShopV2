@@ -27,6 +27,12 @@ export default function LoginPage() {
       // Clean up URL
       window.history.replaceState({}, '', '/login');
     }
+
+    if (searchParams.get('deactivated') === 'true') {
+      setMessage('Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ 0787358358 để được hỗ trợ.');
+      setMessageType('error');
+      window.history.replaceState({}, '', '/login');
+    }
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {

@@ -108,3 +108,8 @@ export const resetPassword = async (token: string, newPassword: string) => {
   const res = await axiosClient.post('/api/auth/reset-password', { token, newPassword });
   return res.data;
 };
+
+export const deactivateAccount = async () => {
+  const res = await axiosClient.post('/api/auth/me/deactivate');
+  return res.data;
+};
