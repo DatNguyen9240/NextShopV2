@@ -86,3 +86,13 @@ export async function saveWelcomeSettings(settings: WelcomeSettingsDto): Promise
     return false;
   }
 }
+
+export async function getMyCoupons(): Promise<CouponDto[]> {
+  try {
+    const res = await axiosClient.get('/api/Coupon/my');
+    return res.data?.data ?? [];
+  } catch (err) {
+    console.error('[getMyCoupons] error', err);
+    return [];
+  }
+}

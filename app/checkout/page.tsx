@@ -9,6 +9,7 @@ import { getCart } from "@/app/services/cartService";
 import { createOrder, type CreateOrderRequest } from '@/app/services/orderService';
 import { useAuth } from "@/app/providers/AuthProvider";
 import type { CartDto } from "@/app/types/cart";
+import type { CouponDto } from "@/app/services/couponService";
 
 const CheckoutPage: React.FC = () => {
   const router = useRouter();
@@ -57,6 +58,20 @@ const CheckoutPage: React.FC = () => {
   const [discountAmount, setDiscountAmount] = useState<number>(0);
   const [finalAmount, setFinalAmount] = useState<number | null>(null);
   const [couponError, setCouponError] = useState<string | null>(null);
+  const [myCoupons, setMyCoupons] = useState<CouponDto[]>([]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    (async () => {
+      try {
+        const { getMyCoupons } = await import('@/app/services/couponService');
+        const list = await getMyCoupons();
+        setMyCoupons(list ?? []);
+      } catch (e) {
+        console.error('[loadMyCoupons]', e);
+      }
+    })();
+  }, [isAuthenticated]);
 
   const handlePlaceOrder = async () => {
     if (!cart || !shippingAddress) {
@@ -248,6 +263,42 @@ const CheckoutPage: React.FC = () => {
                 </svg>
                 Đã áp dụng mã: {appliedCoupon.code}
               </div>}
+
+              {/* My coupons list (from server) */}
+              {myCoupons && myCoupons.length > 0 && (
+                <div className="mt-3">
+                  <div className="text-sm font-medium text-gray-700 mb-2">Voucher của bạn</div>
+                  <div className="space-y-2">
+                    {myCoupons.map(c => (
+                      <div key={c.couponId} className="flex items-center justify-between gap-2 bg-white border border-gray-100 rounded-lg px-3 py-2">
+                        <div className="min-w-0">
+                          <div className="font-semibold text-sm truncate">{c.code} • {c.discountPercent}%</div>
+                          <div className="text-xs text-gray-500">HSD: {new Date(c.endDate).toLocaleDateString()}</div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button type="button" onClick={async () => {
+                            if (!cart) return;
+                            setCouponLoading(true);
+                            try {
+                              const { calculateDiscount } = await import('@/app/services/couponService');
+                              const calc = await calculateDiscount(c.code, cart.totalAmount);
+                              const discountVal = Number(calc?.discountAmount ?? calc?.DiscountAmount ?? 0);
+                              const finalVal = Number(calc?.finalAmount ?? calc?.FinalAmount ?? (cart.totalAmount - discountVal));
+                              if (!calc || discountVal <= 0) { toast.error('Mã không áp dụng được cho đơn hàng này'); setCouponLoading(false); return; }
+                              setAppliedCoupon({ couponId: c.couponId, code: c.code });
+                              setDiscountAmount(discountVal);
+                              setFinalAmount(finalVal);
+                              toast.success('Áp mã thành công');
+                            } catch (e) { console.error(e); toast.error('Lỗi khi áp mã'); }
+                            finally { setCouponLoading(false); }
+                          }} className="px-3 py-1 bg-pink-600 text-white rounded text-sm">Áp</button>
+                          <button type="button" onClick={() => { /* optional: show details */ }} className="px-2 py-1 bg-white border rounded text-sm">Chi tiết</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-4 space-y-2">
