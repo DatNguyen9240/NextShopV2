@@ -292,7 +292,19 @@ const CheckoutPage: React.FC = () => {
                             } catch (e) { console.error(e); toast.error('Lỗi khi áp mã'); }
                             finally { setCouponLoading(false); }
                           }} className="px-3 py-1 bg-pink-600 text-white rounded text-sm">Áp</button>
-                          <button type="button" onClick={() => { /* optional: show details */ }} className="px-2 py-1 bg-white border rounded text-sm">Chi tiết</button>
+                          <button type="button" onClick={async () => {
+                            if (!cart) return;
+                            setCouponLoading(true);
+                            try {
+                              const { calculateDiscount } = await import('@/app/services/couponService');
+                              const calc = await calculateDiscount(c.code, cart.totalAmount);
+                              const discountVal = Number(calc?.discountAmount ?? calc?.DiscountAmount ?? 0);
+                              if (!calc || discountVal <= 0) { toast.error('Mã không áp dụng được cho đơn hàng này'); setCouponLoading(false); return; }
+                              const formatted = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(discountVal);
+                              toast.success(`Voucher ${c.code} được giảm ${formatted}`);
+                            } catch (e) { console.error(e); toast.error('Lỗi khi lấy thông tin voucher'); }
+                            finally { setCouponLoading(false); }
+                          }} className="px-2 py-1 bg-white border rounded text-sm">Chi tiết</button>
                         </div>
                       </div>
                     ))}
