@@ -1,6 +1,8 @@
 import React from 'react';
 import Image from 'next/image';
 import Button from '@/app/components/Button';
+import { updateOrderStatus } from '@/app/services/orderService';
+import { toast } from 'react-hot-toast';
 import MoneyVND from '@/app/components/MoneyVND';
 import { OrderDto } from '@/app/services/orderService';
 
@@ -137,6 +139,27 @@ const OrderDetailsModal: React.FC<{ order: OrderDto; onClose: () => void }> = ({
           </div>
 
           <div className="mt-3 flex items-center justify-end gap-3">
+            {order.status !== 'Paid' && (
+              <Button
+                shape="roundedSquare"
+                size="md"
+                onClick={async () => {
+                  try {
+                    await updateOrderStatus(order.orderId, 'Paid');
+                    toast.success('Cập nhật trạng thái: Paid');
+                    // close modal and refresh list
+                    onClose();
+                    try { window.location.reload(); } catch {}
+                  } catch (err) {
+                    console.error('[markPaid] error', err);
+                    toast.error('Đánh Paid thất bại');
+                  }
+                }}
+                className="bg-green-600 text-white"
+              >
+                Đánh Paid
+              </Button>
+            )}
             <Button shape="roundedSquare" size="md" onClick={onClose} className="bg-blue-600 text-white">Đóng</Button>
           </div>
         </div>
