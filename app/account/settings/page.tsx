@@ -4,6 +4,7 @@ import axios from 'axios';
 import { updateProfile, upsertAddress, deleteAddress } from "../../services/authService";
 import { getPasskeys, startRegister, verifyRegister, revokePasskey } from '../../services/webauthnService';
 import MfaEmailSection from './MfaEmailSection';
+import NotificationToggle from './NotificationToggle';
 import { preformatMakeCredReq, publicKeyCredentialToJSON } from '@/utils/webauthn';
 import { uploadImage } from "../../services/uploadService";
 import { useAuth } from "@/app/providers/AuthProvider";
@@ -518,6 +519,10 @@ export default function SettingsPage() {
             <button type="submit" disabled={saving} className="bg-blue-600 text-white py-2 px-6 rounded">
               {saving ? "Đang lưu..." : "Lưu"}
             </button>
+          </div>
+
+          <div className="mt-6">
+            <NotificationToggle userId={user?.id} />
           </div>
 
           {/* Passkey management */}

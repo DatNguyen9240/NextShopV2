@@ -1,4 +1,4 @@
-import { getToken, onMessage, MessagePayload } from 'firebase/messaging';
+import { getToken, onMessage, deleteToken, MessagePayload } from 'firebase/messaging';
 import { messaging } from '../lib/firebaseConfig';
 import axiosClient from '../lib/axiosClient';
 
@@ -78,4 +78,35 @@ export function setupForegroundListener(callback?: (payload: MessagePayload) => 
       callback(payload);
     }
   });
+}
+
+// Hủy đăng ký token cục bộ và cố gắng thông báo server (nếu endpoint hỗ trợ)
+export async function unregisterNotification(): Promise<boolean> {
+  try {
+    const currentMessaging = messaging();
+    if (!currentMessaging) return false;
+
+    // try to read current token
+    const currentToken = await getToken(currentMessaging, { vapidKey: VAPID_KEY }).catch(() => null);
+
+    // delete local token
+    const deleted = await deleteToken(currentMessaging).catch((e) => {
+      console.warn('deleteToken failed', e);
+      return false;
+    });
+
+    // try to inform server to remove this token (best-effort - endpoint may not exist)
+    if (currentToken) {
+      try {
+        await axiosClient.post('/api/firebase-notifications/remove-token', { token: currentToken });
+      } catch (e) {
+        // ignore - endpoint may be absent
+      }
+    }
+
+    return !!deleted;
+  } catch (error) {
+    console.error('Error unregistering token:', error);
+    return false;
+  }
 }
