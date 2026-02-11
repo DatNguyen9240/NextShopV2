@@ -90,8 +90,8 @@ export async function unregisterNotification(): Promise<boolean> {
     const currentToken = await getToken(currentMessaging, { vapidKey: VAPID_KEY }).catch(() => null);
 
     // delete local token
-    const deleted = await deleteToken(currentMessaging).catch((e) => {
-      console.warn('deleteToken failed', e);
+    const deleted = await deleteToken(currentMessaging).catch((err) => {
+      console.warn('deleteToken failed', err);
       return false;
     });
 
@@ -99,7 +99,7 @@ export async function unregisterNotification(): Promise<boolean> {
     if (currentToken) {
       try {
         await axiosClient.post('/api/firebase-notifications/remove-token', { token: currentToken });
-      } catch (e) {
+      } catch {
         // ignore - endpoint may be absent
       }
     }

@@ -1,18 +1,20 @@
 import React from 'react';
+import Image from 'next/image';
 import Button from '@/app/components/Button';
 import MoneyVND from '@/app/components/MoneyVND';
 import { OrderDto } from '@/app/services/orderService';
 
-function fmt(v: any, empty = '—') {
+function fmt(v: unknown, empty = '—') {
   if (v === null || v === undefined) return empty;
   if (typeof v === 'string' && v.trim() === '') return empty;
-  return v;
+  return v as React.ReactNode;
 }
 
-function fmtDate(v: any) {
-  if (!v) return '—';
+function fmtDate(v: unknown) {
+  if (v === null || v === undefined) return '—';
   try {
-    return new Date(v).toLocaleString('vi-VN');
+    const d = typeof v === 'string' || typeof v === 'number' ? new Date(v) : (v as Date);
+    return isNaN(d.getTime()) ? '—' : d.toLocaleString('vi-VN');
   } catch { return '—'; }
 }
 
@@ -108,8 +110,12 @@ const OrderDetailsModal: React.FC<{ order: OrderDto; onClose: () => void }> = ({
 
               return (
                 <div key={item.orderItemId} className="flex items-center gap-3 border-b pb-3">
-                  <div className="w-14 h-14 bg-gray-50 rounded overflow-hidden flex items-center justify-center">
-                    {imageUrl ? <img src={imageUrl} alt={item.productName ?? ''} className="w-full h-full object-cover" /> : <div className="text-xs text-gray-400">No image</div>}
+                  <div className="w-14 h-14 bg-gray-50 rounded overflow-hidden flex items-center justify-center relative">
+                    {imageUrl ? (
+                      <Image src={imageUrl} alt={item.productName ?? ''} width={56} height={56} className="object-cover" />
+                    ) : (
+                      <div className="text-xs text-gray-400">No image</div>
+                    )}
                   </div>
                   <div className="flex-1">
                     <div className="font-medium">{item.productName}</div>
