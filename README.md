@@ -1,3 +1,5 @@
+https://www.emxinh.shop/
+
 Dưới đây là phiên bản được format lại chuyên nghiệp – rõ ràng – dễ đọc – chuẩn README GitHub / tài liệu kỹ thuật nội bộ.
 
 🚀 NextShopV2 – Frontend
