@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/Card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import dashboardService, { DashboardMetrics } from '@/app/services/dashboardService';
+import MoneyVND from '@/app/components/MoneyVND';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
@@ -66,8 +67,8 @@ export default function DashboardPage() {
             <CardTitle>Total Revenue</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">${metrics.revenue.total}</p>
-            <p className="text-sm text-gray-600">+${metrics.revenue.today} today</p>
+            <p className="text-2xl font-bold"><MoneyVND value={metrics.revenue.total} /></p>
+            <p className="text-sm text-gray-600">+<MoneyVND value={metrics.revenue.today} /> today</p>
           </CardContent>
         </Card>
         <Card>
