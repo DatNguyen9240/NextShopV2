@@ -298,10 +298,7 @@ export default function LoginPage() {
       const data = await r.json();
       if (!r.ok) {
         const msg = data?.message || 'Google sign-in failed';
-        // Provide friendly suggestion when Google returned user-not-found or unverified
-        if (msg === 'User not found') setMessage('Tài khoản Google chưa được đăng ký. Vui lòng đăng ký trước.');
-        else if (msg === 'Email not verified') setMessage('Email chưa được đăng ký. Vui lòng đăng ký trước.');
-        else setMessage(msg);
+        setMessage(msg);
         return;
       }
 

@@ -146,15 +146,15 @@ export default function AboutPage() {
             <div className="p-6 rounded-xl bg-gradient-to-br from-rose-50 to-rose-100 border border-rose-200 hover:shadow-lg transition-shadow">
               <div className="text-3xl mb-3">📧</div>
               <h3 className="font-bold text-gray-900 mb-2">Email</h3>
-              <a href="mailto:support@nextshop.local" className="text-rose-600 hover:text-rose-700 font-medium">
-                support@nextshop.local
+              <a href="mailto:datnguyen9240@gmail.com" className="text-rose-600 hover:text-rose-700 font-medium">
+                datnguyen9240@gmail.com
               </a>
             </div>
             <div className="p-6 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 hover:shadow-lg transition-shadow">
               <div className="text-3xl mb-3">☎️</div>
               <h3 className="font-bold text-gray-900 mb-2">Hotline</h3>
-              <a href="tel:1900-1234" className="text-blue-600 hover:text-blue-700 font-medium">
-                1900 - 1234
+              <a href="tel:0787358358" className="text-blue-600 hover:text-blue-700 font-medium">
+                0787358358
               </a>
             </div>
           </div>
