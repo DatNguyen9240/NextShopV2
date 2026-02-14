@@ -9,10 +9,34 @@ export interface DashboardMetrics {
   notifications: { sentToday: number };
 }
 
+export interface InventoryTransaction {
+  id: string;
+  productId: string;
+  action: string;
+  quantity: number;
+  timestamp: string;
+  userId?: string;
+}
+
+export interface NotificationHistory {
+  id: string;
+  type: string;
+  recipient: string;
+  status: string;
+  timestamp: string;
+}
+
+export interface TrackingEvent {
+  id: string;
+  eventType: string;
+  data: Record<string, unknown>;
+  timestamp: string;
+}
+
 export interface AuditLogs {
-  inventoryTransactions: any[];
-  notificationHistory: any[];
-  trackingEvents: any[];
+  inventoryTransactions: InventoryTransaction[];
+  notificationHistory: NotificationHistory[];
+  trackingEvents: TrackingEvent[];
 }
 
 export interface PerformanceMetrics {
@@ -39,4 +63,5 @@ class DashboardService {
   }
 }
 
-export default new DashboardService();
+const dashboardService = new DashboardService();
+export default dashboardService;
