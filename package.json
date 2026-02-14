@@ -25,6 +25,7 @@
     "react-dom": "19.1.0",
     "react-hot-toast": "^2.6.0",
     "react-swipeable": "^7.0.2",
+    "recharts": "^3.7.0",
     "swiper": "^11.2.10",
     "tailwind-merge": "^3.4.0"
   },

@@ -82,6 +82,11 @@ Frontend của NextShopV2 được xây dựng bằng Next.js (App Router) + Typ
 ### 🚚 Shipper Tracking
 - SignalR realtime tracking, OSRM route calculation, reverse geocoding, autocomplete địa điểm
 
+### 📊 Admin Dashboard
+- **Real-time Metrics**: Hiển thị KPIs với charts (bar, pie): users, orders, revenue, products
+- **Audit Logs**: Viewer cho inventory, notifications, tracking events
+- **Security**: Protected admin routes với authentication
+
 ## 🗺️ Map & Geocoding Services
 
 | Service | Nguồn |
