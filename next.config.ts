@@ -14,6 +14,7 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'api.qrserver.com', pathname: '/**' },
       { protocol: 'https', hostname: 'nonson.vn', pathname: '/**' },
       { protocol: 'https', hostname: 'down-vn.img.susercontent.com', pathname: '/**' },
+      { protocol: 'https', hostname: 'example.com', pathname: '/**' },
     ],
   },
   async rewrites() {

@@ -34,7 +34,7 @@ export default async function RootLayout({
   const user = await getUserFromCookie();
   return (
     <html lang="en">
-      <body className={`${roboto.variable} antialiased`}>
+      <body className={`${roboto.variable} antialiased`} suppressHydrationWarning>
         <AuthProvider initialUser={user}>
           <CategoryProvider>
             <ConditionalLayout>
