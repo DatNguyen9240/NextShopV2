@@ -78,9 +78,10 @@ export default function ProductVariants() {
 
       setEditingId(null);
       setEditData({});
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating variant:', error);
-      alert(error?.response?.data?.message || 'Error updating variant');
+      const err = error as { response?: { data?: { message?: string } } };
+      alert(err?.response?.data?.message || 'Error updating variant');
     }
   };
 
