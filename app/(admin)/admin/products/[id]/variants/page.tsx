@@ -65,12 +65,22 @@ export default function ProductVariants() {
   const saveEdit = async () => {
     if (!editingId) return;
     try {
-      await updateVariant(editingId, editData);
-      setVariants(prev => prev.map(v => v.productVariantId === editingId ? { ...v, ...editData } : v));
+      const payload = { ...editData };
+      delete payload.discountAmount;
+      delete payload.priceAfterDiscount;
+
+      await updateVariant(editingId, payload);
+      
+      // Refresh variants to get the updated prices from the backend
+      const data = await getVariantsByProductIdAdmin(id as string);
+      const normalized = data.map((v: Partial<Variant>) => ({ ...v, isActive: typeof v.isActive === 'undefined' ? true : v.isActive }) as Variant);
+      setVariants(normalized);
+
       setEditingId(null);
       setEditData({});
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating variant:', error);
+      alert(error?.response?.data?.message || 'Error updating variant');
     }
   };
 
